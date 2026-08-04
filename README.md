@@ -3,8 +3,6 @@
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/)[![environment](https://img.shields.io/badge/environment-venv/3.13.3-green.svg)](https://www.python.org/)
 [![License: GPLv3+NonCommercial](https://img.shields.io/badge/License-GPLv3%2B%20NC-red.svg)](LICENSE)[![bilibili](https://img.shields.io/badge/bilibili-%E6%95%B0%E7%A7%91%E6%99%BA%E6%98%9F-blue.svg)](https://space.bilibili.com/3493111196027162)
 
-[![Star History Rank](https://api.star-history.com/badge?repo=codecrafters-io/build-your-own-x&theme=dark)](https://www.star-history.com/codecrafters-io/build-your-own-x)
-
 一个功能强大的 AI 电脑控制应用程序，集成了**AI 智能对话**、**桌面监控**、**视频剪辑**、**RCON 广播**等多种功能，实现自动化系统操作和智能控制。
 
 ## ✨ 功能特性
