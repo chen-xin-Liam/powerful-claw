@@ -21,3 +21,4 @@ jobs:
           destination: ./        # 同步到 Wiki 根目录
           gitHubToken: ${{ secrets.WIKI_SYNC_TOKEN }}  # 从 Secrets 读取
           commitMessage: "docs: auto-sync from main branch"
+          
