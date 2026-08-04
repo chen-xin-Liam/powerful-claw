@@ -1,6 +1,6 @@
 # LAN AI Computing Power Sharing System
 
-## 📋 Overview
+## 📋 Overview 
 
 This system implements GPU resource sharing and distributed execution of AI model inference tasks among multiple computers within a LAN. Through automatic discovery, intelligent scheduling, and secure transmission mechanisms, all available GPU resources within the LAN are integrated into a unified computing power pool, enabling efficient distributed computing.
 
@@ -31,27 +31,27 @@ This system implements GPU resource sharing and distributed execution of AI mode
 
 ### Core Components
 
-| Component | File | Responsibility |
-|-----------|------|----------------|
-| **GPU Detection** | `gpu_detector.py` | Detect GPU model, memory, temperature and other information |
-| **Node Communication** | `lan_node.py` | LAN node discovery, connection management, heartbeat monitoring |
-| **Task Scheduling** | `task_scheduler.py` | Task distribution and load balancing |
-| **Secure Transport** | `secure_transport.py` | Data encryption and signature verification |
-| **Cluster Monitoring** | `cluster_monitor.py` | Real-time status monitoring and statistics |
-| **Distributed Inference** | `distributed_inference.py` | AI model distributed inference |
-| **REST API** | `cluster_api.py` | External API interface |
-| **Cluster Management** | `__init__.py` | Integration of all components |
+| Component                 | File                       | Responsibility                                                  |
+| ------------------------- | -------------------------- | --------------------------------------------------------------- |
+| **GPU Detection**         | `gpu_detector.py`          | Detect GPU model, memory, temperature and other information     |
+| **Node Communication**    | `lan_node.py`              | LAN node discovery, connection management, heartbeat monitoring |
+| **Task Scheduling**       | `task_scheduler.py`        | Task distribution and load balancing                            |
+| **Secure Transport**      | `secure_transport.py`      | Data encryption and signature verification                      |
+| **Cluster Monitoring**    | `cluster_monitor.py`       | Real-time status monitoring and statistics                      |
+| **Distributed Inference** | `distributed_inference.py` | AI model distributed inference                                  |
+| **REST API**              | `cluster_api.py`           | External API interface                                          |
+| **Cluster Management**    | `__init__.py`              | Integration of all components                                   |
 
 ## 🔌 Port Allocation
 
-| Port | Protocol | Purpose |
-|------|----------|---------|
-| **15300** | UDP | Node discovery broadcast |
-| **15301** | TCP | Master node communication |
-| **15302** | TCP | Task distribution |
-| **15303** | TCP | Data transfer |
-| **15304** | UDP | Status monitoring |
-| **15305** | HTTP | REST API |
+| Port      | Protocol | Purpose                   |
+| --------- | -------- | ------------------------- |
+| **15300** | UDP      | Node discovery broadcast  |
+| **15301** | TCP      | Master node communication |
+| **15302** | TCP      | Task distribution         |
+| **15303** | TCP      | Data transfer             |
+| **15304** | UDP      | Status monitoring         |
+| **15305** | HTTP     | REST API                  |
 
 ## 🧠 Core Principles
 
@@ -76,6 +76,7 @@ This system implements GPU resource sharing and distributed execution of AI mode
 ```
 
 **Key Technical Points**:
+
 - Broadcast interval: 3 seconds
 - Heartbeat timeout: 15 seconds
 - Offline determination: No response for two consecutive heartbeat cycles
@@ -84,12 +85,13 @@ This system implements GPU resource sharing and distributed execution of AI mode
 
 **Detection Methods**:
 
-| Method | Description |
-|--------|-------------|
+| Method     | Description                                           |
+| ---------- | ----------------------------------------------------- |
 | nvidia-smi | Get detailed GPU information on Windows/Linux systems |
-| PyTorch | Fallback solution, detect via torch.cuda |
+| PyTorch    | Fallback solution, detect via torch.cuda              |
 
 **Detection Content**:
+
 - GPU model and quantity
 - Total/used/available memory
 - GPU utilization
@@ -106,12 +108,12 @@ Score = (Memory Adequacy × 50) + (GPU Count × 10) + (Load Ratio × 30) + (Prio
 
 **Scoring Factors**:
 
-| Factor | Weight | Description |
-|--------|--------|-------------|
-| Memory Adequacy | 50% | Available memory / Total memory |
-| GPU Count | 10% | Number of GPUs in the node |
-| Load Ratio | 30% | (Max tasks - Current tasks) / Max tasks |
-| Priority Bonus | 10% | Extra points for HIGH/URGENT tasks |
+| Factor          | Weight | Description                             |
+| --------------- | ------ | --------------------------------------- |
+| Memory Adequacy | 50%    | Available memory / Total memory         |
+| GPU Count       | 10%    | Number of GPUs in the node              |
+| Load Ratio      | 30%    | (Max tasks - Current tasks) / Max tasks |
+| Priority Bonus  | 10%    | Extra points for HIGH/URGENT tasks      |
 
 ### 4. Distributed Inference Flow
 
@@ -136,13 +138,14 @@ Score = (Memory Adequacy × 50) + (GPU Count × 10) + (Load Ratio × 30) + (Prio
 
 **Encryption Scheme**:
 
-| Type | Algorithm | Purpose |
-|------|-----------|---------|
-| Symmetric Encryption | Fernet | Data transmission encryption |
-| Asymmetric Encryption | RSA-2048 | Key exchange |
-| Digital Signature | SHA256 + PSS | Message integrity verification |
+| Type                  | Algorithm    | Purpose                        |
+| --------------------- | ------------ | ------------------------------ |
+| Symmetric Encryption  | Fernet       | Data transmission encryption   |
+| Asymmetric Encryption | RSA-2048     | Key exchange                   |
+| Digital Signature     | SHA256 + PSS | Message integrity verification |
 
 **Security Features**:
+
 - ✅ End-to-end encryption
 - ✅ Message signature verification
 - ✅ Data integrity check
@@ -212,9 +215,11 @@ curl -X POST http://localhost:15305/api/cluster/task \
 ## 📊 API Interface
 
 ### GET /api/cluster/stats
+
 Get cluster statistics
 
 **Response Example**:
+
 ```json
 {
   "status": "active",
@@ -230,36 +235,42 @@ Get cluster statistics
 ```
 
 ### GET /api/cluster/nodes
+
 Get node list
 
 ### GET /api/cluster/tasks
+
 Get task list
 
 ### GET /api/cluster/summary
+
 Get cluster summary
 
 ### GET /api/cluster/self
+
 Get current node information
 
 ### POST /api/cluster/task
+
 Submit new task
 
 ### POST /api/cluster/task/cancel
+
 Cancel task
 
 ## ⚙️ Configuration
 
 ### Environment Variables
 
-| Variable | Default Value | Description |
-|----------|---------------|-------------|
-| CLUSTER_ENABLED | true | Enable cluster functionality |
-| DISCOVERY_PORT | 15300 | Discovery service port |
-| MAIN_PORT | 15301 | Main communication port |
-| TASK_PORT | 15302 | Task port |
-| DATA_PORT | 15303 | Data port |
-| MONITOR_PORT | 15304 | Monitor port |
-| API_PORT | 15305 | API port |
+| Variable         | Default Value | Description                  |
+| ---------------- | ------------- | ---------------------------- |
+| CLUSTER\_ENABLED | true          | Enable cluster functionality |
+| DISCOVERY\_PORT  | 15300         | Discovery service port       |
+| MAIN\_PORT       | 15301         | Main communication port      |
+| TASK\_PORT       | 15302         | Task port                    |
+| DATA\_PORT       | 15303         | Data port                    |
+| MONITOR\_PORT    | 15304         | Monitor port                 |
+| API\_PORT        | 15305         | API port                     |
 
 ### Configuration Example (.env)
 
@@ -283,12 +294,12 @@ HEARTBEAT_TIMEOUT=15
 
 ### Common Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Cannot discover nodes | Firewall blocking UDP broadcast | Allow UDP port 15300 |
-| Connection refused | Target port not open | Check port usage |
-| GPU detection failed | nvidia-smi not available | Install NVIDIA driver |
-| Task assignment failed | Node offline | Check network connection |
+| Issue                  | Cause                           | Solution                 |
+| ---------------------- | ------------------------------- | ------------------------ |
+| Cannot discover nodes  | Firewall blocking UDP broadcast | Allow UDP port 15300     |
+| Connection refused     | Target port not open            | Check port usage         |
+| GPU detection failed   | nvidia-smi not available        | Install NVIDIA driver    |
+| Task assignment failed | Node offline                    | Check network connection |
 
 ### Log Description
 
@@ -311,12 +322,12 @@ HEARTBEAT_TIMEOUT=15
 
 ### Performance Metrics
 
-| Metric | Description | Target Value |
-|--------|-------------|--------------|
-| Node discovery latency | From startup to discovering all nodes | < 5 seconds |
-| Task assignment latency | From submission to assignment completion | < 100ms |
-| Inference latency | Network transfer + computation time | Depends on model |
-| Throughput | Tasks processed per second | Depends on GPU count |
+| Metric                  | Description                              | Target Value         |
+| ----------------------- | ---------------------------------------- | -------------------- |
+| Node discovery latency  | From startup to discovering all nodes    | < 5 seconds          |
+| Task assignment latency | From submission to assignment completion | < 100ms              |
+| Inference latency       | Network transfer + computation time      | Depends on model     |
+| Throughput              | Tasks processed per second               | Depends on GPU count |
 
 ## 🤝 Extensibility
 
@@ -339,7 +350,7 @@ HEARTBEAT_TIMEOUT=15
 
 This system is released under the MIT License, see LICENSE file for details.
 
----
+***
 
-*Document Version: 1.0*  
-*Last Updated: May 2026*
+*Document Version: 1.0*\
+*Last Updated: May 2026 *

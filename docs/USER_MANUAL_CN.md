@@ -6,7 +6,7 @@ AI 计算机控制是一款人工智能驱动的自动化应用程序，允许�
 
 ## 入门指南
 
-### 1. 启动应用程序
+### 1. 启动应用程序 
 
 ```bash
 python src/ui/customtkinter_app.py

@@ -5,7 +5,7 @@
 
 A powerful AI computer control application that integrates **AI intelligent conversation**, **desktop monitoring**, **video editing**, **RCON broadcasting**, and other features to achieve automated system operations and intelligent control.
 
-### Star History
+### Star History 
 
 <a href="https://www.star-history.com/?repos=chen-xin-Liam%2Fpowerful-claw&type=date&legend=bottom-right">
  <picture>
