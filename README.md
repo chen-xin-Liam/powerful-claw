@@ -3,6 +3,16 @@
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/)[![environment](https://img.shields.io/badge/environment-venv/3.13.3-green.svg)](https://www.python.org/)
 [![License: GPLv3+NonCommercial](https://img.shields.io/badge/License-GPLv3%2B%20NC-red.svg)](LICENSE)[![bilibili](https://img.shields.io/badge/bilibili-%E6%95%B0%E7%A7%91%E6%99%BA%E6%98%9F-blue.svg)](https://space.bilibili.com/3493111196027162)
 
+### Star History
+
+<a href="https://www.star-history.com/?repos=chen-xin-Liam%2Fpowerful-claw&type=date&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=chen-xin-Liam/powerful-claw&type=date&theme=dark&legend=bottom-right&sealed_token=YFwFvLj13TKlFm-6F2v-wK3CccWetfpWS4UxnJ9D60Q1E0QUwLTvlh5FXnpfvPl1c15Ff4xjJb_GQ2wf727u_u6pbsgElr9z2q6h1_13yMPif_leAh2hOgBv-l84SdghyCcCWLzxO23V0H09ajX6NidIKg5VSovfolqbK1mZW7yRAJondULB2e_XK86L" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=chen-xin-Liam/powerful-claw&type=date&legend=bottom-right&sealed_token=YFwFvLj13TKlFm-6F2v-wK3CccWetfpWS4UxnJ9D60Q1E0QUwLTvlh5FXnpfvPl1c15Ff4xjJb_GQ2wf727u_u6pbsgElr9z2q6h1_13yMPif_leAh2hOgBv-l84SdghyCcCWLzxO23V0H09ajX6NidIKg5VSovfolqbK1mZW7yRAJondULB2e_XK86L" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=chen-xin-Liam/powerful-claw&type=date&legend=bottom-right&sealed_token=YFwFvLj13TKlFm-6F2v-wK3CccWetfpWS4UxnJ9D60Q1E0QUwLTvlh5FXnpfvPl1c15Ff4xjJb_GQ2wf727u_u6pbsgElr9z2q6h1_13yMPif_leAh2hOgBv-l84SdghyCcCWLzxO23V0H09ajX6NidIKg5VSovfolqbK1mZW7yRAJondULB2e_XK86L" />
+ </picture>
+</a>
+
 一个功能强大的 AI 电脑控制应用程序，集成了**AI 智能对话**、**桌面监控**、**视频剪辑**、**RCON 广播**等多种功能，实现自动化系统操作和智能控制。
 
 ## ✨ 功能特性
