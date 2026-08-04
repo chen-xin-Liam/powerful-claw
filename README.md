@@ -692,9 +692,8 @@ venv\Scripts\python.exe
 ## 🤝 贡献者
 
 感谢所有为本项目做出贡献的开发者！
-## Contributors
 
-[![Contributors](https://contrib.rocks/image?repo=你的用户名/你的仓库名)](https://github.com/chen-xin-Liam/powerfil-claw/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?chen-xin-Liam/powerful-claw)](https://github.com/chen-xin-Liam/powerful-claw/graphs/contributors)
 
 
 
