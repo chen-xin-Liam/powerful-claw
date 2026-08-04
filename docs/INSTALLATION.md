@@ -1,6 +1,6 @@
 # Installation Guide
 
-## Prerequisites 
+## Prerequisites
 
 - Python 3.8 or higher
 - NVIDIA API Key (get from NVIDIA developer portal)

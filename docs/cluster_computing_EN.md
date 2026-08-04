@@ -1,6 +1,6 @@
 # LAN AI Computing Power Sharing System
 
-## 📋 Overview 
+## 📋 Overview
 
 This system implements GPU resource sharing and distributed execution of AI model inference tasks among multiple computers within a LAN. Through automatic discovery, intelligent scheduling, and secure transmission mechanisms, all available GPU resources within the LAN are integrated into a unified computing power pool, enabling efficient distributed computing.
 

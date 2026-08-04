@@ -1,6 +1,6 @@
 # Configuration Guide
 
-## Environment Variables 
+## Environment Variables
 
 | Variable | Description | Default Value | Required |
 |----------|-------------|---------------|----------|

@@ -1,6 +1,6 @@
 # Debug Mode User Guide
 
-## 📋 Overview
+## 📋 Overview 
  
 Debug mode provides complete AI conversation log output functionality, allowing you to see all raw responses and output results in the terminal.
 

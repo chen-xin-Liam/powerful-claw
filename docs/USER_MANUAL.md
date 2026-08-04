@@ -6,7 +6,7 @@ AI Computer Control is an AI-powered automation application that allows you to c
 
 ## Getting Started
 
-### 1. 启动应用程序 
+### 1. 启动应用程序
 
 ```bash
 python src/ui/customtkinter_app.py
