@@ -1,7 +1,7 @@
 {
   "NVIDIA": {
     "base_url": "https://integrate.api.nvidia.com/v1",
-    "api_key": "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",
+    "api_key": "",
     "default_model": "minimaxai/minimax-m2.7",
     "description": "NVIDIA AI API"
   },
