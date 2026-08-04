@@ -18,3 +18,4 @@ jobs:
           path: docs/
           token: ${{ secrets.WIKI_SYNC_TOKEN }}
           commit-message: "docs: auto-sync from main branch"
+          
