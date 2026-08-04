@@ -700,8 +700,8 @@ venv\Scripts\python.exe
 
 ## 📞 支持与反馈（没有此功能）
 
-- 📧 提交 [Issue](https://github.com/your-username/ai-computer-control/issues) 报告问题
-- 💬 参与 [Discussions](https://github.com/your-username/ai-computer-control/discussions) 讨论功能
+- 📧 提交 [Issue](https://github.com/chen-xin-Liam/powerful-claw/issues) 报告问题
+- 💬 参与 [Discussions](https://github.com/chen-xin-Liam/powerful-claw/discussions) 讨论功能
 
 ---
 
