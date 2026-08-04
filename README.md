@@ -376,38 +376,7 @@ python src/main.py --help
 | 15303 | 集群数据 | tcp://localhost:15303 | 数据传输端口 |
 | 15304 | 集群监控 | udp://localhost:15304 | 状态监控端口 |
 
-## 📖 使用说明
 
-### 基本使用流程
-
-1. **配置 AI 提供者**
-   - 选择 AI 提供者（NVIDIA/OpenAI/Ollama/Custom）
-   - 输入必要的 API 密钥和 Base URL
-   - 选择默认模型
-
-2. **设置权限级别**
-   - **None**: 仅查看模式，无操作权限
-   - **View**: 查看模式，可执行查询操作
-   - **Limited**: 允许鼠标和键盘基本操作
-   - **Full**: 完整系统控制权限
-
-3. **选择操作模式**
-   - **Chat Mode**: 普通对话模式
-   - **Control Mode**: AI 可生成并执行系统操作命令
-
-4. **开始对话**
-   - 输入自然语言指令
-   - AI 会解析并执行相应的系统操作
-
-### 示例指令
-
-```
-"将鼠标移动到屏幕中央"
-"截取当前屏幕并分析内容"
-"打开浏览器访问百度"
-"在当前位置输入'Hello World'"
-"检测屏幕上的按钮对象"
-```
 
 ### 局域网算力共享使用
 
@@ -571,119 +540,7 @@ pip install flake8
 flake8 src/
 ```
 
-## 📡 流媒体传输协议说明
 
-### 视频传输（端口 15009）
-
-| 协议 | 主/备 | 说明 | 适用场景 |
-|------|-------|------|----------|
-| **RTMP** | 主 | Real-Time Messaging Protocol，实时消息传输协议 | 直播推流、传统流媒体 |
-| **SRT** | 备 | Secure Reliable Transport，安全可靠传输 | 低延迟、高质量传输 |
-| **SRTP** | 备 | Secure Real-time Transport Protocol，安全实时传输 | 加密传输、需要安全性 |
-
-**配置示例**:
-```env
-# 使用 RTMP 作为主协议
-VIDEO_PROTOCOL_PRIORITY="rtmp,srt,srtp"
-RTMP_ENABLED=true
-RTMP_URL="rtmp://your-server/live/stream"
-
-# 或使用 SRT 作为主协议
-VIDEO_PROTOCOL_PRIORITY="srt,rtmp,srtp"
-SRT_ENABLED=true
-SRT_PORT=15009
-SRT_LATENCY=120
-```
-
-### 音频传输（端口 15008）
-
-| 协议 | 主/备 | 说明 | 适用场景 |
-|------|-------|------|----------|
-| **WebRTC** | 主 | Web Real-Time Communication，网页实时通信 | 浏览器直连、低延迟 |
-| **SRTP** | 备 | Secure RTP，安全实时传输协议 | 加密VoIP通话 |
-| **SMPTE 2110** | 备 | 专业广电传输标准 | 广播级IP传输 |
-
-**配置示例**:
-
-```env
-# 使用 WebRTC 作为主协议
-AUDIO_PROTOCOL_PRIORITY="webrtc,srtp,smpte2110"
-WEBRTC_ENABLED=true
-WEBRTC_PORT=15008
-
-# 或使用 SMPTE 2110 作为专业音频传输
-AUDIO_PROTOCOL_PRIORITY="smpte2110,webrtc,srtp"
-SMPTE2110_ENABLED=true
-SMPTE2110_MULTICAST="239.255.0.1"
-```
-
-### 远程桌面式视频流
-
-远程桌面式视频流采用类似远程桌面的压缩传输方式，大幅降低带宽占用：
-
-| 参数 | 说明 | 默认值 | 建议值 |
-|------|------|--------|--------|
-| `RD_DIFF_THRESHOLD` | 帧差阈值，越大变化检测越严格 | 10 | 5-20 |
-| `RD_BLOCK_SIZE` | 分块大小，越小压缩率越高 | 64 | 32-128 |
-| `RD_KEYFRAME_INTERVAL` | 关键帧间隔 | 60 | 30-120 |
-| `RD_MIN_QUALITY` | 最低编码质量 | 30 | 20-40 |
-| `RD_MAX_QUALITY` | 最高编码质量 | 95 | 80-100 |
-
-## ⚠️ 常见问题与故障排除
-
-### 问题1: 端口被占用
-
-**错误信息**: `OSError: [Errno 10048] 通常每个套接字地址只允许使用一次`
-
-**解决方法**:
-```powershell
-# 查找占用端口的进程
-netstat -ano | findstr "15000"
-
-# 终止进程（将 <PID> 替换为实际进程ID）
-taskkill /F /PID <PID>
-```
-
-### 问题2: tkinter 模块缺失
-
-**错误信息**: `ModuleNotFoundError: No module named 'tkinter'`
-
-**解决方法**:
-- 确保使用 Python 3.13（嵌入式 Python 不包含 tkinter）
-- 使用完整路径运行：`$env:LOCALAPPDATA\Programs\Python\Python313\python.exe`
-- 使用venv环境运行：`venv\Scripts\python.exe`
-
-### 问题3: 依赖安装失败
-
-**错误信息**: `ERROR: Could not find a version that satisfies the requirement`
-
-**解决方法**:
-
-```bash
-# 更新 pip
-python -m pip install --upgrade pip
-
-# 使用国内镜像
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-
-#使用已经安装的环境（无需安装）
-venv\Scripts\python.exe
-```
-
-### 问题4: 音频捕获警告
-
-**警告信息**: `SoundcardRuntimeWarning: data discontinuity in recording`
-
-**说明**: 这是 Windows 音频捕获的正常警告，不影响功能。
-
-### 问题5: WebSocket 连接失败
-
-**错误信息**: `WebSocket connection failed`
-
-**解决方法**:
-- 确保防火墙允许相关端口
-- 检查服务是否正常启动
-- 尝试使用 `--host 0.0.0.0` 参数
 
 ## 📄 许可证
 
