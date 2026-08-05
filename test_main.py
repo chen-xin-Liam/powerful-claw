@@ -7,6 +7,7 @@ AIclaw 主程序测试脚本
 import sys
 import os
 import traceback
+import importlib.util
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 # 复用项目的统一异常体系，使测试输出的错误信息与正式运行一致
@@ -23,6 +24,184 @@ except Exception:
 
     def get_suggestion(_code):
         return "请查看日志文件获取详细信息"
+
+
+# ───────── pip 依赖库检查 ─────────
+
+# 包名 → import 名 的映射（处理特殊命名的包）
+# 未在此表中的包，默认将包名中的 "-" 替换为 "_" 作为 import 名
+_PACKAGE_IMPORT_MAP = {
+    "opencv-python":       "cv2",
+    "pillow":              "PIL",
+    "pydantic-settings":   "pydantic_settings",
+    "python-dotenv":       "dotenv",
+    "python-docx":         "docx",
+    "python-pptx":         "pptx",
+    "python-multipart":    "multipart",
+    "python-rapidjson":    "rapidjson",
+    "python-dateutil":     "dateutil",
+    "pandas-ta":           "pandas_ta",
+    "pyyaml":              "yaml",
+    "pywinstyles":         "pywinstyles",
+    "line-profiler":       "line_profiler",
+    "memory-profiler":    "memory_profiler",
+    "pre-commit":          "pre_commit",
+    "async-timeout":       "async_timeout",
+    "nest-asyncio":        "nest_asyncio",
+    "argon2-cffi":        "argon2",
+    "PyPDF2":              "PyPDF2",
+    "PyMuPDF":             "fitz",
+}
+
+# 程序启动/核心功能必需的依赖（缺失则视为测试失败）
+# 其余 requirements.txt 中的包为可选功能依赖，缺失只警告不阻断
+_CORE_PACKAGES = {
+    "openai", "pyautogui", "pyperclip", "keyboard", "requests",
+    "markdown2", "ultralytics", "pillow", "opencv-python", "tenacity",
+    "pydantic", "pydantic-settings", "python-dotenv", "colorama",
+    "customtkinter", "pystray", "pywinstyles", "pexpect", "plumbum",
+    "sqlalchemy", "psutil", "cattrs", "pyyaml",
+}
+
+
+def _get_import_name(pkg_name: str) -> str:
+    """根据包名获取对应的 import 名。"""
+    return _PACKAGE_IMPORT_MAP.get(pkg_name, pkg_name.replace("-", "_"))
+
+
+def _is_package_installed(import_name: str) -> bool:
+    """检查包是否已安装（用 find_spec，不触发 import 副作用）。"""
+    try:
+        return importlib.util.find_spec(import_name) is not None
+    except (ImportError, ValueError):
+        return False
+
+
+def test_pip_dependencies(file_path: str = None, strict: bool = None):
+    """检查 pip 依赖库安装情况，缺失时给出 pip install 提示。
+
+    参数:
+        file_path: 依赖列表 txt 文件路径。None 时默认读取项目根目录的 requirements.txt。
+                   支持标准 requirements.txt 格式（含版本约束、类别注释、行内注释），
+                   也支持纯包名列表（每行一个包名，无版本约束）。
+        strict:    是否严格模式。True 时所有缺失都视为失败；
+                   False 时按 _CORE_PACKAGES 分级（核心缺失失败、可选缺失警告）；
+                   None（默认）时自动判断：requirements.txt 用分级，自定义文件用严格模式。
+
+    返回:
+        True 表示所有必须的依赖均已安装，False 表示有缺失。
+    """
+    print("=== 测试 pip 依赖库 ===")
+    is_default_requirements = False
+    if file_path is None:
+        file_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
+        is_default_requirements = True
+    else:
+        # 支持相对路径（相对于脚本所在目录解析）
+        if not os.path.isabs(file_path):
+            file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
+        # 识别是否为 requirements.txt（大小写不敏感，按 basename 判断）
+        is_default_requirements = os.path.basename(file_path).lower() == "requirements.txt"
+
+    # strict 默认值：requirements.txt 用分级，自定义文件用严格模式
+    if strict is None:
+        strict = not is_default_requirements
+
+    if not os.path.isfile(file_path):
+        print(f"⚠ 未找到依赖列表文件: {file_path}")
+        print("  用法: python test_main.py --deps <依赖文件路径>")
+        return False
+
+    mode_label = "严格模式（全部必须）" if strict else "分级模式（核心必须 / 可选警告）"
+    print(f"依赖列表: {file_path}  [{mode_label}]")
+
+    missing_core = []          # 缺失的必须依赖（缺失则失败）
+    missing_optional = {}      # 缺失的可选依赖（按类别汇总，仅警告，仅 strict=False 时使用）
+    installed_count = 0
+    total = 0
+    current_category = "其他"
+
+    # 单次遍历：识别类别注释 + 解析包名 + 检查安装
+    with open(file_path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            stripped = raw_line.strip()
+            # 跳过空行
+            if not stripped:
+                continue
+            # 类别注释行（# 开头）
+            if stripped.startswith("#"):
+                category = stripped.lstrip("# ").strip()
+                if category:  # 非空注释作为类别
+                    current_category = category
+                continue
+            # 去掉行内注释
+            line = stripped.split(" #", 1)[0].strip()
+            # 解析包名（去掉版本约束）
+            pkg_name = line
+            for sep in (">=", "<=", "==", "~=", ">", "<", "!=", "==="):
+                if sep in pkg_name:
+                    pkg_name = pkg_name.split(sep, 1)[0]
+                    break
+            pkg_name = pkg_name.strip()
+            # 去掉 extras（如 package[extra]）
+            if "[" in pkg_name:
+                pkg_name = pkg_name.split("[", 1)[0]
+            if not pkg_name:
+                continue
+
+            total += 1
+            import_name = _get_import_name(pkg_name)
+            if _is_package_installed(import_name):
+                installed_count += 1
+            else:
+                # 严格模式：全部视为必须；分级模式：按 _CORE_PACKAGES 判断
+                if strict or pkg_name in _CORE_PACKAGES:
+                    missing_core.append(pkg_name)
+                else:
+                    missing_optional.setdefault(current_category, []).append(pkg_name)
+
+    print(f"已检查 {total} 个包，已安装 {installed_count} 个")
+
+    # 必须依赖缺失：给出 pip install 命令
+    if missing_core:
+        label = "依赖" if strict else "核心依赖"
+        print(f"\n✗ {label}缺失（{len(missing_core)} 个，必须安装）:")
+        for pkg in missing_core:
+            print(f"  - {pkg}")
+        print("\n  安装命令（一次性安装全部缺失）:")
+        print(f"    pip install {' '.join(missing_core)}")
+        if is_default_requirements:
+            print("\n  或安装全部依赖:")
+            print("    pip install -r requirements.txt")
+        else:
+            # 自定义文件：提供从文件安装的命令
+            print(f"\n  或从依赖列表文件安装:")
+            print(f"    pip install -r {file_path}")
+        if _HAS_APP_ERROR:
+            print(f"\n  建议: {get_suggestion(ErrorCode.E_SERVICE_DEPENDENCY_MISSING)}")
+
+    # 可选依赖缺失：仅警告（仅 strict=False 时）
+    if missing_optional:
+        total_optional = sum(len(v) for v in missing_optional.values())
+        print(f"\n⚠ 可选依赖缺失（{total_optional} 个，仅影响对应功能）:")
+        for category, pkgs in missing_optional.items():
+            preview = ', '.join(pkgs[:5])
+            suffix = " ..." if len(pkgs) > 5 else ""
+            print(f"  [{category}] 缺失 {len(pkgs)} 个: {preview}{suffix}")
+        print("\n  如需使用对应功能，安装命令:")
+        print("    pip install -r requirements.txt")
+
+    if not missing_core:
+        if strict:
+            print("✓ 所有依赖已安装")
+        else:
+            print("✓ 所有核心依赖已安装")
+            if not missing_optional:
+                print("✓ 所有依赖已安装")
+        return True
+
+    return False
+
 
 def test_system_monitor():
     """测试系统监控模块"""
@@ -155,13 +334,95 @@ def test_websocket_server():
     print("WebSocket服务器模块导入成功")
     return True
 
+def _parse_test_args(argv):
+    """解析 test_main.py 的命令行参数。
+
+    支持的参数：
+      --deps <路径>          指定依赖列表 txt 文件路径进行依赖检查
+      --deps-only            仅运行依赖检查测试，跳过其他功能测试
+      --strict / --no-strict 强制启用/禁用严格模式（默认自动判断）
+      -h, --help             显示帮助
+
+    示例：
+      python test_main.py                              # 默认全部测试，依赖检查用 requirements.txt
+      python test_main.py --deps my_deps.txt           # 全部测试，依赖检查用 my_deps.txt
+      python test_main.py --deps my_deps.txt --deps-only  # 仅用 my_deps.txt 跑依赖检查
+      python test_main.py --deps requirements.txt --no-strict  # 用 requirements.txt 但强制严格模式
+    """
+    deps_file = None
+    deps_only = False
+    strict_override = None
+    show_help = False
+
+    i = 1
+    while i < len(argv):
+        arg = argv[i]
+        if arg in ("-h", "--help"):
+            show_help = True
+        elif arg == "--deps":
+            if i + 1 < len(argv):
+                deps_file = argv[i + 1]
+                i += 1
+            else:
+                print("错误: --deps 需要一个文件路径参数")
+                show_help = True
+        elif arg == "--deps-only":
+            deps_only = True
+        elif arg == "--strict":
+            strict_override = True
+        elif arg == "--no-strict":
+            strict_override = False
+        else:
+            # 兼容位置参数：第一个非选项参数视为依赖文件路径
+            if deps_file is None and not arg.startswith("-"):
+                deps_file = arg
+            else:
+                print(f"警告: 忽略未知参数 {arg}")
+        i += 1
+
+    return deps_file, deps_only, strict_override, show_help
+
+
+def _print_usage():
+    print("""
+AIclaw 测试脚本用法:
+  python test_main.py [选项] [依赖文件路径]
+
+选项:
+  --deps <路径>          指定依赖列表 txt 文件路径进行依赖检查
+  --deps-only            仅运行依赖检查测试，跳过其他功能测试
+  --strict               强制严格模式（所有缺失都视为失败）
+  --no-strict            强制分级模式（核心缺失失败、可选缺失警告）
+  -h, --help             显示本帮助
+
+示例:
+  python test_main.py                              默认全部测试
+  python test_main.py --deps my_deps.txt           指定依赖文件
+  python test_main.py --deps my_deps.txt --deps-only  仅跑依赖检查
+  python test_main.py --deps requirements.txt --strict  强制严格模式
+""")
+
+
 def main():
     """运行所有测试"""
+    deps_file, deps_only, strict_override, show_help = _parse_test_args(sys.argv)
+
+    if show_help:
+        _print_usage()
+        return True
+
     print("=" * 60)
     print("AIclaw 完整功能测试")
     print("=" * 60)
-    
+
+    # 构造依赖检查测试的调用（支持文件路径与 strict 覆盖）
+    def _run_pip_deps():
+        if strict_override is not None:
+            return test_pip_dependencies(file_path=deps_file, strict=strict_override)
+        return test_pip_dependencies(file_path=deps_file)
+
     tests = [
+        ("pip 依赖库", _run_pip_deps),
         ("系统监控", test_system_monitor),
         ("集群管理器", test_cluster_manager),
         ("UI视觉特效", test_ui_effects),
@@ -171,10 +432,15 @@ def main():
         ("API服务器", test_api_server),
         ("WebSocket服务器", test_websocket_server),
     ]
-    
+
+    # --deps-only：仅保留依赖检查测试
+    if deps_only:
+        tests = [tests[0]]
+        print("(仅运行依赖检查测试 --deps-only)")
+
     passed = 0
     failed = 0
-    
+
     for name, test_func in tests:
         try:
             result = test_func()
