@@ -1,10 +1,1476 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <title>test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>powerful-claw - 你的新一代智能电脑控制应用</title>
+    <meta name="description" content="一个功能强大的 AI 电脑控制应用程序，集成了 AI 智能对话、桌面监控、视频剪辑、RCON 广播等多种功能">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0A192F;
+            --bg-secondary: #112240;
+            --bg-card: #1A365D;
+            --bg-glass: rgba(26, 54, 93, 0.6);
+            --border: #2D4A6F;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --accent: #1E90FF;
+            --accent-2: #00BFFF;
+            --accent-glow: rgba(30, 144, 255, 0.4);
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --gradient: linear-gradient(135deg, #1E90FF 0%, #00BFFF 50%, #8B5CF6 100%);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 背景装饰 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-blob:nth-child(1) {
+            width: 500px;
+            height: 500px;
+            background: var(--accent);
+            top: -10%;
+            left: -10%;
+        }
+
+        .bg-blob:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            background: #8B5CF6;
+            top: 40%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        .bg-blob:nth-child(3) {
+            width: 450px;
+            height: 450px;
+            background: var(--accent-2);
+            bottom: -10%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.95); }
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 25, 47, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-2);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .lang-toggle {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .lang-toggle:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Hero 区域 */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.8rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .badge-blue { background: rgba(30, 144, 255, 0.15); border-color: var(--accent); color: var(--accent-2); }
+        .badge-green { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: var(--success); }
+        .badge-red { background: rgba(239, 68, 68, 0.15); border-color: var(--error); color: var(--error); }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 1.8rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--accent);
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        /* 通用 section */
+        section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 功能卡片 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 40px rgba(30, 144, 255, 0.15);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .feature-port {
+            font-size: 0.75rem;
+            color: var(--accent-2);
+            background: rgba(30, 144, 255, 0.15);
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            font-size: 0.88rem;
+        }
+
+        .feature-list li {
+            color: var(--text-secondary);
+            padding: 0.2rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .feature-list li::before {
+            content: '▸';
+            color: var(--accent-2);
+            flex-shrink: 0;
+        }
+
+        /* 端口表格 */
+        .table-container {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th {
+            background: var(--bg-card);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--accent-2);
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(45, 74, 111, 0.5);
+            font-size: 0.92rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: rgba(30, 144, 255, 0.05);
+        }
+
+        .port-badge {
+            display: inline-block;
+            background: rgba(30, 144, 255, 0.15);
+            color: var(--accent-2);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* 快速开始 */
+        .quickstart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .step-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 1.75rem;
+            background: var(--gradient);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0.5rem 0 0.75rem;
+        }
+
+        .code-block {
+            background: rgba(10, 25, 47, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.88rem;
+            color: var(--accent-2);
+            margin: 0.75rem 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block .comment {
+            color: var(--text-secondary);
+        }
+
+        /* 项目结构 */
+        .structure-tree {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+
+        .tree-line {
+            color: var(--text-secondary);
+            white-space: pre;
+        }
+
+        .tree-dir { color: var(--accent-2); }
+        .tree-file { color: var(--text-primary); }
+        .tree-comment { color: #64748B; font-style: italic; }
+
+        /* 文档链接 */
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .doc-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .doc-card:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+            background: rgba(30, 144, 255, 0.1);
+        }
+
+        .doc-card-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .doc-icon {
+            font-size: 1.5rem;
+        }
+
+        .doc-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .doc-lang {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .doc-arrow {
+            color: var(--accent-2);
+            transition: transform 0.3s ease;
+        }
+
+        .doc-card:hover .doc-arrow {
+            transform: translateX(4px);
+        }
+
+        /* 页脚 */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem 2rem;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-2);
+        }
+
+        .footer-copyright {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer-license {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .nav-links a:not(.lang-toggle) {
+                display: none;
+            }
+
+            .hero-stats {
+                gap: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            section {
+                padding: 3rem 1rem;
+            }
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
 </head>
 <body>
-  <h1>test</h1>
-  <p>test</p>
+    <!-- 背景装饰 -->
+    <div class="bg-decoration">
+        <div class="bg-blob"></div>
+        <div class="bg-blob"></div>
+        <div class="bg-blob"></div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="nav-logo-icon">🤖</span>
+                <span>AI Computer Control</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features" data-i18n="nav.features">功能特性</a></li>
+                <li><a href="#ports" data-i18n="nav.ports">服务端口</a></li>
+                <li><a href="#quickstart" data-i18n="nav.quickstart">快速开始</a></li>
+                <li><a href="#structure" data-i18n="nav.structure">项目结构</a></li>
+                <li><a href="#docs" data-i18n="nav.docs">文档</a></li>
+                <li><button class="lang-toggle" onclick="toggleLang()">EN</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badges">
+                <span class="badge badge-blue">🐍 Python 3.13+</span>
+                <span class="badge badge-green">⚙️ venv/3.13.3</span>
+                <span class="badge badge-red">📄 GPLv3+NC</span>
+                <span class="badge">📺 bilibili</span>
+            </div>
+            <h1>AI Computer Control</h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">
+                一个功能强大的 AI 电脑控制应用程序，集成了 <strong>AI 智能对话</strong>、<strong>桌面监控</strong>、<strong>视频剪辑</strong>、<strong>RCON 广播</strong>等多种功能，实现自动化系统操作和智能控制。
+            </p>
+            <div class="hero-cta">
+                <a href="#quickstart" class="btn btn-primary">
+                    <span>🚀</span>
+                    <span data-i18n="hero.cta.start">快速开始</span>
+                </a>
+                <a href="#features" class="btn btn-secondary">
+                    <span>✨</span>
+                    <span data-i18n="hero.cta.features">了解功能</span>
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-number">9+</div>
+                    <div class="stat-label" data-i18n="hero.stats.modules">功能模块</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label" data-i18n="hero.stats.ports">服务端口</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label" data-i18n="hero.stats.ai">AI 提供者</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label" data-i18n="hero.stats.platforms">支持平台</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能特性 -->
+    <section id="features">
+        <div class="section-header fade-in">
+            <h2 class="section-title" data-i18n="features.title">✨ 功能特性</h2>
+            <p class="section-subtitle" data-i18n="features.subtitle">九大核心功能模块，全方位覆盖 AI 智能控制场景</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🤖</span>
+                <div class="feature-title">
+                    <span data-i18n="features.ai.title">AI 智能控制</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.ai.desc">多 AI 提供者支持，自动轮回对话与系统控制</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.ai.1">多 AI 提供者：NVIDIA、OpenAI、Ollama、自定义</li>
+                    <li data-i18n="features.ai.2">自动轮回对话，可设置调用频率限制</li>
+                    <li data-i18n="features.ai.3">鼠标键盘控制、屏幕截图、YOLO 检测</li>
+                    <li data-i18n="features.ai.4">四级权限管理（None/View/Limited/Full）</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">📺</span>
+                <div class="feature-title">
+                    <span data-i18n="features.monitor.title">桌面监控</span>
+                    <span class="feature-port">15004-15009</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.monitor.desc">实时屏幕与音频捕获，多协议自适应传输</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.monitor.1">1-30 FPS 可调帧率实时捕获</li>
+                    <li data-i18n="features.monitor.2">视频：RTMP/SRT/SRTP 协议自适应</li>
+                    <li data-i18n="features.monitor.3">音频：WebRTC/SRTP/SMPTE 2110</li>
+                    <li data-i18n="features.monitor.4">远程桌面式视频流，低带宽占用</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🎬</span>
+                <div class="feature-title">
+                    <span data-i18n="features.editor.title">视频剪辑</span>
+                    <span class="feature-port">15010</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.editor.desc">多轨道时间轴，专业级剪辑与特效处理</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.editor.1">视频/音频/字幕/画中画多轨道</li>
+                    <li data-i18n="features.editor.2">切割、合并、调色、转场特效</li>
+                    <li data-i18n="features.editor.3">语音转字幕，SRT/ASS 导出</li>
+                    <li data-i18n="features.editor.4">1080P/2K/4K，MP4/MOV/GIF/WebM</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🎮</span>
+                <div class="feature-title">
+                    <span data-i18n="features.rcon.title">RCON 广播</span>
+                    <span class="feature-port">15001</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.rcon.desc">WebSocket 实时广播 RCON 控制台信息</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.rcon.1">实时控制台信息广播</li>
+                    <li data-i18n="features.rcon.2">游戏服务器事件推送</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🌐</span>
+                <div class="feature-title">
+                    <span data-i18n="features.api.title">API 服务</span>
+                    <span class="feature-port">15002-15003</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.api.desc">Web 设置界面与 AI 对话接口，支持插件扩展</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.api.1">浏览器访问配置 AI 模型</li>
+                    <li data-i18n="features.api.2">AI 模型输入输出接口</li>
+                    <li data-i18n="features.api.3">热加载 MCP 和插件</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🖱️</span>
+                <div class="feature-title">
+                    <span data-i18n="features.web.title">网页控制端</span>
+                    <span class="feature-port">15000</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.web.desc">跨平台浏览器控制，集成所有核心功能</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.web.1">浏览器访问即可控制应用</li>
+                    <li data-i18n="features.web.2">集成所有核心功能的控制界面</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🖥️</span>
+                <div class="feature-title">
+                    <span data-i18n="features.cluster.title">局域网算力共享</span>
+                    <span class="feature-port">15300-15304</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.cluster.desc">自动节点发现，分布式 AI 推理与负载均衡</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.cluster.1">UDP 广播自动发现局域网节点</li>
+                    <li data-i18n="features.cluster.2">实时监控 CPU/内存/GPU/NPU</li>
+                    <li data-i18n="features.cluster.3">Fernet/RSA 加密传输</li>
+                    <li data-i18n="features.cluster.4">心跳机制自动剔除离线节点</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">🎨</span>
+                <div class="feature-title">
+                    <span data-i18n="features.ui.title">UI 视觉特效</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.ui.desc">毛玻璃效果、透明度控制与窗口动画</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.ui.1">完整 Glassmorphism 毛玻璃效果</li>
+                    <li data-i18n="features.ui.2">0-100% 透明度调节</li>
+                    <li data-i18n="features.ui.3">蓝色发光边框与阴影过渡</li>
+                    <li data-i18n="features.ui.4">兼容 Windows 和 Linux</li>
+                </ul>
+            </div>
+
+            <div class="feature-card fade-in">
+                <span class="feature-icon">📊</span>
+                <div class="feature-title">
+                    <span data-i18n="features.monitor_sys.title">系统资源监控</span>
+                </div>
+                <p class="feature-desc" data-i18n="features.monitor_sys.desc">实时监控 CPU、内存、NPU 资源状态</p>
+                <ul class="feature-list">
+                    <li data-i18n="features.monitor_sys.1">CPU 型号、核心数、使用率、温度</li>
+                    <li data-i18n="features.monitor_sys.2">内存总量、已用、可用、使用率</li>
+                    <li data-i18n="features.monitor_sys.3">NPU 显存、利用率、温度</li>
+                    <li data-i18n="features.monitor_sys.4">每秒更新，支持历史记录查询</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 服务端口 -->
+    <section id="ports">
+        <div class="section-header fade-in">
+            <h2 class="section-title" data-i18n="ports.title">🌐 服务端口说明</h2>
+            <p class="section-subtitle" data-i18n="ports.subtitle">所有服务端口及其访问地址一览</p>
+        </div>
+        <div class="table-container fade-in">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-i18n="ports.table.port">端口</th>
+                        <th data-i18n="ports.table.service">服务</th>
+                        <th data-i18n="ports.table.url">访问地址</th>
+                        <th data-i18n="ports.table.desc">说明</th>
+                    </tr>
+                </thead>
+                <tbody id="ports-tbody">
+                    <!-- 由 JS 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 快速开始 -->
+    <section id="quickstart">
+        <div class="section-header fade-in">
+            <h2 class="section-title" data-i18n="quickstart.title">⚡ 快速开始</h2>
+            <p class="section-subtitle" data-i18n="quickstart.subtitle">三步即可启动应用</p>
+        </div>
+        <div class="quickstart-grid">
+            <div class="step-card fade-in">
+                <div class="step-number">1</div>
+                <h3 class="step-title" data-i18n="quickstart.step1.title">克隆项目</h3>
+                <p class="feature-desc" data-i18n="quickstart.step1.desc">获取项目源代码</p>
+                <div class="code-block">
+                    <span class="comment"># 克隆仓库</span><br>
+                    git clone &lt;repository-url&gt;<br>
+                    cd ai-computer-control
+                </div>
+            </div>
+
+            <div class="step-card fade-in">
+                <div class="step-number">2</div>
+                <h3 class="step-title" data-i18n="quickstart.step2.title">安装依赖</h3>
+                <p class="feature-desc" data-i18n="quickstart.step2.desc">使用 Python 3.11+ 安装所有依赖</p>
+                <div class="code-block">
+                    <span class="comment"># 安装依赖</span><br>
+                    pip install -r requirements.txt
+                </div>
+            </div>
+
+            <div class="step-card fade-in">
+                <div class="step-number">3</div>
+                <h3 class="step-title" data-i18n="quickstart.step3.title">启动应用</h3>
+                <p class="feature-desc" data-i18n="quickstart.step3.desc">Windows 用户推荐使用一键启动脚本</p>
+                <div class="code-block">
+                    <span class="comment"># Windows 一键启动</span><br>
+                    .\start_app.ps1<br><br>
+                    <span class="comment"># 或手动启动</span><br>
+                    python src/main.py
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 项目结构 -->
+    <section id="structure">
+        <div class="section-header fade-in">
+            <h2 class="section-title" data-i18n="structure.title">🏗️ 项目结构</h2>
+            <p class="section-subtitle" data-i18n="structure.subtitle">清晰的模块化目录组织</p>
+        </div>
+        <div class="structure-tree fade-in">
+<div class="tree-line"><span class="tree-dir">ai-computer-control/</span></div>
+<div class="tree-line">├── <span class="tree-dir">src/</span>                          <span class="tree-comment"># 源代码目录</span></div>
+<div class="tree-line">│   ├── <span class="tree-dir">config/</span>                   <span class="tree-comment"># 配置管理</span></div>
+<div class="tree-line">│   ├── <span class="tree-dir">services/</span>                 <span class="tree-comment"># 服务层（AI/监控/视频/集群）</span></div>
+<div class="tree-line">│   │   └── <span class="tree-dir">cluster/</span>              <span class="tree-comment"># 集群服务模块</span></div>
+<div class="tree-line">│   ├── <span class="tree-dir">system/</span>                   <span class="tree-comment"># 系统控制（鼠标键盘/视觉）</span></div>
+<div class="tree-line">│   ├── <span class="tree-dir">ui/</span>                       <span class="tree-comment"># 用户界面</span></div>
+<div class="tree-line">│   │   └── <span class="tree-dir">effects/</span>              <span class="tree-comment"># UI 视觉特效模块</span></div>
+<div class="tree-line">│   ├── <span class="tree-dir">utils/</span>                    <span class="tree-comment"># 工具模块</span></div>
+<div class="tree-line">│   └── <span class="tree-file">main.py</span>                   <span class="tree-comment"># 主入口</span></div>
+<div class="tree-line">├── <span class="tree-dir">docs/</span>                         <span class="tree-comment"># 文档目录（中英双语）</span></div>
+<div class="tree-line">├── <span class="tree-dir">config/themes/</span>                <span class="tree-comment"># 主题配置</span></div>
+<div class="tree-line">├── <span class="tree-file">.env.example</span>                  <span class="tree-comment"># 环境变量示例</span></div>
+<div class="tree-line">├── <span class="tree-file">requirements.txt</span>              <span class="tree-comment"># Python 依赖</span></div>
+<div class="tree-line">├── <span class="tree-file">start_app.ps1</span>                 <span class="tree-comment"># PowerShell 启动脚本</span></div>
+<div class="tree-line">└── <span class="tree-file">README.md</span>                     <span class="tree-comment"># 项目说明</span></div>
+        </div>
+    </section>
+
+    <!-- 文档 -->
+    <section id="docs">
+        <div class="section-header fade-in">
+            <h2 class="section-title" data-i18n="docs.title">📚 文档</h2>
+            <p class="section-subtitle" data-i18n="docs.subtitle">中英双语完整文档，覆盖安装、配置、使用各环节</p>
+        </div>
+        <div class="docs-grid">
+            <a href="docs/README_EN.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">📖</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.readme">项目说明</div>
+                        <div class="doc-lang">English</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/INSTALLATION_CN.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">🚀</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.installation">安装指南</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/CONFIGURATION_CN.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">⚙️</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.configuration">配置指南</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/USER_MANUAL_CN.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">📋</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.user_manual">用户手册</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/cluster_computing_ZH.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">🖥️</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.cluster">集群算力共享</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/debug_mode_guide_CN.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">🔍</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.debug">调试模式</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/ai_library_usage_ZH.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">🛠️</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.ai_library">AI 库工具</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="docs/导览.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">🗺️</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.guide">文档导览</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="config/themes/README.md" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">🎨</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.themes">主题配置</div>
+                        <div class="doc-lang">中文</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+            <a href="LICENSE" class="doc-card fade-in">
+                <div class="doc-card-content">
+                    <span class="doc-icon">📄</span>
+                    <div>
+                        <div class="doc-title" data-i18n="docs.license">许可证</div>
+                        <div class="doc-lang">GPLv3+NC</div>
+                    </div>
+                </div>
+                <span class="doc-arrow">→</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#features" data-i18n="footer.features">功能特性</a>
+                <a href="#quickstart" data-i18n="footer.quickstart">快速开始</a>
+                <a href="#docs" data-i18n="footer.docs">文档</a>
+                <a href="README.md" data-i18n="footer.readme">README</a>
+                <a href="LICENSE" data-i18n="footer.license">许可证</a>
+            </div>
+            <p class="footer-copyright" data-i18n="footer.copyright">© 2026 AI Computer Control. Powered by Python 3.13+</p>
+            <p class="footer-license" data-i18n="footer.license_text">本项目采用 GNU GPL v3 许可证并附加禁止商业使用的条款</p>
+        </div>
+    </footer>
+
+    <script>
+        // ========== 多语言支持 ==========
+        const i18n = {
+            zh: {
+                'nav.features': '功能特性',
+                'nav.ports': '服务端口',
+                'nav.quickstart': '快速开始',
+                'nav.structure': '项目结构',
+                'nav.docs': '文档',
+                'hero.subtitle': '一个功能强大的 AI 电脑控制应用程序，集成了 <strong>AI 智能对话</strong>、<strong>桌面监控</strong>、<strong>视频剪辑</strong>、<strong>RCON 广播</strong>等多种功能，实现自动化系统操作和智能控制。',
+                'hero.cta.start': '快速开始',
+                'hero.cta.features': '了解功能',
+                'hero.stats.modules': '功能模块',
+                'hero.stats.ports': '服务端口',
+                'hero.stats.ai': 'AI 提供者',
+                'hero.stats.platforms': '支持平台',
+                'features.title': '✨ 功能特性',
+                'features.subtitle': '九大核心功能模块，全方位覆盖 AI 智能控制场景',
+                'features.ai.title': 'AI 智能控制',
+                'features.ai.desc': '多 AI 提供者支持，自动轮回对话与系统控制',
+                'features.ai.1': '多 AI 提供者：NVIDIA、OpenAI、Ollama、自定义',
+                'features.ai.2': '自动轮回对话，可设置调用频率限制',
+                'features.ai.3': '鼠标键盘控制、屏幕截图、YOLO 检测',
+                'features.ai.4': '四级权限管理（None/View/Limited/Full）',
+                'features.monitor.title': '桌面监控',
+                'features.monitor.desc': '实时屏幕与音频捕获，多协议自适应传输',
+                'features.monitor.1': '1-30 FPS 可调帧率实时捕获',
+                'features.monitor.2': '视频：RTMP/SRT/SRTP 协议自适应',
+                'features.monitor.3': '音频：WebRTC/SRTP/SMPTE 2110',
+                'features.monitor.4': '远程桌面式视频流，低带宽占用',
+                'features.editor.title': '视频剪辑',
+                'features.editor.desc': '多轨道时间轴，专业级剪辑与特效处理',
+                'features.editor.1': '视频/音频/字幕/画中画多轨道',
+                'features.editor.2': '切割、合并、调色、转场特效',
+                'features.editor.3': '语音转字幕，SRT/ASS 导出',
+                'features.editor.4': '1080P/2K/4K，MP4/MOV/GIF/WebM',
+                'features.rcon.title': 'RCON 广播',
+                'features.rcon.desc': 'WebSocket 实时广播 RCON 控制台信息',
+                'features.rcon.1': '实时控制台信息广播',
+                'features.rcon.2': '游戏服务器事件推送',
+                'features.api.title': 'API 服务',
+                'features.api.desc': 'Web 设置界面与 AI 对话接口，支持插件扩展',
+                'features.api.1': '浏览器访问配置 AI 模型',
+                'features.api.2': 'AI 模型输入输出接口',
+                'features.api.3': '热加载 MCP 和插件',
+                'features.web.title': '网页控制端',
+                'features.web.desc': '跨平台浏览器控制，集成所有核心功能',
+                'features.web.1': '浏览器访问即可控制应用',
+                'features.web.2': '集成所有核心功能的控制界面',
+                'features.cluster.title': '局域网算力共享',
+                'features.cluster.desc': '自动节点发现，分布式 AI 推理与负载均衡',
+                'features.cluster.1': 'UDP 广播自动发现局域网节点',
+                'features.cluster.2': '实时监控 CPU/内存/GPU/NPU',
+                'features.cluster.3': 'Fernet/RSA 加密传输',
+                'features.cluster.4': '心跳机制自动剔除离线节点',
+                'features.ui.title': 'UI 视觉特效',
+                'features.ui.desc': '毛玻璃效果、透明度控制与窗口动画',
+                'features.ui.1': '完整 Glassmorphism 毛玻璃效果',
+                'features.ui.2': '0-100% 透明度调节',
+                'features.ui.3': '蓝色发光边框与阴影过渡',
+                'features.ui.4': '兼容 Windows 和 Linux',
+                'features.monitor_sys.title': '系统资源监控',
+                'features.monitor_sys.desc': '实时监控 CPU、内存、NPU 资源状态',
+                'features.monitor_sys.1': 'CPU 型号、核心数、使用率、温度',
+                'features.monitor_sys.2': '内存总量、已用、可用、使用率',
+                'features.monitor_sys.3': 'NPU 显存、利用率、温度',
+                'features.monitor_sys.4': '每秒更新，支持历史记录查询',
+                'ports.title': '🌐 服务端口说明',
+                'ports.subtitle': '所有服务端口及其访问地址一览',
+                'ports.table.port': '端口',
+                'ports.table.service': '服务',
+                'ports.table.url': '访问地址',
+                'ports.table.desc': '说明',
+                'quickstart.title': '⚡ 快速开始',
+                'quickstart.subtitle': '三步即可启动应用',
+                'quickstart.step1.title': '克隆项目',
+                'quickstart.step1.desc': '获取项目源代码',
+                'quickstart.step2.title': '安装依赖',
+                'quickstart.step2.desc': '使用 Python 3.11+ 安装所有依赖',
+                'quickstart.step3.title': '启动应用',
+                'quickstart.step3.desc': 'Windows 用户推荐使用一键启动脚本',
+                'structure.title': '🏗️ 项目结构',
+                'structure.subtitle': '清晰的模块化目录组织',
+                'docs.title': '📚 文档',
+                'docs.subtitle': '中英双语完整文档，覆盖安装、配置、使用各环节',
+                'docs.readme': '项目说明',
+                'docs.installation': '安装指南',
+                'docs.configuration': '配置指南',
+                'docs.user_manual': '用户手册',
+                'docs.cluster': '集群算力共享',
+                'docs.debug': '调试模式',
+                'docs.ai_library': 'AI 库工具',
+                'docs.guide': '文档导览',
+                'docs.themes': '主题配置',
+                'docs.license': '许可证',
+                'footer.features': '功能特性',
+                'footer.quickstart': '快速开始',
+                'footer.docs': '文档',
+                'footer.readme': 'README',
+                'footer.license': '许可证',
+                'footer.copyright': '© 2026 AI Computer Control. Powered by Python 3.13+',
+                'footer.license_text': '本项目采用 GNU GPL v3 许可证并附加禁止商业使用的条款'
+            },
+            en: {
+                'nav.features': 'Features',
+                'nav.ports': 'Ports',
+                'nav.quickstart': 'Quick Start',
+                'nav.structure': 'Structure',
+                'nav.docs': 'Docs',
+                'hero.subtitle': 'A powerful AI computer control application integrating <strong>AI Chat</strong>, <strong>Desktop Monitoring</strong>, <strong>Video Editing</strong>, <strong>RCON Broadcasting</strong> and more for automated system operations.',
+                'hero.cta.start': 'Quick Start',
+                'hero.cta.features': 'Explore Features',
+                'hero.stats.modules': 'Modules',
+                'hero.stats.ports': 'Ports',
+                'hero.stats.ai': 'AI Providers',
+                'hero.stats.platforms': 'Platforms',
+                'features.title': '✨ Features',
+                'features.subtitle': 'Nine core modules covering all AI control scenarios',
+                'features.ai.title': 'AI Control',
+                'features.ai.desc': 'Multi-provider support with auto-loop conversation',
+                'features.ai.1': 'Providers: NVIDIA, OpenAI, Ollama, Custom',
+                'features.ai.2': 'Auto-loop conversation with rate limiting',
+                'features.ai.3': 'Mouse/keyboard control, screenshot, YOLO',
+                'features.ai.4': '4-level permissions (None/View/Limited/Full)',
+                'features.monitor.title': 'Desktop Monitor',
+                'features.monitor.desc': 'Real-time screen & audio capture, multi-protocol',
+                'features.monitor.1': '1-30 FPS adjustable capture',
+                'features.monitor.2': 'Video: RTMP/SRT/SRTP adaptive',
+                'features.monitor.3': 'Audio: WebRTC/SRTP/SMPTE 2110',
+                'features.monitor.4': 'Remote desktop stream, low bandwidth',
+                'features.editor.title': 'Video Editor',
+                'features.editor.desc': 'Multi-track timeline, pro editing & effects',
+                'features.editor.1': 'Video/audio/subtitle/PIP tracks',
+                'features.editor.2': 'Cut, merge, color grading, transitions',
+                'features.editor.3': 'Speech-to-subtitle, SRT/ASS export',
+                'features.editor.4': '1080P/2K/4K, MP4/MOV/GIF/WebM',
+                'features.rcon.title': 'RCON Broadcast',
+                'features.rcon.desc': 'WebSocket real-time RCON console broadcast',
+                'features.rcon.1': 'Real-time console broadcast',
+                'features.rcon.2': 'Game server event push',
+                'features.api.title': 'API Service',
+                'features.api.desc': 'Web UI & AI chat interface with plugin support',
+                'features.api.1': 'Configure AI via browser',
+                'features.api.2': 'AI input/output interface',
+                'features.api.3': 'Hot-load MCP and plugins',
+                'features.web.title': 'Web Control',
+                'features.web.desc': 'Cross-platform browser control panel',
+                'features.web.1': 'Control app via browser',
+                'features.web.2': 'All core features integrated',
+                'features.cluster.title': 'LAN Computing',
+                'features.cluster.desc': 'Auto node discovery, distributed inference',
+                'features.cluster.1': 'UDP broadcast auto discovery',
+                'features.cluster.2': 'CPU/RAM/GPU/NPU monitoring',
+                'features.cluster.3': 'Fernet/RSA encrypted transport',
+                'features.cluster.4': 'Heartbeat auto-remove offline nodes',
+                'features.ui.title': 'UI Visual Effects',
+                'features.ui.desc': 'Glassmorphism, transparency & animations',
+                'features.ui.1': 'Full Glassmorphism effect',
+                'features.ui.2': '0-100% transparency control',
+                'features.ui.3': 'Glow border with shadow transition',
+                'features.ui.4': 'Windows & Linux compatible',
+                'features.monitor_sys.title': 'Resource Monitor',
+                'features.monitor_sys.desc': 'Real-time CPU, RAM, NPU monitoring',
+                'features.monitor_sys.1': 'CPU model, cores, usage, temp',
+                'features.monitor_sys.2': 'RAM total/used/free/percent',
+                'features.monitor_sys.3': 'NPU VRAM, utilization, temp',
+                'features.monitor_sys.4': 'Per-second update, history query',
+                'ports.title': '🌐 Service Ports',
+                'ports.subtitle': 'All service ports and access URLs',
+                'ports.table.port': 'Port',
+                'ports.table.service': 'Service',
+                'ports.table.url': 'URL',
+                'ports.table.desc': 'Description',
+                'quickstart.title': '⚡ Quick Start',
+                'quickstart.subtitle': 'Start the app in three steps',
+                'quickstart.step1.title': 'Clone Project',
+                'quickstart.step1.desc': 'Get the source code',
+                'quickstart.step2.title': 'Install Dependencies',
+                'quickstart.step2.desc': 'Use Python 3.11+ to install all deps',
+                'quickstart.step3.title': 'Launch App',
+                'quickstart.step3.desc': 'Windows users: use one-click script',
+                'structure.title': '🏗️ Project Structure',
+                'structure.subtitle': 'Clear modular directory organization',
+                'docs.title': '📚 Documentation',
+                'docs.subtitle': 'Bilingual docs covering installation, config & usage',
+                'docs.readme': 'Project Home',
+                'docs.installation': 'Installation',
+                'docs.configuration': 'Configuration',
+                'docs.user_manual': 'User Manual',
+                'docs.cluster': 'Cluster Computing',
+                'docs.debug': 'Debug Mode',
+                'docs.ai_library': 'AI Library',
+                'docs.guide': 'Doc Guide',
+                'docs.themes': 'Themes',
+                'docs.license': 'License',
+                'footer.features': 'Features',
+                'footer.quickstart': 'Quick Start',
+                'footer.docs': 'Docs',
+                'footer.readme': 'README',
+                'footer.license': 'License',
+                'footer.copyright': '© 2026 AI Computer Control. Powered by Python 3.13+',
+                'footer.license_text': 'Licensed under GNU GPL v3 with non-commercial clause'
+            }
+        };
+
+        let currentLang = 'zh';
+
+        // 端口数据
+        const portsData = {
+            zh: [
+                ['15000', '网页控制端', 'http://localhost:15000', '跨平台 Web 控制界面'],
+                ['15001', 'RCON 广播', 'ws://localhost:15001/rcon', 'RCON 控制台信息广播'],
+                ['15002', 'API 服务', 'http://localhost:15002', 'AI 模型配置和对话接口'],
+                ['15003', 'API WebSocket', 'ws://localhost:15003/api', 'AI 对话 WebSocket 接口'],
+                ['15004', '桌面监控', 'http://localhost:15004', '实时桌面监控页面'],
+                ['15006', '监控 WebSocket', 'ws://localhost:15006', '桌面监控 WebSocket'],
+                ['15007', 'UDP 视频流', 'udp://localhost:15007', '低延迟视频传输'],
+                ['15010', '视频剪辑', 'http://localhost:15010', 'Web 视频剪辑编辑器'],
+                ['15012', '剪辑 WebSocket', 'ws://localhost:15012', '视频剪辑 WebSocket'],
+                ['15300', '集群发现', 'udp://localhost:15300', 'UDP 广播节点发现'],
+                ['15301', '集群主通信', 'tcp://localhost:15301', '节点间 TCP 通信'],
+                ['15302', '集群任务', 'tcp://localhost:15302', '任务分发端口'],
+                ['15303', '集群数据', 'tcp://localhost:15303', '数据传输端口'],
+                ['15304', '集群监控', 'udp://localhost:15304', '状态监控端口']
+            ],
+            en: [
+                ['15000', 'Web Control', 'http://localhost:15000', 'Cross-platform web UI'],
+                ['15001', 'RCON Broadcast', 'ws://localhost:15001/rcon', 'RCON console broadcast'],
+                ['15002', 'API Service', 'http://localhost:15002', 'AI model config & chat API'],
+                ['15003', 'API WebSocket', 'ws://localhost:15003/api', 'AI chat WebSocket'],
+                ['15004', 'Desktop Monitor', 'http://localhost:15004', 'Real-time monitor page'],
+                ['15006', 'Monitor WebSocket', 'ws://localhost:15006', 'Monitor WebSocket'],
+                ['15007', 'UDP Video Stream', 'udp://localhost:15007', 'Low-latency video'],
+                ['15010', 'Video Editor', 'http://localhost:15010', 'Web video editor'],
+                ['15012', 'Editor WebSocket', 'ws://localhost:15012', 'Editor WebSocket'],
+                ['15300', 'Cluster Discovery', 'udp://localhost:15300', 'UDP node discovery'],
+                ['15301', 'Cluster Main', 'tcp://localhost:15301', 'Inter-node TCP'],
+                ['15302', 'Cluster Task', 'tcp://localhost:15302', 'Task dispatch'],
+                ['15303', 'Cluster Data', 'tcp://localhost:15303', 'Data transfer'],
+                ['15304', 'Cluster Monitor', 'udp://localhost:15304', 'Status monitor']
+            ]
+        };
+
+        function applyLang(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+
+            // 更新所有带 data-i18n 的元素
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) {
+                    el.innerHTML = i18n[lang][key];
+                }
+            });
+
+            // 更新语言切换按钮
+            const toggle = document.querySelector('.lang-toggle');
+            toggle.textContent = lang === 'zh' ? 'EN' : '中文';
+
+            // 更新端口表格
+            renderPorts(lang);
+
+            // 保存语言偏好
+            try {
+                localStorage.setItem('app-lang', lang);
+            } catch (e) {}
+        }
+
+        function renderPorts(lang) {
+            const tbody = document.getElementById('ports-tbody');
+            tbody.innerHTML = portsData[lang].map(row => `
+                <tr>
+                    <td><span class="port-badge">${row[0]}</span></td>
+                    <td>${row[1]}</td>
+                    <td><code style="color: var(--accent-2);">${row[2]}</code></td>
+                    <td style="color: var(--text-secondary);">${row[3]}</td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleLang() {
+            applyLang(currentLang === 'zh' ? 'en' : 'zh');
+        }
+
+        // ========== 滚动动画 ==========
+        function initScrollAnimation() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // ========== 导航栏滚动效果 ==========
+        function initNavScroll() {
+            const nav = document.querySelector('nav');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    nav.style.padding = '0.75rem 2rem';
+                    nav.style.background = 'rgba(10, 25, 47, 0.9)';
+                } else {
+                    nav.style.padding = '1rem 2rem';
+                    nav.style.background = 'rgba(10, 25, 47, 0.7)';
+                }
+            });
+        }
+
+        // ========== 初始化 ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            // 读取语言偏好
+            let savedLang = 'zh';
+            try {
+                savedLang = localStorage.getItem('app-lang') || 'zh';
+            } catch (e) {}
+            applyLang(savedLang);
+            initScrollAnimation();
+            initNavScroll();
+        });
+    </script>
 </body>
 </html>
