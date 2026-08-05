@@ -4,7 +4,8 @@
 <img src="docs/images/logo.png" alt="AI Computer Control" width="200" height="200" />
 -->
 
-# 🤖 AI Computer Control
+# 🤖 powerful-claw  
+#### 正在开发中...
 
 **让 AI 真正"看见并操作"你的电脑** —— 一个把多模态大模型变成桌面自动化 Agent 的开源控制中枢，开箱即用地串联起 **AI 对话 → 视觉感知 → 鼠键控制 → 桌面推流 → 视频剪辑 → 局域网算力共享**。
 
