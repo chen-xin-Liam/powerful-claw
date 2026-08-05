@@ -87,6 +87,7 @@ python src/main.py
 - 支持更多 AI 模型（如 DeepSeek、CodeGemma）
 - 增加自定义 Skill 系统（类似 OpenClaw）
 - 完善文档与使用教程
+- 完善mcp工具支持，增加更多功能
 
 ### 长期
 - 跨平台统一安装包
