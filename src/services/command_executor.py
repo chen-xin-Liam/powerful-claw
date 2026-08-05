@@ -1,7 +1,13 @@
 import subprocess
 import threading
-from typing import Optional, Callable, Generator
-from queue import Queue
+from typing import Callable, List, Tuple
+
+from src.utils.logger import get_logger
+from src.utils.errors import ValidationError
+from src.utils.error_codes import ErrorCode
+
+logger = get_logger(__name__)
+
 
 class CommandExecutor:
     """命令执行器，支持多种方式运行命令"""
@@ -10,8 +16,25 @@ class CommandExecutor:
         self._process = None
         self._is_running = False
 
-    def run_simple_command(self, command: str, timeout: int = 30) -> tuple[str, str, int]:
-        """使用subprocess运行简单命令（非交互式）"""
+    def run_simple_command(self, command: str, timeout: int = 30) -> Tuple[str, str, int]:
+        """使用subprocess运行简单命令（非交互式）。
+
+        返回 (stdout, stderr, returncode)。
+        """
+        # 输入校验
+        if not isinstance(command, str) or not command.strip():
+            raise ValidationError(
+                ErrorCode.E_VAL_MISSING_REQUIRED,
+                "command 不能为空字符串",
+                details={"arg": "command"},
+            )
+        if not isinstance(timeout, int) or timeout <= 0:
+            raise ValidationError(
+                ErrorCode.E_VAL_OUT_OF_RANGE,
+                f"timeout 必须是正整数，实际收到 {timeout}",
+                details={"arg": "timeout", "value": timeout},
+            )
+
         try:
             result = subprocess.run(
                 command,
@@ -23,10 +46,14 @@ class CommandExecutor:
                 errors='replace'
             )
             return result.stdout, result.stderr, result.returncode
-        except subprocess.TimeoutExpired:
-            return "", "命令执行超时", -1
-        except Exception as e:
-            return "", str(e), -1
+        except subprocess.TimeoutExpired as e:
+            # 软失败：超时返回错误码，不抛异常（保留原 API 契约）
+            logger.warning(f"命令执行超时（{timeout}s）: {command}")
+            return "", f"命令执行超时（{timeout}s）", -1
+        except (FileNotFoundError, OSError) as e:
+            logger.error(f"命令无法执行: {command} - {e}")
+            return "", f"命令不可执行: {e}", -1
+        # 不再捕获 Exception 兜底，让真正未预期的错误冒泡由调用方决定
 
     def run_command_stream(
         self,
@@ -35,6 +62,14 @@ class CommandExecutor:
         timeout: int = 60
     ) -> int:
         """运行命令并流式返回输出"""
+        if not isinstance(command, str) or not command.strip():
+            raise ValidationError(
+                ErrorCode.E_VAL_MISSING_REQUIRED,
+                "command 不能为空字符串",
+                details={"arg": "command"},
+            )
+
+        process = None
         try:
             process = subprocess.Popen(
                 command,
@@ -71,11 +106,14 @@ class CommandExecutor:
             return process.returncode
 
         except subprocess.TimeoutExpired:
-            process.kill()
+            if process is not None:
+                process.kill()
             callback("[ERROR] 命令执行超时")
+            logger.warning(f"流式命令执行超时（{timeout}s）: {command}")
             return -1
-        except Exception as e:
-            callback(f"[ERROR] {str(e)}")
+        except (FileNotFoundError, OSError) as e:
+            callback(f"[ERROR] 命令不可执行: {e}")
+            logger.error(f"流式命令无法执行: {command} - {e}")
             return -1
         finally:
             self._is_running = False
@@ -84,11 +122,18 @@ class CommandExecutor:
     def run_interactive_command(
         self,
         command: str,
-        inputs: list[str],
+        inputs: List[str],
         callback: Callable[[str], None],
         timeout: int = 60
     ) -> str:
         """使用pexpect运行交互式命令"""
+        if not isinstance(command, str) or not command.strip():
+            raise ValidationError(
+                ErrorCode.E_VAL_MISSING_REQUIRED,
+                "command 不能为空字符串",
+                details={"arg": "command"},
+            )
+
         try:
             import pexpect
 
@@ -125,6 +170,7 @@ class CommandExecutor:
             return stdout
         except Exception as e:
             callback(f"[ERROR] {str(e)}\n")
+            logger.error(f"交互式命令执行失败: {command} - {e}", exc_info=True)
             return ""
 
     def run_advanced_command(
@@ -133,6 +179,13 @@ class CommandExecutor:
         callback: Callable[[str], None]
     ) -> int:
         """使用plumbum运行高级命令"""
+        if not isinstance(command, str) or not command.strip():
+            raise ValidationError(
+                ErrorCode.E_VAL_MISSING_REQUIRED,
+                "command 不能为空字符串",
+                details={"arg": "command"},
+            )
+
         try:
             from plumbum import local, CommandNotFound
             from plumbum.cmd import sh
@@ -158,9 +211,11 @@ class CommandExecutor:
             return self.run_command_stream(command, callback)
         except CommandNotFound:
             callback(f"[ERROR] 命令未找到: {command.split()[0]}\n")
+            logger.warning(f"plumbum: 命令未找到: {command.split()[0]}")
             return -1
         except Exception as e:
             callback(f"[ERROR] {str(e)}\n")
+            logger.error(f"plumbum 执行失败: {command} - {e}", exc_info=True)
             return -1
         finally:
             self._is_running = False
@@ -175,8 +230,11 @@ class CommandExecutor:
                     self._process.kill()
                 elif hasattr(self._process, 'terminate'):
                     self._process.terminate()
-            except:
-                pass
-            self._process = None
+            except (ProcessLookupError, OSError) as e:
+                # 进程已结束或无权限，无需静默吞掉
+                logger.debug(f"停止命令时进程已结束或无法终止: {e}")
+            finally:
+                self._process = None
+
 
 command_executor = CommandExecutor()

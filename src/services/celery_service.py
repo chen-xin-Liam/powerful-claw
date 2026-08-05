@@ -9,6 +9,10 @@ from queue import Queue
 
 from src.config.app_config import settings
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class LocalTaskQueue:
     """本地任务队列 - 替代Celery的轻量级实现"""
@@ -46,8 +50,8 @@ class LocalTaskQueue:
                         callback({"status": "error", "message": str(e)})
                 finally:
                     self._queue.task_done()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("工作线程任务获取异常", exc_info=True)
     
     def submit(self, func, *args, callback=None, **kwargs):
         """提交任务到队列"""
@@ -196,8 +200,8 @@ class CeleryService:
                     if file_time < cutoff_date:
                         os.remove(filepath)
                         cleaned_count += 1
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"清理日志文件失败: {filepath}", exc_info=True)
         
         return {"status": "success", "cleaned_count": cleaned_count}
     
@@ -241,7 +245,7 @@ class CeleryService:
                     shutil.copy2(src_path, dst_path)
                     backup_count += 1
                 except Exception as e:
-                    print(f"Backup failed for {filename}: {e}")
+                    logger.error(f"Backup failed for {filename}: {e}", exc_info=True)
         
         return {"status": "success", "backed_up_count": backup_count}
     

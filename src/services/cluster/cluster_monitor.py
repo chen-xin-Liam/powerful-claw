@@ -76,7 +76,7 @@ class ClusterMonitor:
                 self._notify_stats_update()
                 time.sleep(2)
             except Exception as e:
-                print(f"[ClusterMonitor] 监控器错误: {e}")
+                logger.error(f"监控器错误: {e}", exc_info=True)
     
     def _update_stats(self):
         """更新集群统计信息"""

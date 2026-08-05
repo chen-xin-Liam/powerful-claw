@@ -10,6 +10,10 @@ from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from src.services.python_library_tool import PythonLibraryTool
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 @dataclass
 class ToolParameter:
@@ -211,7 +215,7 @@ class AIAgent:
     
     def think_and_act(self, task: str) -> Dict[str, Any]:
         """思考并执行任务（简化版推理）"""
-        print(f"[AIAgent] 收到任务: {task}")
+        logger.info(f"收到任务: {task}")
         
         # 简单的工具选择逻辑
         if "读取" in task or "查看" in task or "内容" in task:
@@ -354,8 +358,8 @@ class SearchTool(BaseTool):
                                 content = f.read()
                                 if query.lower() in content.lower():
                                     results.append(file_path)
-                        except:
-                            pass
+                        except Exception as e:
+                            logger.debug(f"跳过无法读取的文件: {file_path}")
             
             if results:
                 return "\n".join(results)

@@ -12,13 +12,17 @@ from typing import Dict, List, Optional, Any
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from dataclasses import dataclass, field
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 try:
     import cv2
     HAS_OPENCV = True
-    print("[ScreenMonitor] OpenCV 库已加载，支持RTMP流")
+    logger.info("OpenCV 库已加载，支持RTMP流")
 except ImportError:
     HAS_OPENCV = False
-    print("[ScreenMonitor] 警告：OpenCV 库未安装，将使用PIL方式")
+    logger.warning("OpenCV 库未安装，将使用PIL方式")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,36 +33,36 @@ try:
     HAS_MSS = True
 except ImportError:
     HAS_MSS = False
-    print("[ScreenMonitor] 警告：mss 库未安装，将使用 PIL 方式")
+    logger.warning("mss 库未安装，将使用 PIL 方式")
 
 try:
     from PIL import Image, ImageGrab, ImageEnhance, ImageFilter
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
-    print("[ScreenMonitor] 错误：PIL 库未安装，无法捕获屏幕")
+    logger.error("PIL 库未安装，无法捕获屏幕")
 
 try:
     import pyaudio
     HAS_PYAUDIO = True
 except ImportError:
     HAS_PYAUDIO = False
-    print("[ScreenMonitor] 警告：pyaudio 库未安装")
+    logger.warning("pyaudio 库未安装")
 
 try:
     import numpy as np
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False
-    print("[ScreenMonitor] 警告：numpy 库未安装，音频处理功能受限")
+    logger.warning("numpy 库未安装，音频处理功能受限")
 
 try:
     import soundcard as sc
     HAS_SOUNDCARD = True
-    print("[ScreenMonitor] soundcard 库已加载，支持系统音频捕获")
+    logger.info("soundcard 库已加载，支持系统音频捕获")
 except ImportError:
     HAS_SOUNDCARD = False
-    print("[ScreenMonitor] 警告：soundcard 库未安装，将尝试使用其他方法捕获系统音频")
+    logger.warning("soundcard 库未安装，将尝试使用其他方法捕获系统音频")
 
 @dataclass
 class MonitorConfig:
@@ -274,12 +278,12 @@ class ScreenMonitor:
         # 启动屏幕捕获
         self._start_capture()
 
-        print(f"[ScreenMonitor] 监控页面已启动：http://0.0.0.0:{self.port}")
-        print(f"[ScreenMonitor] WebSocket 服务器已启动：ws://0.0.0.0:{self.ws_port}")
+        logger.info(f"监控页面已启动：http://0.0.0.0:{self.port}")
+        logger.info(f"WebSocket 服务器已启动：ws://0.0.0.0:{self.ws_port}")
         if self.config.use_udp:
-            print(f"[ScreenMonitor] UDP 视频流服务器已启动：udp://0.0.0.0:{self.config.udp_port}")
+            logger.info(f"UDP 视频流服务器已启动：udp://0.0.0.0:{self.config.udp_port}")
         if self.config.use_remote_desktop_stream:
-            print(f"[ScreenMonitor] 远程桌面式视频流已启用（帧差压缩+分块编码）")
+            logger.info("远程桌面式视频流已启用（帧差压缩+分块编码）")
     
     def stop(self):
         """停止监控服务"""
@@ -295,26 +299,26 @@ class ScreenMonitor:
             try:
                 self._audio_stream.stop_stream()
                 self._audio_stream.close()
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"停止音频流时出错: {e}")
             self._audio_stream = None
-        
+
         if self._http_server:
             self._http_server.shutdown()
             self._http_server.server_close()
-        
+
         if self._ws_server:
             self._ws_server.close()
-        
+
         # 停止 UDP 服务器
         if self._udp_socket:
             try:
                 self._udp_socket.close()
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"关闭UDP socket时出错: {e}")
             self._udp_socket = None
-        
-        print("[ScreenMonitor] 监控服务已停止")
+
+        logger.info("监控服务已停止")
     
     def _start_udp_server(self):
         """启动UDP服务器用于低延迟视频传输"""
@@ -332,10 +336,10 @@ class ScreenMonitor:
                 name="UDPListener"
             )
             self._udp_thread.start()
-            print(f"[ScreenMonitor] UDP服务器已启动在端口 {self.config.udp_port}")
-            
+            logger.info(f"UDP服务器已启动在端口 {self.config.udp_port}")
+
         except Exception as e:
-            print(f"[ScreenMonitor] UDP服务器启动失败：{e}")
+            logger.error(f"UDP服务器启动失败：{e}", exc_info=True)
             self.config.use_udp = False
     
     def _udp_listen_loop(self):
@@ -347,14 +351,14 @@ class ScreenMonitor:
                     msg = data.decode('utf-8')
                     if msg == 'REGISTER':
                         self._udp_clients.add(addr)
-                        print(f"[ScreenMonitor] UDP客户端已注册：{addr}")
+                        logger.info(f"UDP客户端已注册：{addr}")
                     elif msg == 'UNREGISTER':
                         self._udp_clients.discard(addr)
-                        print(f"[ScreenMonitor] UDP客户端已注销：{addr}")
+                        logger.info(f"UDP客户端已注销：{addr}")
             except BlockingIOError:
                 time.sleep(0.01)
             except Exception as e:
-                print(f"[ScreenMonitor] UDP监听错误：{e}")
+                logger.error(f"UDP监听错误：{e}", exc_info=True)
                 time.sleep(0.1)
     
     def _send_frame_via_udp(self, frame_data):
@@ -380,11 +384,11 @@ class ScreenMonitor:
                     for chunk in chunks:
                         self._udp_socket.sendto(chunk, client)
                 except Exception as e:
-                    print(f"[ScreenMonitor] UDP发送失败到 {client}：{e}")
+                    logger.error(f"UDP发送失败到 {client}：{e}", exc_info=True)
                     self._udp_clients.discard(client)
-                    
+
         except Exception as e:
-            print(f"[ScreenMonitor] UDP发送错误：{e}")
+            logger.error(f"UDP发送错误：{e}", exc_info=True)
 
     def _init_remote_desktop_stream(self):
         """初始化远程桌面式视频流"""
@@ -404,9 +408,9 @@ class ScreenMonitor:
                 block_cache_size=self.config.rd_block_cache_size
             )
             self._rd_streamer = RemoteDesktopStreamer(self._rd_config)
-            print("[ScreenMonitor] 远程桌面式视频流初始化完成")
+            logger.info("远程桌面式视频流初始化完成")
         except Exception as e:
-            print(f"[ScreenMonitor] 远程桌面式视频流初始化失败：{e}")
+            logger.error(f"远程桌面式视频流初始化失败：{e}", exc_info=True)
             self.config.use_remote_desktop_stream = False
 
     def _process_frame_remote_desktop(self, frame: Any) -> Optional[Dict]:
@@ -432,20 +436,20 @@ class ScreenMonitor:
             return result
 
         except Exception as e:
-            print(f"[ScreenMonitor] 远程桌面式视频流处理失败：{e}")
+            logger.error(f"远程桌面式视频流处理失败：{e}", exc_info=True)
             return None
 
     def enable(self):
         """启用监控"""
         self.config.enabled = True
         self._start_capture()
-        print("[ScreenMonitor] 监控已启用")
+        logger.info("监控已启用")
     
     def disable(self):
         """禁用监控"""
         self.config.enabled = False
         self.is_capturing = False
-        print("[ScreenMonitor] 监控已禁用")
+        logger.info("监控已禁用")
     
     def toggle(self):
         """切换监控状态"""
@@ -459,17 +463,17 @@ class ScreenMonitor:
         """设置帧率"""
         self.config.fps = max(1, min(30, fps))
         self._frame_interval = 1.0 / self.config.fps
-        print(f"[ScreenMonitor] 帧率已设置为：{fps} FPS")
+        logger.info(f"帧率已设置为：{fps} FPS")
     
     def set_quality(self, quality: int):
         """设置图片质量"""
         self.config.quality = max(10, min(100, quality))
-        print(f"[ScreenMonitor] 质量已设置为：{quality}%")
+        logger.info(f"质量已设置为：{quality}%")
     
     def set_scale(self, scale: float):
         """设置缩放比例"""
         self.config.scale = max(0.1, min(1.0, scale))
-        print(f"[ScreenMonitor] 缩放比例已设置为：{scale}x")
+        logger.info(f"缩放比例已设置为：{scale}x")
     
     def set_preset(self, preset: str):
         """设置画质预设"""
@@ -489,7 +493,7 @@ class ScreenMonitor:
             self.config.scale = params['scale']
             self.config.use_hdr = params['hdr']
             self.config.chroma_subsampling = params['subsampling']
-            print(f"[ScreenMonitor] 画质已设置为：{preset}")
+            logger.info(f"画质已设置为：{preset}")
     
     def _start_capture(self):
         """启动屏幕捕获线程"""
@@ -518,7 +522,7 @@ class ScreenMonitor:
         elif HAS_PYAUDIO:
             self._start_microphone_capture()
         else:
-            print("[ScreenMonitor] 无法捕获音频：未安装 soundcard 或 pyaudio")
+            logger.warning("无法捕获音频：未安装 soundcard 或 pyaudio")
     
     def _is_device_blacklisted(self, device_name: str) -> bool:
         """检查设备是否在黑名单中"""
@@ -545,7 +549,7 @@ class ScreenMonitor:
             ]
             
             # 获取所有设备并过滤黑名单
-            print("[ScreenMonitor] 可用音频设备列表：")
+            logger.info("可用音频设备列表：")
             all_mics = sc.all_microphones(include_loopback=True)
             filtered_mics = []
             
@@ -559,7 +563,7 @@ class ScreenMonitor:
                 elif is_loopback:
                     status = " [回送设备]"
                 
-                print(f"  [{i}] {mic.name}{status}")
+                logger.info(f"  [{i}] {mic.name}{status}")
                 
                 # 跳过黑名单设备
                 if not is_blacklisted:
@@ -585,10 +589,10 @@ class ScreenMonitor:
                                 if priority < best_priority:
                                     best_priority = priority
                                     selected_mic = mic
-                                    print(f"[ScreenMonitor] 找到优先设备 '{mic.name}' (优先级: {priority})")
+                                    logger.info(f"找到优先设备 '{mic.name}' (优先级: {priority})")
                                 break
             except Exception as e:
-                print(f"[ScreenMonitor] 遍历音频设备时出错：{e}")
+                logger.error(f"遍历音频设备时出错：{e}", exc_info=True)
             
             # 如果找到优先设备，使用它
             if selected_mic:
@@ -596,13 +600,13 @@ class ScreenMonitor:
             # 如果找到回送设备但没有找到最优匹配，选择第一个回送设备
             elif loopback_candidates:
                 self._audio_microphone = loopback_candidates[0]
-                print(f"[ScreenMonitor] 选择第一个回送设备: {self._audio_microphone.name}")
+                logger.info(f"选择第一个回送设备: {self._audio_microphone.name}")
             # 如果没有找到回送设备，使用默认麦克风（不受黑名单限制）
             else:
                 self._audio_microphone = sc.default_microphone()
-                print("[ScreenMonitor] 警告：未找到可用的回送设备，将使用默认麦克风输入")
-            
-            print(f"[ScreenMonitor] 音频设备：{self._audio_microphone.name}")
+                logger.warning("未找到可用的回送设备，将使用默认麦克风输入")
+
+            logger.info(f"音频设备：{self._audio_microphone.name}")
             
             self._is_capturing_audio = True
             self._audio_thread = threading.Thread(
@@ -611,10 +615,10 @@ class ScreenMonitor:
                 name="SystemAudioCapture"
             )
             self._audio_thread.start()
-            print("[ScreenMonitor] 系统音频捕获已启动（捕获所有应用声音）")
-            
+            logger.info("系统音频捕获已启动（捕获所有应用声音）")
+
         except Exception as e:
-            print(f"[ScreenMonitor] 系统音频捕获启动失败：{e}")
+            logger.error(f"系统音频捕获启动失败：{e}", exc_info=True)
             # 回退到麦克风捕获
             self._start_microphone_capture()
     
@@ -639,10 +643,10 @@ class ScreenMonitor:
                 name="MicrophoneCapture"
             )
             self._audio_thread.start()
-            print("[ScreenMonitor] 麦克风音频捕获已启动")
-            
+            logger.info("麦克风音频捕获已启动")
+
         except Exception as e:
-            print(f"[ScreenMonitor] 麦克风音频捕获启动失败：{e}")
+            logger.error(f"麦克风音频捕获启动失败：{e}", exc_info=True)
     
     def _system_audio_capture_loop_with_retry(self):
         """系统音频捕获循环 - 带重试机制，处理 COM 初始化错误"""
@@ -695,14 +699,14 @@ class ScreenMonitor:
                 
                 frame_count += 1
                 if frame_count % 100 == 0:
-                    print(f"[ScreenMonitor] 已发送 {frame_count} 帧音频数据")
+                    logger.info(f"已发送 {frame_count} 帧音频数据")
             
             except Exception as e:
                 error_msg = str(e).lower()
                 # 检测 COM 初始化错误（Error 0x800401f0）
                 if '0x800401f0' in error_msg or 'coinitialize' in error_msg or 'com' in error_msg:
                     retry_count += 1
-                    print(f"[ScreenMonitor] COM 初始化错误，尝试重新初始化 ({retry_count}/{max_retries})")
+                    logger.warning(f"COM 初始化错误，尝试重新初始化 ({retry_count}/{max_retries})")
                     
                     if retry_count <= max_retries:
                         # 等待后重试
@@ -713,13 +717,13 @@ class ScreenMonitor:
                             for mic in all_mics:
                                 if 'realtek' in mic.name.lower() and getattr(mic, 'isloopback', False):
                                     self._audio_microphone = mic
-                                    print(f"[ScreenMonitor] 重新选择设备: {mic.name}")
+                                    logger.info(f"重新选择设备: {mic.name}")
                                     break
                         except Exception as reinit_e:
-                            print(f"[ScreenMonitor] 重新初始化设备失败: {reinit_e}")
+                            logger.error(f"重新初始化设备失败: {reinit_e}", exc_info=True)
                         continue
                     else:
-                        print(f"[ScreenMonitor] 音频捕获重试 {max_retries} 次失败，停止音频捕获")
+                        logger.error(f"音频捕获重试 {max_retries} 次失败，停止音频捕获")
                         self._is_capturing_audio = False
                         break
     
@@ -748,7 +752,7 @@ class ScreenMonitor:
                         )
                 
             except Exception as e:
-                print(f"[ScreenMonitor] 麦克风音频捕获错误：{e}")
+                logger.error(f"麦克风音频捕获错误：{e}", exc_info=True)
                 time.sleep(0.01)
     
     def _capture_loop(self):
@@ -777,7 +781,7 @@ class ScreenMonitor:
                     time.sleep(0.001)
                     
             except Exception as e:
-                print(f"[ScreenMonitor] 捕获错误：{e}")
+                logger.error(f"捕获错误：{e}", exc_info=True)
                 time.sleep(0.05)
     
     def _capture_screen(self) -> Optional[str]:
@@ -832,7 +836,7 @@ class ScreenMonitor:
             return base64.b64encode(buffer.getvalue()).decode('utf-8')
             
         except Exception as e:
-            print(f"[ScreenMonitor] 截图失败：{e}")
+            logger.error(f"截图失败：{e}", exc_info=True)
             return None
     
     def _apply_hdr_enhancement(self, img: Image.Image) -> Image.Image:
@@ -889,7 +893,7 @@ class ScreenMonitor:
             frame_bytes = base64.b64decode(frame_data)
             self._send_frame_via_udp(frame_bytes)
         except Exception as e:
-            print(f"[ScreenMonitor] UDP发送帧失败：{e}")
+            logger.error(f"UDP发送帧失败：{e}", exc_info=True)
 
         if self.config.use_remote_desktop_stream and self._rd_streamer:
             try:
@@ -905,7 +909,7 @@ class ScreenMonitor:
                         self._event_loop
                     )
             except Exception as e:
-                print(f"[ScreenMonitor] 远程桌面式视频流广播失败：{e}")
+                logger.error(f"远程桌面式视频流广播失败：{e}", exc_info=True)
     
     async def _send_to_all_clients(self, message: str):
         """发送消息给所有客户端 - 并行发送优化"""
@@ -925,14 +929,16 @@ class ScreenMonitor:
                     continue
                 try:
                     await asyncio.wait_for(client.ping(), timeout=0.1)
-                except:
+                except Exception as e:
+                    logger.warning(f"客户端 ping 失败，移除: {e}")
                     self.clients.remove(client)
     
     async def _send_to_client(self, client, message):
         """发送消息给单个客户端"""
         try:
             await client.send(message)
-        except:
+        except Exception as e:
+            logger.warning(f"发送消息失败，移除客户端: {e}")
             with self._lock:
                 if client in self.clients:
                     self.clients.remove(client)
@@ -941,7 +947,7 @@ class ScreenMonitor:
         """处理监控客户端连接"""
         with self._lock:
             self.clients.append(websocket)
-            print(f"[ScreenMonitor] 客户端已连接：{websocket.remote_address}")
+            logger.info(f"客户端已连接：{websocket.remote_address}")
         
         try:
             await websocket.send(json.dumps({
@@ -996,7 +1002,7 @@ class ScreenMonitor:
                             'clients': len(self.clients)
                         }))
                 except Exception as e:
-                    print(f"[ScreenMonitor] 处理客户端消息失败：{e}")
+                    logger.error(f"处理客户端消息失败：{e}", exc_info=True)
                     
         except websockets.exceptions.ConnectionClosed:
             pass
@@ -1004,7 +1010,7 @@ class ScreenMonitor:
             with self._lock:
                 if websocket in self.clients:
                     self.clients.remove(websocket)
-                print(f"[ScreenMonitor] 客户端已断开：{websocket.remote_address}")
+                logger.info(f"客户端已断开：{websocket.remote_address}")
     
     async def _run_ws_server(self):
         """运行 WebSocket 服务器"""
@@ -1029,7 +1035,7 @@ class ScreenMonitor:
         
         handler = lambda *args, **kwargs: MonitorHTTPServerHandler(web_dir, *args, **kwargs)
         self._http_server = HTTPServer(('0.0.0.0', self.port), handler)
-        print(f"[ScreenMonitor] HTTP 服务器已启动：http://0.0.0.0:{self.port}")
+        logger.info(f"HTTP 服务器已启动：http://0.0.0.0:{self.port}")
         self._http_server.serve_forever()
     
     def _create_web_page(self, web_dir):

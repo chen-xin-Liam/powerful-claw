@@ -11,6 +11,10 @@ from .cluster_api import ClusterAPIServer
 from .distributed_inference import DistributedInferenceService, InferenceTask
 from .system_monitor import SystemMonitor, CPUInfo, MemoryInfo, NPUInfo, SystemInfo
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 __all__ = [
     "GPUDetector",
     "GPUInfo",
@@ -39,7 +43,7 @@ __all__ = [
 
 class ClusterManager:
     """集群管理器（整合所有组件）"""
-    
+
     def __init__(self):
         self.lan_node = LANNode()
         self.scheduler = TaskScheduler(self.lan_node)
@@ -47,25 +51,25 @@ class ClusterManager:
         self.secure_transport = SecureTransport()
         self.api_server = ClusterAPIServer()
         self.inference_service = DistributedInferenceService(self)
-        
+
         # 设置API服务器的集群管理器引用
         self.api_server.set_cluster_manager(self)
-        
+
         # 心跳定时任务
         self.heartbeat_thread = None
         self.is_running = False
-    
+
     def start(self):
         """启动集群服务"""
         self.is_running = True
-        
+
         # 启动各个组件
         self.lan_node.start()
         self.scheduler.start()
         self.monitor.start()
         self.api_server.start()
         self.inference_service.start()
-        
+
         # 启动心跳定时任务
         import threading
         self.heartbeat_thread = threading.Thread(
@@ -73,32 +77,53 @@ class ClusterManager:
             daemon=True
         )
         self.heartbeat_thread.start()
-        
-        print("[ClusterManager] 集群服务已启动")
-    
+
+        logger.info("集群服务已启动")
+
     def stop(self):
         """停止集群服务"""
         self.is_running = False
-        
+
         # 停止各个组件
-        self.inference_service.stop()
-        self.api_server.stop()
-        self.monitor.stop()
-        self.scheduler.stop()
-        self.lan_node.stop()
-        
-        print("[ClusterManager] 集群服务已停止")
-    
+        try:
+            self.inference_service.stop()
+        except Exception as e:
+            logger.warning(f"停止 inference_service 失败: {e}")
+        try:
+            self.api_server.stop()
+        except Exception as e:
+            logger.warning(f"停止 api_server 失败: {e}")
+        try:
+            self.monitor.stop()
+        except Exception as e:
+            logger.warning(f"停止 monitor 失败: {e}")
+        try:
+            self.scheduler.stop()
+        except Exception as e:
+            logger.warning(f"停止 scheduler 失败: {e}")
+        try:
+            self.lan_node.stop()
+        except Exception as e:
+            logger.warning(f"停止 lan_node 失败: {e}")
+
+        logger.info("集群服务已停止")
+
     def _heartbeat_loop(self):
         """心跳定时任务"""
+        import time
         while self.is_running:
             try:
                 self.lan_node.send_heartbeat()
-                import time
                 time.sleep(5)
             except Exception as e:
                 if self.is_running:
-                    print(f"[ClusterManager] 心跳发送失败: {e}")
+                    # 心跳失败不退出循环，下一轮重试
+                    logger.warning(f"心跳发送失败: {e}")
+                    # 短暂休眠避免异常时疯狂重试
+                    try:
+                        time.sleep(5)
+                    except Exception:
+                        pass
     
     def submit_task(self, task_type: str, data: dict, priority: int = 2):
         """提交任务"""

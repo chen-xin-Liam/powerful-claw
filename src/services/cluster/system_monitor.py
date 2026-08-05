@@ -11,6 +11,10 @@ from dataclasses import dataclass
 import subprocess
 import os
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 @dataclass
 class CPUInfo:
@@ -61,17 +65,20 @@ class SystemInfo:
 
 class SystemMonitor:
     """系统资源监控器"""
-    
+
     def __init__(self):
         self.platform = platform.system().lower()
         self.hostname = platform.node()
-    
+
     def get_cpu_info(self) -> CPUInfo:
-        """获取CPU信息"""
+        """获取CPU信息。
+
+        软失败策略：任一子项获取失败降级为默认值，不抛异常。
+        """
         try:
             cpu_count = psutil.cpu_count(logical=False) or 0
             logical_count = psutil.cpu_count(logical=True) or 0
-            
+
             # 获取CPU型号
             model = "Unknown"
             if self.platform == "windows":
@@ -84,8 +91,12 @@ class SystemMonitor:
                         if line.startswith("Name="):
                             model = line.split('=', 1)[1].strip()
                             break
-                except:
-                    pass
+                except FileNotFoundError:
+                    logger.debug("wmic 不可用，无法获取 CPU 型号")
+                except subprocess.TimeoutExpired:
+                    logger.debug("wmic 获取 CPU 型号超时")
+                except Exception as e:
+                    logger.debug(f"获取 CPU 型号失败: {e}")
             elif self.platform == "linux":
                 try:
                     with open("/proc/cpuinfo", "r") as f:
@@ -93,19 +104,27 @@ class SystemMonitor:
                             if line.startswith("model name"):
                                 model = line.split(':', 1)[1].strip()
                                 break
-                except:
-                    pass
-            
+                except (FileNotFoundError, PermissionError) as e:
+                    logger.debug(f"读取 /proc/cpuinfo 失败: {e}")
+
             # 获取CPU频率
-            freq = psutil.cpu_freq()
-            frequency = freq.current if freq else 0.0
-            
+            try:
+                freq = psutil.cpu_freq()
+                frequency = freq.current if freq else 0.0
+            except Exception as e:
+                logger.debug(f"获取 CPU 频率失败: {e}")
+                frequency = 0.0
+
             # 获取CPU使用率
-            usage = psutil.cpu_percent(interval=0.1)
-            
+            try:
+                usage = psutil.cpu_percent(interval=0.1)
+            except Exception as e:
+                logger.debug(f"获取 CPU 使用率失败: {e}")
+                usage = 0.0
+
             # 获取CPU温度
             temp = self._get_cpu_temperature()
-            
+
             return CPUInfo(
                 model=model,
                 cores=cpu_count,
@@ -115,7 +134,7 @@ class SystemMonitor:
                 temperature=temp
             )
         except Exception as e:
-            print(f"[SystemMonitor] 获取CPU信息失败: {e}")
+            logger.warning(f"获取 CPU 信息失败: {e}", exc_info=True)
             return CPUInfo(
                 model="Unknown",
                 cores=0,
@@ -124,7 +143,7 @@ class SystemMonitor:
                 usage_percent=0.0,
                 temperature=0.0
             )
-    
+
     def _get_cpu_temperature(self) -> float:
         """获取CPU温度"""
         try:
@@ -138,8 +157,12 @@ class SystemMonitor:
                         if line.startswith("CurrentTemperature="):
                             temp = int(line.split('=', 1)[1].strip())
                             return temp / 10.0 if temp > 0 else 0.0
-                except:
-                    pass
+                except FileNotFoundError:
+                    logger.debug("wmic 不可用，无法获取 CPU 温度")
+                except subprocess.TimeoutExpired:
+                    logger.debug("wmic 获取 CPU 温度超时")
+                except (ValueError, OSError) as e:
+                    logger.debug(f"解析 CPU 温度失败: {e}")
             elif self.platform == "linux":
                 # 尝试读取常见的温度文件
                 temp_files = [
@@ -152,12 +175,12 @@ class SystemMonitor:
                             with open(temp_file, "r") as f:
                                 temp = int(f.read().strip())
                                 return temp / 1000.0 if temp > 0 else 0.0
-                        except:
-                            pass
-        except Exception:
-            pass
+                        except (ValueError, OSError) as e:
+                            logger.debug(f"读取温度文件 {temp_file} 失败: {e}")
+        except Exception as e:
+            logger.debug(f"获取 CPU 温度失败: {e}")
         return 0.0
-    
+
     def get_memory_info(self) -> MemoryInfo:
         """获取内存信息"""
         try:
@@ -170,7 +193,7 @@ class SystemMonitor:
                 usage_percent=mem.percent
             )
         except Exception as e:
-            print(f"[SystemMonitor] 获取内存信息失败: {e}")
+            logger.warning(f"获取内存信息失败: {e}", exc_info=True)
             return MemoryInfo(
                 total_mb=0,
                 used_mb=0,
@@ -178,29 +201,29 @@ class SystemMonitor:
                 available_mb=0,
                 usage_percent=0.0
             )
-    
+
     def get_npu_info(self) -> List[NPUInfo]:
         """获取NPU信息"""
         npus = []
-        
+
         try:
             if self.platform == "windows":
                 npus.extend(self._detect_npu_windows())
             elif self.platform == "linux":
                 npus.extend(self._detect_npu_linux())
-            
+
             # 尝试通过环境变量检测
             npus.extend(self._detect_npu_environment())
-            
+
         except Exception as e:
-            print(f"[SystemMonitor] 获取NPU信息失败: {e}")
-        
+            logger.warning(f"获取 NPU 信息失败: {e}", exc_info=True)
+
         return npus
-    
+
     def _detect_npu_windows(self) -> List[NPUInfo]:
         """Windows平台NPU检测"""
         npus = []
-        
+
         try:
             # 检测Intel NPU
             result = subprocess.run(
@@ -210,13 +233,13 @@ class SystemMonitor:
             lines = result.stdout.strip().split('\n')
             npu_name = ""
             device_id = ""
-            
+
             for line in lines:
                 if line.startswith("Name="):
                     npu_name = line.split('=', 1)[1].strip()
                 elif line.startswith("DeviceID="):
                     device_id = line.split('=', 1)[1].strip()
-                
+
                 if npu_name and device_id:
                     npus.append(NPUInfo(
                         id=len(npus),
@@ -230,15 +253,19 @@ class SystemMonitor:
                     ))
                     npu_name = ""
                     device_id = ""
-        except:
-            pass
-        
+        except FileNotFoundError:
+            logger.debug("wmic 不可用，跳过 Windows NPU 检测")
+        except subprocess.TimeoutExpired:
+            logger.debug("wmic NPU 检测超时")
+        except Exception as e:
+            logger.debug(f"Windows NPU 检测失败: {e}")
+
         return npus
-    
+
     def _detect_npu_linux(self) -> List[NPUInfo]:
         """Linux平台NPU检测"""
         npus = []
-        
+
         try:
             # 检查常见的NPU设备路径
             npu_paths = ["/dev/accel", "/dev/dri/renderD128"]
@@ -254,15 +281,15 @@ class SystemMonitor:
                         utilization=0,
                         temperature=0
                     ))
-        except:
-            pass
-        
+        except OSError as e:
+            logger.debug(f"Linux NPU 设备检测失败: {e}")
+
         return npus
-    
+
     def _detect_npu_environment(self) -> List[NPUInfo]:
         """通过环境变量检测NPU"""
         npus = []
-        
+
         # 检查Intel NPU环境变量
         if os.environ.get("NPU_VISIBLE_DEVICES"):
             npus.append(NPUInfo(
@@ -275,13 +302,13 @@ class SystemMonitor:
                 utilization=0,
                 temperature=0
             ))
-        
+
         return npus
-    
+
     def get_system_info(self, include_gpu: bool = False) -> SystemInfo:
         """获取完整的系统信息"""
         gpu_info = None
-        
+
         if include_gpu:
             try:
                 from .gpu_detector import GPUDetector
@@ -289,8 +316,8 @@ class SystemMonitor:
                 detector.detect()
                 gpu_info = detector.to_dict()
             except Exception as e:
-                print(f"[SystemMonitor] 获取GPU信息失败: {e}")
-        
+                logger.warning(f"获取 GPU 信息失败: {e}", exc_info=True)
+
         return SystemInfo(
             platform=self.platform,
             hostname=self.hostname,
@@ -300,11 +327,11 @@ class SystemMonitor:
             npus=self.get_npu_info(),
             gpu_info=gpu_info
         )
-    
+
     def to_dict(self, include_gpu: bool = False) -> Dict[str, Any]:
         """转换为字典格式"""
         system_info = self.get_system_info(include_gpu)
-        
+
         return {
             "platform": system_info.platform,
             "hostname": system_info.hostname,
@@ -340,7 +367,7 @@ class SystemMonitor:
             ],
             "gpu_info": system_info.gpu_info
         }
-    
+
     def to_json(self, include_gpu: bool = False) -> str:
         """转换为JSON字符串"""
         return json.dumps(self.to_dict(include_gpu), indent=2)
@@ -349,6 +376,6 @@ class SystemMonitor:
 # 测试
 if __name__ == "__main__":
     monitor = SystemMonitor()
-    
+
     print("=== 系统资源信息 ===")
     print(monitor.to_json(include_gpu=True))

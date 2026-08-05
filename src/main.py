@@ -5,12 +5,22 @@ import signal
 import time
 import logging
 import threading
+import traceback
 from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.config.settings import settings
+# 配置加载失败时直接给出错误码与建议，避免 pydantic-settings 抛出未捕获异常
+try:
+    from src.config.settings import settings
+except Exception as _cfg_err:
+    print(f"[E1001][src.main] 配置加载失败: {_cfg_err}")
+    print("  建议: 检查 .env 文件格式，或参考 .env.example 重新生成")
+    sys.exit(2)
+
 from src.utils.logger import setup_logger
+from src.utils.errors import AppError, ServiceError, get_suggestion
+from src.utils.error_codes import ErrorCode
 
 logger = None  # 延迟初始化
 
@@ -26,6 +36,8 @@ class AppContext:
         self.ai_service = None
         self.local_model_service = None
         self.is_running = False
+        # 记录启动失败的服务清单，供 start_services 汇总并影响退出码
+        self.failed_services: list = []
 
     @classmethod
     def get_instance(cls) -> 'AppContext':
@@ -175,6 +187,25 @@ def stop_all_services():
     logger.info("所有服务已停止")
 
 
+def _record_failure(ctx, name: str, err: BaseException, *, code: ErrorCode = ErrorCode.E_SERVICE_START_FAILED, **details):
+    """统一记录服务启动失败，并附加到 ctx.failed_services 供汇总。"""
+    if isinstance(err, AppError):
+        wrapped = err
+    else:
+        wrapped = ServiceError(
+            code,
+            f"{name} 启动失败: {err}",
+            details={"service": name, **details},
+            cause=err,
+        )
+    logger.error(str(wrapped), exc_info=True)
+    ctx.failed_services.append({
+        "name": name,
+        "code": int(wrapped.code),
+        "message": str(wrapped),
+    })
+
+
 def _start_websocket_server(ctx, host, port):
     """启动WebSocket服务器（线程函数）"""
     try:
@@ -183,8 +214,10 @@ def _start_websocket_server(ctx, host, port):
         ctx.websocket_server = WebSocketServer(host=host, port=port)
         ctx.websocket_server.start()
         logger.info(f"WebSocket 服务启动成功: {host}:{port}")
+    except AppError as e:
+        _record_failure(ctx, "websocket_server", e, host=host, port=port)
     except Exception as e:
-        logger.error(f"WebSocket 服务启动失败: {e}")
+        _record_failure(ctx, "websocket_server", e, host=host, port=port)
 
 def _start_api_server(ctx, host, port):
     """启动API服务器（线程函数）"""
@@ -194,8 +227,10 @@ def _start_api_server(ctx, host, port):
         ctx.api_server = APIServer(host=host, port=port)
         ctx.api_server.start()
         logger.info(f"API 服务启动成功: {host}:{port}")
+    except AppError as e:
+        _record_failure(ctx, "api_server", e, host=host, port=port)
     except Exception as e:
-        logger.error(f"API 服务启动失败: {e}")
+        _record_failure(ctx, "api_server", e, host=host, port=port)
 
 def _start_screen_monitor(ctx, monitor_port, quality, fps, bitrate):
     """启动桌面监控服务（线程函数）"""
@@ -212,8 +247,10 @@ def _start_screen_monitor(ctx, monitor_port, quality, fps, bitrate):
         screen_monitor.start()
         ctx.screen_monitor = screen_monitor
         logger.info(f"桌面监控服务启动成功: {monitor_port}")
+    except AppError as e:
+        _record_failure(ctx, "screen_monitor", e, port=monitor_port)
     except Exception as e:
-        logger.error(f"桌面监控服务启动失败: {e}")
+        _record_failure(ctx, "screen_monitor", e, port=monitor_port)
 
 def _start_video_editor(ctx, editor_port):
     """启动视频剪辑服务（线程函数）"""
@@ -224,8 +261,10 @@ def _start_video_editor(ctx, editor_port):
         ctx.video_editor.port = editor_port
         ctx.video_editor.start()
         logger.info(f"视频剪辑服务启动成功: {editor_port}")
+    except AppError as e:
+        _record_failure(ctx, "video_editor", e, port=editor_port)
     except Exception as e:
-        logger.error(f"视频剪辑服务启动失败: {e}")
+        _record_failure(ctx, "video_editor", e, port=editor_port)
 
 def _start_ai_service(ctx):
     """启动AI服务（线程函数）"""
@@ -234,8 +273,10 @@ def _start_ai_service(ctx):
         logger.info("启动 AI 服务...")
         ctx.ai_service = AIService()
         logger.info("AI 服务启动成功")
+    except AppError as e:
+        _record_failure(ctx, "ai_service", e)
     except Exception as e:
-        logger.error(f"AI 服务启动失败: {e}")
+        _record_failure(ctx, "ai_service", e)
 
 def _start_local_model_service(ctx):
     """启动本地模型服务（线程函数）"""
@@ -244,11 +285,19 @@ def _start_local_model_service(ctx):
         logger.info("启动本地模型服务...")
         ctx.local_model_service = LocalModelService()
         logger.info("本地模型服务启动成功")
+    except AppError as e:
+        _record_failure(ctx, "local_model_service", e)
     except Exception as e:
-        logger.error(f"本地模型服务启动失败: {e}")
+        _record_failure(ctx, "local_model_service", e)
 
-def start_services(args):
-    """使用多线程并行启动所有服务"""
+def start_services(args) -> int:
+    """使用多线程并行启动所有服务。
+
+    返回退出码：
+      0 = 全部服务启动成功
+      1 = 部分服务启动失败（非致命，可继续运行）
+      2 = 全部服务失败或致命错误
+    """
     ctx = AppContext.get_instance()
 
     host = resolve_str(settings.host, args.host)
@@ -339,19 +388,44 @@ def start_services(args):
     # 等待所有线程启动完成（带超时）
     timeout = 30  # 最大等待30秒
     start_time = time.time()
-    
+    timeout_threads: list = []
+
     for thread in threads:
         elapsed = time.time() - start_time
         remaining = max(0, timeout - elapsed)
         thread.join(remaining)
-        
+
         if thread.is_alive():
-            logger.warning(f"线程 {thread.name} 启动超时，继续等待其他服务...")
+            logger.warning(f"线程 {thread.name} 启动超时（{timeout}s），继续等待其他服务...")
+            timeout_threads.append(thread.name)
+            # 超时视为该服务启动失败
+            ctx.failed_services.append({
+                "name": thread.name,
+                "code": int(ErrorCode.E_SERVICE_TIMEOUT),
+                "message": f"[E{int(ErrorCode.E_SERVICE_TIMEOUT):04d}][{thread.name}] 启动超时（{timeout}s）",
+            })
 
     ctx.is_running = True
     logger.info("=" * 50)
     logger.info("所有服务启动完成")
     logger.info("=" * 50)
+
+    # 汇总失败服务并影响退出码
+    failed = ctx.failed_services
+    if failed:
+        logger.error("=" * 50)
+        logger.error(f"以下 {len(failed)} 个服务启动失败:")
+        for svc in failed:
+            logger.error(f"  - {svc['name']}: {svc['message']}")
+            logger.error(f"      建议: {get_suggestion(ErrorCode(svc['code']))}")
+        logger.error("=" * 50)
+        # 全部失败视为致命错误
+        if len(failed) >= len(threads):
+            logger.error("所有服务均启动失败，退出码 2（致命错误）")
+            return 2
+        logger.warning("部分服务启动失败，退出码 1（部分失败，可继续运行）")
+        return 1
+    return 0
 
 
 def run_ui(args):
@@ -380,61 +454,98 @@ def run_ui(args):
     if args.window_size:
         try:
             w, h = map(int, args.window_size.split('x'))
+            if w <= 0 or h <= 0:
+                raise ValueError("窗口宽高必须 > 0")
             app.root.geometry(f"{w}x{h}")
-        except:
-            pass
+        except ValueError as e:
+            # 替换原 bare except: pass，避免静默吞掉非法参数
+            logger.warning(f"忽略非法 window_size 参数 '{args.window_size}': {e}")
 
     app.run()
 
 
 def main():
     global logger
-    
+
     args = parse_args()
 
-    debug_mode = resolve_bool(settings.debug, args.debug)
-    
-    # 确定是否启用文件日志保存
-    # debug模式默认开启日志保存，除非使用-nolog参数
-    # 正常模式默认不保存日志
-    enable_file_logging = debug_mode and not args.nolog
-    
-    if args.log_level:
-        log_level = args.log_level
-    elif debug_mode:
-        log_level = "DEBUG"
-    else:
-        log_level = settings.log_level
-    
-    # 初始化日志记录器
-    logger = setup_logger(__name__, log_level=log_level, enable_file_logging=enable_file_logging)
-    
-    if debug_mode:
-        os.environ["DEBUG"] = "1"
-        os.environ["DEBUG_MODE"] = "true"
-        logging.getLogger().setLevel(logging.DEBUG)
-        logger.info("调试模式已启用")
-    
-    if enable_file_logging:
-        logger.info("日志文件保存已启用")
-    else:
-        logger.info("日志文件保存已禁用")
+    # 顶层 try/except：捕获所有未预期异常，统一输出错误码与建议，确保资源被清理
+    exit_code = 0
+    try:
+        debug_mode = resolve_bool(settings.debug, args.debug)
 
-    setup_signal_handlers()
+        # 确定是否启用文件日志保存
+        # debug模式默认开启日志保存，除非使用-nolog参数
+        # 正常模式默认不保存日志
+        enable_file_logging = debug_mode and not args.nolog
 
-    noui_mode = resolve_bool(settings.noui, args.noui)
-    logger.info(f"启动模式: {'终端' if noui_mode else 'GUI'}")
+        if args.log_level:
+            log_level = args.log_level
+        elif debug_mode:
+            log_level = "DEBUG"
+        else:
+            log_level = settings.log_level
 
-    if noui_mode:
-        start_services(args)
+        # 初始化日志记录器
+        logger = setup_logger(__name__, log_level=log_level, enable_file_logging=enable_file_logging)
+
+        if debug_mode:
+            os.environ["DEBUG"] = "1"
+            os.environ["DEBUG_MODE"] = "true"
+            logging.getLogger().setLevel(logging.DEBUG)
+            logger.info("调试模式已启用")
+
+        if enable_file_logging:
+            logger.info("日志文件保存已启用")
+        else:
+            logger.info("日志文件保存已禁用")
+
+        setup_signal_handlers()
+
+        noui_mode = resolve_bool(settings.noui, args.noui)
+        logger.info(f"启动模式: {'终端' if noui_mode else 'GUI'}")
+
+        if noui_mode:
+            exit_code = start_services(args)
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                logger.info("用户中断，正在停止服务...")
+        else:
+            exit_code = start_services(args)
+            if exit_code != 2:  # 仅当非致命错误时启动 UI
+                run_ui(args)
+    except AppError as e:
+        # 自定义异常：输出错误码 + 建议
+        safe_logger = logger or logging.getLogger(__name__)
+        safe_logger.error(f"应用启动失败: {e}")
+        safe_logger.debug(traceback.format_exc())
+        print(f"错误: {e}")
+        print(f"  建议: {get_suggestion(e.code)}")
+        exit_code = 2
+    except KeyboardInterrupt:
+        safe_logger = logger or logging.getLogger(__name__)
+        safe_logger.info("用户中断")
+        exit_code = 0
+    except Exception as e:
+        # 未分类的致命错误：保留完整 traceback 供排查
+        logging.getLogger(__name__).exception(f"未预期错误: {e}")
+        print(f"[E{int(ErrorCode.E_FATAL_UNEXPECTED):04d}] 未预期错误: {type(e).__name__}: {e}")
+        print(f"  建议: {get_suggestion(ErrorCode.E_FATAL_UNEXPECTED)}")
+        exit_code = 2
+    finally:
+        # 无论成功失败都尝试清理已启动的服务
         try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            stop_all_services()
-    else:
-        start_services(args)
-        run_ui(args)
+            ctx = AppContext.get_instance()
+            if ctx.is_running or ctx.websocket_server or ctx.api_server:
+                stop_all_services()
+        except Exception as cleanup_err:
+            # 清理过程的异常不应掩盖原始错误
+            safe_logger = logger or logging.getLogger(__name__)
+            safe_logger.debug(f"清理资源时发生异常: {cleanup_err}")
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,10 @@ from src.config.ai_providers import AIProvider
 from src.system.controller import SystemController, PermissionLevel
 from src.services.local_model_service import LocalModelService
 from src.services.tool_registry import tool_registry
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 _USE_COLOR = sys.stdout.isatty() and os.getenv("NO_COLOR") is None
 _REASONING_COLOR = "\033[90m" if _USE_COLOR else ""
 _RESET_COLOR = "\033[0m" if _USE_COLOR else ""
@@ -433,10 +437,10 @@ class AIService:
         
         # Debug 模式：打印用户消息
         if os.getenv("DEBUG_MODE", "false").lower() == "true":
-            print("\n" + "="*80)
-            print(f"\033[92m[DEBUG] 👤 用户消息:\033[0m")
-            print(f"\033[92m{message}\033[0m")
-            print("="*80)
+            logger.debug("="*80)
+            logger.debug("👤 用户消息:")
+            logger.debug(message)
+            logger.debug("="*80)
         
         full_response = ""
         for reasoning_content, content in self.chat_completion_stream(messages):
@@ -445,20 +449,20 @@ class AIService:
                 result["reasoning_content"] = reasoning_content
                 # Debug 模式：打印推理内容
                 if os.getenv("DEBUG_MODE", "false").lower() == "true":
-                    print(f"\033[90m[DEBUG] 🧠 AI 推理：{reasoning_content}\033[0m")
+                    logger.debug(f"🧠 AI 推理：{reasoning_content}")
             if content:
                 result["content"] = content
                 full_response += content
                 # Debug 模式：实时打印 AI 回答
                 if os.getenv("DEBUG_MODE", "false").lower() == "true":
-                    print(f"\033[94m[DEBUG] 🤖 AI: {content}\033[0m", end="", flush=True)
+                    logger.debug(f"🤖 AI: {content}")
             if result:
                 yield result
         
         # Debug 模式：打印完整回答
         if os.getenv("DEBUG_MODE", "false").lower() == "true" and full_response:
-            print("\n\033[90m[DEBUG] ✅ AI 完整回答已接收\033[0m")
-            print("="*80 + "\n")
+            logger.debug("✅ AI 完整回答已接收")
+            logger.debug("="*80)
         
         if full_response:
             self._add_to_history({"role": "user", "content": message})
@@ -605,14 +609,14 @@ class AIService:
         
         # Debug 模式：打印循环信息
         if os.getenv("DEBUG_MODE", "false").lower() == "true":
-            print(f"\n\033[93m[DEBUG] 🔄 开始对话循环，最大循环次数：{max_loops}\033[0m")
+            logger.debug(f"🔄 开始对话循环，最大循环次数：{max_loops}")
         
         while True:
             full_response = ""
             
             # Debug 模式：打印当前循环次数
             if os.getenv("DEBUG_MODE", "false").lower() == "true":
-                print(f"\n\033[93m[DEBUG] 📍 第 {loop_count + 1} 轮对话\033[0m")
+                logger.debug(f"📍 第 {loop_count + 1} 轮对话")
             
             for chunk in self.stream_chat(current_message, include_system_prompt=True):
                 if "content" in chunk:
@@ -621,7 +625,7 @@ class AIService:
             
             # Debug 模式：打印命令解析信息
             if os.getenv("DEBUG_MODE", "false").lower() == "true":
-                print(f"\n\033[93m[DEBUG] 🔍 解析并执行命令...\033[0m")
+                logger.debug("🔍 解析并执行命令...")
             
             command_results = self.parse_and_execute_commands(full_response)
             result_text = self.format_command_results(command_results)
@@ -629,8 +633,8 @@ class AIService:
             if result_text:
                 # Debug 模式：打印命令执行结果
                 if os.getenv("DEBUG_MODE", "false").lower() == "true":
-                    print(f"\n\033[93m[DEBUG] 📋 命令执行结果:\033[0m")
-                    print(f"\033[93m{result_text}\033[0m\n")
+                    logger.debug("📋 命令执行结果:")
+                    logger.debug(result_text)
                 
                 yield {"content": "\n" + result_text}
                 
@@ -641,9 +645,9 @@ class AIService:
                 # Debug 模式：打印循环结束信息
                 if os.getenv("DEBUG_MODE", "false").lower() == "true":
                     if loop_count >= max_loops:
-                        print(f"\n\033[93m[DEBUG] ⚠️ 已达到最大循环次数 {max_loops}，停止\033[0m")
+                        logger.debug(f"⚠️ 已达到最大循环次数 {max_loops}，停止")
                     else:
-                        print(f"\n\033[93m[DEBUG] ✅ 对话循环结束\033[0m")
+                        logger.debug("✅ 对话循环结束")
                 break
             
             if command_results.get("has_commands"):
@@ -652,7 +656,7 @@ class AIService:
                     current_message = f"以下命令执行失败，请分析原因并尝试解决：\n{result_text}"
                     # Debug 模式：打印重试信息
                     if os.getenv("DEBUG_MODE", "false").lower() == "true":
-                        print(f"\n\033[93m[DEBUG] ⚠️ 有 {failed_count} 个命令失败，准备重试...\033[0m")
+                        logger.debug(f"⚠️ 有 {failed_count} 个命令失败，准备重试...")
                 else:
                     break
             else:

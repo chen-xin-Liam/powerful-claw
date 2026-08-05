@@ -11,6 +11,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.services.mcp_manager import mcp_manager, MCPServerConfig
 from src.services.plugin_manager import plugin_manager
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 @dataclass
 class ExtensionInfo:
     type: str
@@ -65,7 +69,7 @@ class ExtensionManager:
                     self._mcp_configs = config.get('mcp_servers', [])
                     self._enabled_extensions = config.get('enabled_extensions', [])
             except Exception as e:
-                print(f"[ExtensionManager] 加载配置失败: {e}")
+                logger.error(f"加载配置失败: {e}", exc_info=True)
                 self._mcp_configs = []
                 self._enabled_extensions = []
         else:
@@ -84,7 +88,7 @@ class ExtensionManager:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"[ExtensionManager] 保存配置失败: {e}")
+            logger.error(f"保存配置失败: {e}", exc_info=True)
     
     def register_web_handler(self, path: str, handler: Any) -> None:
         """注册Web请求处理器"""
@@ -92,7 +96,7 @@ class ExtensionManager:
     
     def initialize(self) -> None:
         """初始化所有扩展"""
-        print("[ExtensionManager] 初始化扩展...")
+        logger.info("初始化扩展...")
         
         self._register_mcp_servers()
         
@@ -103,11 +107,11 @@ class ExtensionManager:
         
         self.plugins.start_hot_reload(interval=3.0)
         
-        print("[ExtensionManager] 扩展初始化完成")
+        logger.info("扩展初始化完成")
     
     def shutdown(self) -> None:
         """关闭所有扩展"""
-        print("[ExtensionManager] 关闭扩展...")
+        logger.info("关闭扩展...")
         
         self.plugins.stop_hot_reload()
         self.mcp.stop_all()
@@ -117,7 +121,7 @@ class ExtensionManager:
         
         self._save_config()
         
-        print("[ExtensionManager] 扩展已关闭")
+        logger.info("扩展已关闭")
     
     def _register_mcp_servers(self) -> None:
         """注册MCP服务器"""
@@ -135,7 +139,7 @@ class ExtensionManager:
                 )
                 self.mcp.register_server(mcp_config)
             except Exception as e:
-                print(f"[ExtensionManager] 注册MCP服务器 '{config.get('name', 'unknown')}' 失败: {e}")
+                logger.error(f"注册MCP服务器 '{config.get('name', 'unknown')}' 失败: {e}", exc_info=True)
     
     def add_mcp_server(self, name: str, command: str, args: List[str] = None,
                        env: Dict[str, str] = None, enabled: bool = True) -> bool:
@@ -164,7 +168,7 @@ class ExtensionManager:
             
             return True
         except Exception as e:
-            print(f"[ExtensionManager] 添加MCP服务器 '{name}' 失败: {e}")
+            logger.error(f"添加MCP服务器 '{name}' 失败: {e}", exc_info=True)
             return False
     
     def remove_mcp_server(self, name: str) -> bool:

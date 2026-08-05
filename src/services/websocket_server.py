@@ -12,6 +12,10 @@ from src.system.controller import SystemController
 from src.system.vision import VisionCapture
 from src.config.settings import settings
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 class RCONBroadcastServer:
     """RCON控制台信息广播服务器"""
     
@@ -26,7 +30,7 @@ class RCONBroadcastServer:
     async def _broadcast_handler(self, websocket, path):
         """处理rcon客户端连接"""
         self.clients.add(websocket)
-        print(f"RCON客户端已连接: {websocket.remote_address}")
+        logger.info(f"RCON客户端已连接: {websocket.remote_address}")
         
         try:
             # 发送欢迎消息
@@ -46,7 +50,7 @@ class RCONBroadcastServer:
                     break
         finally:
             self.clients.remove(websocket)
-            print(f"RCON客户端已断开: {websocket.remote_address}")
+            logger.info(f"RCON客户端已断开: {websocket.remote_address}")
     
     def broadcast(self, message_type, content):
         """向所有客户端广播消息"""
@@ -64,7 +68,7 @@ class RCONBroadcastServer:
             self.host,
             self.port
         )
-        print(f"RCON广播服务器已启动: ws://{self.host}:{self.port}/rcon")
+        logger.info(f"RCON广播服务器已启动: ws://{self.host}:{self.port}/rcon")
         
         await self.server.wait_closed()
     
@@ -91,7 +95,7 @@ class RCONBroadcastServer:
         self.is_running = False
         if self.server:
             self.server.close()
-        print("RCON广播服务器已停止")
+        logger.info("RCON广播服务器已停止")
 
 
 class WebSocketServer:
@@ -927,12 +931,12 @@ class WebSocketServer:
         with open(os.path.join(self.web_dir, "index.html"), "w", encoding="utf-8") as f:
             f.write(html_content)
         
-        print(f"网页文件已创建: {os.path.join(self.web_dir, 'index.html')}")
+        logger.info(f"网页文件已创建: {os.path.join(self.web_dir, 'index.html')}")
     
     async def _handle_client(self, websocket, path):
         """处理单个客户端连接"""
         self.clients.add(websocket)
-        print(f"客户端已连接: {websocket.remote_address}")
+        logger.info(f"客户端已连接: {websocket.remote_address}")
         
         try:
             async for message in websocket:
@@ -941,7 +945,7 @@ class WebSocketServer:
             pass
         finally:
             self.clients.remove(websocket)
-            print(f"客户端已断开: {websocket.remote_address}")
+            logger.info(f"客户端已断开: {websocket.remote_address}")
     
     async def _process_message(self, websocket, message):
         """处理收到的消息"""
@@ -1163,8 +1167,8 @@ class WebSocketServer:
             self.port,
             process_request=self._http_handler
         )
-        print(f"WebSocket服务器已启动: ws://{self.host}:{self.port}/ws")
-        print(f"网页控制端: http://{self.host}:{self.port}")
+        logger.info(f"WebSocket服务器已启动: ws://{self.host}:{self.port}/ws")
+        logger.info(f"网页控制端: http://{self.host}:{self.port}")
         
         await self.server.wait_closed()
     
@@ -1201,7 +1205,7 @@ class WebSocketServer:
         # 停止主WebSocket服务器
         if self.server:
             self.server.close()
-        print("WebSocket服务器已停止")
+        logger.info("WebSocket服务器已停止")
     
     def broadcast_rcon(self, message_type, content):
         """向RCON客户端广播消息"""

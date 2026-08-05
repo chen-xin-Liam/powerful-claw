@@ -3,6 +3,10 @@ import threading
 from typing import List, Dict, Any, Optional, Generator
 from dataclasses import dataclass
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 @dataclass
 class LocalModel:
     name: str
@@ -149,16 +153,16 @@ class LocalModelService:
                 if progress_callback:
                     try:
                         progress_callback({"status": "downloading", "message": f"正在下载模型 {display_name}..."})
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("进度回调失败(downloading)", exc_info=True)
 
                 from transformers import AutoTokenizer, AutoModelForCausalLM
 
                 if progress_callback:
                     try:
                         progress_callback({"status": "loading", "message": f"正在加载模型 {display_name}..."})
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("进度回调失败(loading)", exc_info=True)
 
                 self.tokenizer = AutoTokenizer.from_pretrained(
                     model_id,
@@ -184,8 +188,8 @@ class LocalModelService:
                 if progress_callback:
                     try:
                         progress_callback({"status": "complete", "message": f"模型 {display_name} 加载完成"})
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("进度回调失败(complete)", exc_info=True)
 
             except Exception as e:
                 self.is_loading = False
@@ -195,13 +199,13 @@ class LocalModelService:
                 self.model = None
 
                 error_msg = f"加载模型失败: {str(e)}"
-                print(f"LocalModelService Error: {error_msg}")
+                logger.error(error_msg, exc_info=True)
 
                 if progress_callback:
                     try:
                         progress_callback({"status": "error", "message": error_msg})
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("进度回调失败(error)", exc_info=True)
 
         thread = threading.Thread(target=load_in_thread, daemon=True)
         thread.start()

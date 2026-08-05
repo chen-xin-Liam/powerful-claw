@@ -11,6 +11,10 @@ from typing import Dict, List, Optional, Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 class VideoEditorHTTPServerHandler(BaseHTTPRequestHandler):
     def __init__(self, web_dir, *args, **kwargs):
         self.web_dir = web_dir
@@ -139,8 +143,8 @@ class VideoEditor:
         )
         self._ws_thread.start()
         
-        print(f"[VideoEditor] 视频剪辑页面已启动：http://0.0.0.0:{self.port}")
-        print(f"[VideoEditor] WebSocket 服务器已启动：ws://0.0.0.0:{self.ws_port}")
+        logger.info(f"视频剪辑页面已启动：http://0.0.0.0:{self.port}")
+        logger.info(f"WebSocket 服务器已启动：ws://0.0.0.0:{self.ws_port}")
     
     def stop(self):
         if not self.is_running:
@@ -155,7 +159,7 @@ class VideoEditor:
         if self._ws_server:
             self._ws_server.close()
         
-        print("[VideoEditor] 视频剪辑服务器已停止")
+        logger.info("视频剪辑服务器已停止")
     
     def _http_thread_func(self):
         web_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video_editor")
@@ -164,7 +168,7 @@ class VideoEditor:
         
         handler = lambda *args, **kwargs: VideoEditorHTTPServerHandler(web_dir, *args, **kwargs)
         self._http_server = HTTPServer(('0.0.0.0', self.port), handler)
-        print(f"[VideoEditor] HTTP 服务器已启动：http://0.0.0.0:{self.port}")
+        logger.info(f"HTTP 服务器已启动：http://0.0.0.0:{self.port}")
         self._http_server.serve_forever()
     
     def _ws_thread_func(self):
@@ -276,7 +280,7 @@ class VideoEditor:
                         await self._handle_save_project(websocket, data)
                     
                 except Exception as e:
-                    print(f"[VideoEditor] 处理消息失败：{e}")
+                    logger.error(f"处理消息失败：{e}", exc_info=True)
                     
         except websockets.exceptions.ConnectionClosed:
             pass
@@ -803,7 +807,8 @@ class VideoEditor:
         for client in clients:
             try:
                 await client.send(json.dumps(message))
-            except:
+            except Exception as e:
+                logger.debug(f"广播消息失败，移除客户端: {e}")
                 with self._lock:
                     if client in self.clients:
                         self.clients.remove(client)

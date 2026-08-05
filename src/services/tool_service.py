@@ -5,6 +5,10 @@ from datetime import datetime
 
 from src.config.app_config import settings
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class ToolService:
     """工具服务 - AI可调用的统一工具接口"""

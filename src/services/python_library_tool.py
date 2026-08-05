@@ -7,15 +7,19 @@ import importlib
 import pkgutil
 from typing import Dict, List, Any, Optional
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class PythonLibraryTool:
     """Python 库调用工具"""
-    
+
     @classmethod
     def list_installed_libraries(cls) -> Dict[str, str]:
         """列出所有已安装的库"""
         libraries = {}
-        
+
         # 获取所有已安装的包
         for importer, modname, ispkg in pkgutil.iter_modules():
             try:
@@ -26,9 +30,13 @@ class PythonLibraryTool:
                     libraries[modname] = str(module.VERSION)
                 else:
                     libraries[modname] = "unknown"
-            except:
-                pass
-        
+            except ImportError as e:
+                # 跳过不可导入的模块（如缺少依赖、平台不兼容）
+                logger.debug(f"跳过不可导入的模块 {modname}: {e}")
+            except Exception as e:
+                # 某些模块导入时会执行副作用导致异常（如 GUI 库），不影响整体
+                logger.debug(f"模块 {modname} 信息采集失败: {e}")
+
         return libraries
     
     @classmethod
@@ -99,18 +107,23 @@ class PythonLibraryTool:
                 timeout=timeout,
                 cwd=None
             )
-            
+
             output = ""
             if result.stdout:
                 output += f"STDOUT:\n{result.stdout}\n\n"
             if result.stderr:
                 output += f"STDERR:\n{result.stderr}\n\n"
             output += f"返回码：{result.returncode}"
-            
+
             return output
         except subprocess.TimeoutExpired:
+            logger.warning(f"Python 代码执行超时（{timeout}s）")
             return f"执行超时（{timeout}秒）"
+        except (FileNotFoundError, OSError) as e:
+            logger.error(f"无法启动 Python 解释器执行代码: {e}")
+            return f"执行失败：无法启动 Python 解释器（{sys.executable}）: {e}"
         except Exception as e:
+            logger.error(f"Python 代码执行失败: {e}", exc_info=True)
             return f"执行失败：{str(e)}"
     
     @classmethod
@@ -146,7 +159,9 @@ class PythonLibraryTool:
             # 尝试 JSON 序列化结果
             try:
                 return json.dumps({"result": result}, default=str, ensure_ascii=False)
-            except:
+            except (TypeError, ValueError) as e:
+                # 结果不可 JSON 序列化（如文件句柄、numpy 数组），降级为字符串表示
+                logger.debug(f"结果不可 JSON 序列化，降级为字符串: {e}")
                 return f"result: {result}"
         except ImportError:
             return f"错误：库 '{library}' 未安装"

@@ -12,6 +12,10 @@ from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class NodeStatus(Enum):
     """节点状态枚举"""
@@ -43,14 +47,14 @@ class NodeInfo:
 
 class LANNode:
     """局域网节点"""
-    
+
     # 端口分配
     DISCOVERY_PORT = 15300
     MAIN_PORT = 15301
     TASK_PORT = 15302
     DATA_PORT = 15303
     MONITOR_PORT = 15304
-    
+
     def __init__(self):
         self.node_id = str(uuid.uuid4())
         self.hostname = socket.gethostname()
@@ -63,11 +67,11 @@ class LANNode:
         self.lock = threading.Lock()
         self.message_handlers: Dict[str, Callable] = {}
         self.status_callback: Optional[Callable] = None
-        
+
         # 心跳间隔（秒）
         self.heartbeat_interval = 5
         self.heartbeat_timeout = 15
-    
+
     def _get_local_ip(self) -> str:
         """获取本地IP地址"""
         try:
@@ -78,38 +82,38 @@ class LANNode:
             return ip
         except Exception:
             return "127.0.0.1"
-    
+
     def start(self):
         """启动节点服务"""
         self.is_running = True
-        
+
         # 启动发现服务
         threading.Thread(target=self._start_discovery, daemon=True).start()
-        
+
         # 启动主通信服务
         threading.Thread(target=self._start_main_server, daemon=True).start()
-        
+
         # 启动监控服务
         threading.Thread(target=self._start_monitor_server, daemon=True).start()
-        
+
         # 启动心跳监控
         threading.Thread(target=self._heartbeat_monitor, daemon=True).start()
-        
-        print(f"[LANNode] 节点 {self.node_id[:8]} 已启动，IP: {self.ip_address}")
-    
+
+        logger.info(f"节点 {self.node_id[:8]} 已启动，IP: {self.ip_address}")
+
     def stop(self):
         """停止节点服务"""
         self.is_running = False
-        
+
         if self.discovery_socket:
             self.discovery_socket.close()
         if self.main_socket:
             self.main_socket.close()
         if self.monitor_socket:
             self.monitor_socket.close()
-        
-        print(f"[LANNode] 节点 {self.node_id[:8]} 已停止")
-    
+
+        logger.info(f"节点 {self.node_id[:8]} 已停止")
+
     def _start_discovery(self):
         """启动节点发现服务（UDP广播）"""
         try:
@@ -118,10 +122,10 @@ class LANNode:
             self.discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.discovery_socket.bind(('', self.DISCOVERY_PORT))
             self.discovery_socket.settimeout(1.0)
-            
+
             # 发送发现广播
             threading.Thread(target=self._send_discovery_broadcast, daemon=True).start()
-            
+
             while self.is_running:
                 try:
                     data, addr = self.discovery_socket.recvfrom(1024)
@@ -130,10 +134,10 @@ class LANNode:
                     continue
                 except Exception as e:
                     if self.is_running:
-                        print(f"[LANNode] 发现服务错误: {e}")
+                        logger.warning(f"发现服务错误: {e}")
         except Exception as e:
-            print(f"[LANNode] 启动发现服务失败: {e}")
-    
+            logger.error(f"启动发现服务失败: {e}", exc_info=True)
+
     def _send_discovery_broadcast(self):
         """发送节点发现广播"""
         while self.is_running:
@@ -145,12 +149,12 @@ class LANNode:
                     "ip": self.ip_address,
                     "timestamp": time.time()
                 })
-                
+
                 self.discovery_socket.sendto(
                     message.encode('utf-8'),
                     ('255.255.255.255', self.DISCOVERY_PORT)
                 )
-                
+
                 # 同时向局域网常用网段广播
                 for subnet in self._get_local_subnets():
                     broadcast_ip = subnet.replace('.0/24', '.255')
@@ -159,14 +163,14 @@ class LANNode:
                             message.encode('utf-8'),
                             (broadcast_ip, self.DISCOVERY_PORT)
                         )
-                    except:
-                        pass
-                
+                    except Exception as e:
+                        logger.debug(f"子网广播发送失败: {e}", exc_info=True)
+
                 time.sleep(3)
             except Exception as e:
                 if self.is_running:
-                    print(f"[LANNode] 发送广播失败: {e}")
-    
+                    logger.warning(f"发送广播失败: {e}")
+
     def _get_local_subnets(self) -> List[str]:
         """获取本地子网列表"""
         subnets = []
@@ -174,12 +178,12 @@ class LANNode:
         if len(ip_parts) == 4:
             subnets.append(f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0/24")
         return subnets
-    
+
     def _handle_discovery_packet(self, data: bytes, addr: tuple):
         """处理发现数据包"""
         try:
             message = json.loads(data.decode('utf-8'))
-            
+
             if message.get("type") == "discover":
                 node_id = message.get("node_id")
                 if node_id != self.node_id:
@@ -193,12 +197,12 @@ class LANNode:
                                 status=NodeStatus.CONNECTED,
                                 last_heartbeat=time.time()
                             )
-                            print(f"[LANNode] 发现新节点: {node_id[:8]} ({addr[0]})")
+                            logger.info(f"发现新节点: {node_id[:8]} ({addr[0]})")
                             self._notify_status_change()
                         else:
                             self.nodes[node_id].last_heartbeat = time.time()
                             self.nodes[node_id].status = NodeStatus.CONNECTED
-            
+
             elif message.get("type") == "heartbeat":
                         node_id = message.get("node_id")
                         with self.lock:
@@ -220,8 +224,8 @@ class LANNode:
                                 if "memory_total_mb" in message:
                                     self.nodes[node_id].memory_total_mb = message["memory_total_mb"]
         except Exception as e:
-            print(f"[LANNode] 处理发现包失败: {e}")
-    
+            logger.warning(f"处理发现包失败: {e}")
+
     def _start_main_server(self):
         """启动主通信服务（TCP）"""
         try:
@@ -230,9 +234,9 @@ class LANNode:
             self.main_socket.bind((self.ip_address, self.MAIN_PORT))
             self.main_socket.listen(10)
             self.main_socket.settimeout(1.0)
-            
-            print(f"[LANNode] 主通信服务已启动: {self.ip_address}:{self.MAIN_PORT}")
-            
+
+            logger.info(f"主通信服务已启动: {self.ip_address}:{self.MAIN_PORT}")
+
             while self.is_running:
                 try:
                     conn, addr = self.main_socket.accept()
@@ -245,44 +249,44 @@ class LANNode:
                     continue
                 except Exception as e:
                     if self.is_running:
-                        print(f"[LANNode] 主服务错误: {e}")
+                        logger.warning(f"主服务错误: {e}")
         except Exception as e:
-            print(f"[LANNode] 启动主服务失败: {e}")
-    
+            logger.error(f"启动主服务失败: {e}", exc_info=True)
+
     def _handle_main_connection(self, conn: socket.socket, addr: tuple):
         """处理主连接"""
         try:
             conn.settimeout(30)
             buffer = ""
-            
+
             while self.is_running:
                 data = conn.recv(4096)
                 if not data:
                     break
-                
+
                 buffer += data.decode('utf-8')
-                
+
                 while '\n' in buffer:
                     line, buffer = buffer.split('\n', 1)
                     self._handle_message(line, addr)
-            
+
             conn.close()
         except Exception as e:
-            print(f"[LANNode] 连接处理失败: {e}")
-    
+            logger.error(f"连接处理失败: {e}", exc_info=True)
+
     def _handle_message(self, message_str: str, addr: tuple):
         """处理收到的消息"""
         try:
             message = json.loads(message_str)
             msg_type = message.get("type")
-            
+
             if msg_type in self.message_handlers:
                 self.message_handlers[msg_type](message, addr)
             else:
-                print(f"[LANNode] 未知消息类型: {msg_type}")
+                logger.warning(f"未知消息类型: {msg_type}")
         except Exception as e:
-            print(f"[LANNode] 消息处理失败: {e}")
-    
+            logger.warning(f"消息处理失败: {e}")
+
     def _start_monitor_server(self):
         """启动监控服务（UDP）"""
         try:
@@ -290,9 +294,9 @@ class LANNode:
             self.monitor_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.monitor_socket.bind(('', self.MONITOR_PORT))
             self.monitor_socket.settimeout(1.0)
-            
-            print(f"[LANNode] 监控服务已启动: {self.MONITOR_PORT}")
-            
+
+            logger.info(f"监控服务已启动: {self.MONITOR_PORT}")
+
             while self.is_running:
                 try:
                     data, addr = self.monitor_socket.recvfrom(4096)
@@ -301,15 +305,15 @@ class LANNode:
                     continue
                 except Exception as e:
                     if self.is_running:
-                        print(f"[LANNode] 监控服务错误: {e}")
+                        logger.warning(f"监控服务错误: {e}")
         except Exception as e:
-            print(f"[LANNode] 启动监控服务失败: {e}")
-    
+            logger.error(f"启动监控服务失败: {e}", exc_info=True)
+
     def _handle_monitor_packet(self, data: bytes, addr: tuple):
         """处理监控数据包"""
         try:
             message = json.loads(data.decode('utf-8'))
-            
+
             if message.get("type") == "status_request":
                 response = json.dumps({
                     "type": "status_response",
@@ -321,49 +325,49 @@ class LANNode:
                 })
                 self.monitor_socket.sendto(response.encode('utf-8'), addr)
         except Exception as e:
-            print(f"[LANNode] 处理监控包失败: {e}")
-    
+            logger.warning(f"处理监控包失败: {e}")
+
     def _heartbeat_monitor(self):
         """心跳监控线程"""
         while self.is_running:
             time.sleep(1)
-            
+
             now = time.time()
             with self.lock:
                 to_remove = []
-                
+
                 for node_id, node in self.nodes.items():
                     if now - node.last_heartbeat > self.heartbeat_timeout:
                         if node.status == NodeStatus.CONNECTED:
                             node.status = NodeStatus.UNRESPONSIVE
-                            print(f"[LANNode] 节点 {node_id[:8]} 心跳超时")
+                            logger.warning(f"节点 {node_id[:8]} 心跳超时")
                             self._notify_status_change()
-                        
+
                         if now - node.last_heartbeat > self.heartbeat_timeout * 2:
                             to_remove.append(node_id)
-                
+
                 for node_id in to_remove:
-                    print(f"[LANNode] 移除节点: {node_id[:8]}")
+                    logger.info(f"移除节点: {node_id[:8]}")
                     del self.nodes[node_id]
                     self._notify_status_change()
-    
+
     def _notify_status_change(self):
         """通知节点状态变化"""
         if self.status_callback:
             self.status_callback(self.get_nodes())
-    
+
     def send_heartbeat(self):
         """发送心跳包"""
         from .gpu_detector import GPUDetector
         from .system_monitor import SystemMonitor
-        
+
         try:
             detector = GPUDetector()
             detector.detect()
-            
+
             monitor = SystemMonitor()
             system_data = monitor.to_dict(include_gpu=False)
-            
+
             heartbeat = json.dumps({
                 "type": "heartbeat",
                 "node_id": self.node_id,
@@ -380,7 +384,7 @@ class LANNode:
                 "cpu_count": system_data.get("cpu", {}).get("logical_cores", 0),
                 "memory_total_mb": system_data.get("memory", {}).get("total_mb", 0)
             })
-            
+
             # 向所有已知节点发送心跳
             with self.lock:
                 for node in self.nodes.values():
@@ -389,34 +393,34 @@ class LANNode:
                             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                             sock.sendto(heartbeat.encode('utf-8'), (node.ip_address, self.DISCOVERY_PORT))
                             sock.close()
-                        except:
-                            pass
+                        except Exception as e:
+                            logger.debug(f"向节点发送心跳失败: {e}", exc_info=True)
         except Exception as e:
-            print(f"[LANNode] 发送心跳失败: {e}")
-    
+            logger.warning(f"发送心跳失败: {e}")
+
     def register_handler(self, message_type: str, handler: Callable):
         """注册消息处理器"""
         self.message_handlers[message_type] = handler
-    
+
     def unregister_handler(self, message_type: str):
         """取消注册消息处理器"""
         if message_type in self.message_handlers:
             del self.message_handlers[message_type]
-    
+
     def set_status_callback(self, callback: Callable):
         """设置状态回调"""
         self.status_callback = callback
-    
+
     def get_nodes(self) -> List[NodeInfo]:
         """获取所有节点列表"""
         with self.lock:
             return list(self.nodes.values())
-    
+
     def get_node(self, node_id: str) -> Optional[NodeInfo]:
         """获取单个节点信息"""
         with self.lock:
             return self.nodes.get(node_id)
-    
+
     def get_self_info(self) -> Dict[str, Any]:
         """获取本节点信息"""
         return {
@@ -436,15 +440,15 @@ class LANNode:
 # 测试
 if __name__ == "__main__":
     node = LANNode()
-    
+
     def on_status_change(nodes):
         print(f"\n[LANNode] 节点列表更新 ({len(nodes)} 个节点):")
         for n in nodes:
             print(f"  - {n.node_id[:8]}: {n.hostname} ({n.ip_address}) - {n.status.value}")
-    
+
     node.set_status_callback(on_status_change)
     node.start()
-    
+
     print("\n按 Ctrl+C 停止...")
     try:
         while True:

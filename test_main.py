@@ -6,7 +6,23 @@ AIclaw 主程序测试脚本
 
 import sys
 import os
+import traceback
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
+# 复用项目的统一异常体系，使测试输出的错误信息与正式运行一致
+try:
+    from utils.errors import AppError, get_suggestion
+    from utils.error_codes import ErrorCode
+    _HAS_APP_ERROR = True
+except Exception:
+    # 兜底：基础设施不可用时也能跑测试
+    _HAS_APP_ERROR = False
+
+    class AppError(Exception):  # type: ignore
+        pass
+
+    def get_suggestion(_code):
+        return "请查看日志文件获取详细信息"
 
 def test_system_monitor():
     """测试系统监控模块"""
@@ -166,19 +182,33 @@ def main():
                 print(f"✓ {name}: 通过")
                 passed += 1
             else:
-                print(f"✗ {name}: 失败")
+                print(f"✗ {name}: 失败（测试函数返回 False）")
                 failed += 1
-        except Exception as e:
-            print(f"✗ {name}: 错误 - {e}")
+        except AppError as e:
+            # 业务异常：输出错误码 + 模块 + 上下文 + 建议
+            print(f"✗ {name}: {e}")
+            if _HAS_APP_ERROR and hasattr(e, "module"):
+                print(f"    模块: {e.module}")
+                print(f"    错误码: {e.code.name if hasattr(e, 'code') else 'unknown'}")
+                if getattr(e, "details", None):
+                    print(f"    上下文: {e.details}")
+                suggestion = get_suggestion(getattr(e, "code", None)) if getattr(e, "code", None) else ""
+                if suggestion:
+                    print(f"    建议: {suggestion}")
             failed += 1
-    
+        except Exception as e:
+            # 未预期错误：打印完整 traceback 帮助定位
+            print(f"✗ {name}: 未预期错误 - {type(e).__name__}: {e}")
+            traceback.print_exc()
+            failed += 1
+
     print("\n" + "=" * 60)
     print(f"测试结果: {passed}/{len(tests)} 通过")
-    
+
     if failed > 0:
         print(f"失败: {failed}")
         return False
-    
+
     print("所有测试通过!")
     return True
 

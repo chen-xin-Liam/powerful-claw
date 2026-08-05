@@ -14,6 +14,10 @@ from src.services.ai_service import AIService
 from src.services.extension_manager import extension_manager
 from src.services.screen_monitor import screen_monitor
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 class HTTPServerHandler(BaseHTTPRequestHandler):
     """HTTP请求处理器"""
     
@@ -940,20 +944,20 @@ class APIServer:
         with open(os.path.join(self.web_dir, "index.html"), "w", encoding="utf-8") as f:
             f.write(html_content)
         
-        print(f"API网页文件已创建: {os.path.join(self.web_dir, 'index.html')}")
+        logger.info(f"API网页文件已创建: {os.path.join(self.web_dir, 'index.html')}")
     
     def _http_thread_func(self):
         """HTTP服务器线程函数"""
         monitor_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web_monitor")
         handler = lambda *args, **kwargs: HTTPServerHandler(self.web_dir, monitor_dir, *args, **kwargs)
         self.http_server = HTTPServer((self.host, self.port), handler)
-        print(f"HTTP服务器已启动: http://{self.host}:{self.port}")
+        logger.info(f"HTTP服务器已启动: http://{self.host}:{self.port}")
         self.http_server.serve_forever()
     
     async def _handle_client(self, websocket):
         """处理单个WebSocket客户端连接"""
         self.clients.add(websocket)
-        print(f"API客户端已连接: {websocket.remote_address}")
+        logger.info(f"API客户端已连接: {websocket.remote_address}")
         
         try:
             await websocket.send(json.dumps({
@@ -967,7 +971,7 @@ class APIServer:
             pass
         finally:
             self.clients.remove(websocket)
-            print(f"API客户端已断开: {websocket.remote_address}")
+            logger.info(f"API客户端已断开: {websocket.remote_address}")
     
     async def _process_message(self, websocket, message):
         """处理收到的消息"""
@@ -1190,7 +1194,7 @@ class APIServer:
             self.port + 1,  # WebSocket使用端口+1
             process_request=self._ws_process_request
         )
-        print(f"API WebSocket服务器已启动: ws://{self.host}:{self.port + 1}/api")
+        logger.info(f"API WebSocket服务器已启动: ws://{self.host}:{self.port + 1}/api")
         
         await self.ws_server.wait_closed()
     
@@ -1229,12 +1233,12 @@ class APIServer:
         if self.http_server:
             self.http_server.shutdown()
             self.http_server.server_close()
-            print("HTTP服务器已停止")
+            logger.info("HTTP服务器已停止")
         
         # 停止WebSocket服务器
         if self.ws_server:
             self.ws_server.close()
-            print("WebSocket服务器已停止")
+            logger.info("WebSocket服务器已停止")
     
     async def _handle_get_extensions(self, data):
         """获取所有扩展"""

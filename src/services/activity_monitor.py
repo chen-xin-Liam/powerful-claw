@@ -11,6 +11,10 @@ from enum import Enum
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 class MonitorEvent(Enum):
     USER_CONNECT = "user_connect"
     USER_DISCONNECT = "user_disconnect"
@@ -48,19 +52,19 @@ class ActivityMonitor:
         """启用监控"""
         with self._lock:
             self.is_enabled = True
-            print("[Monitor] 监控已启用")
+            logger.info("监控已启用")
     
     def disable(self):
         """禁用监控"""
         with self._lock:
             self.is_enabled = False
-            print("[Monitor] 监控已禁用")
+            logger.info("监控已禁用")
     
     def toggle(self):
         """切换监控状态"""
         with self._lock:
             self.is_enabled = not self.is_enabled
-            print(f"[Monitor] 监控状态已切换为: {'启用' if self.is_enabled else '禁用'}")
+            logger.info(f"监控状态已切换为: {'启用' if self.is_enabled else '禁用'}")
         return self.is_enabled
     
     def record_action(self, event_type: str, user_id: str, action: str, 
@@ -107,7 +111,7 @@ class ActivityMonitor:
             
             asyncio.create_task(self._send_to_all_clients(message))
         except Exception as e:
-            print(f"[Monitor] 广播失败: {e}")
+            logger.error(f"广播失败: {e}", exc_info=True)
     
     async def _send_to_all_clients(self, message: str):
         """发送消息给所有客户端"""
@@ -122,7 +126,7 @@ class ActivityMonitor:
         """处理监控客户端连接"""
         with self._lock:
             self.clients.append(websocket)
-            print(f"[Monitor] 监控客户端已连接: {websocket.remote_address}")
+            logger.info(f"监控客户端已连接: {websocket.remote_address}")
         
         try:
             # 发送历史记录
@@ -153,7 +157,7 @@ class ActivityMonitor:
             with self._lock:
                 if websocket in self.clients:
                     self.clients.remove(websocket)
-                print(f"[Monitor] 监控客户端已断开: {websocket.remote_address}")
+                logger.info(f"监控客户端已断开: {websocket.remote_address}")
     
     async def _run_server(self):
         """运行监控服务器"""
@@ -162,7 +166,7 @@ class ActivityMonitor:
             '0.0.0.0',
             self.port
         )
-        print(f"[Monitor] 监控服务器已启动: ws://0.0.0.0:{self.port}")
+        logger.info(f"监控服务器已启动: ws://0.0.0.0:{self.port}")
         
         await self._server.wait_closed()
     
@@ -193,7 +197,7 @@ class ActivityMonitor:
         self.is_running = False
         if self._server:
             self._server.close()
-        print("[Monitor] 监控服务器已停止")
+        logger.info("监控服务器已停止")
     
     def get_status(self) -> Dict[str, Any]:
         """获取监控状态"""

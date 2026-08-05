@@ -10,6 +10,10 @@ from typing import Dict, Any, Optional, Generator
 from dataclasses import dataclass
 import socket
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 @dataclass
 class InferenceTask:
@@ -48,12 +52,12 @@ class DistributedInferenceService:
     def start(self):
         """启动推理服务"""
         self.is_running = True
-        print("[DistributedInference] 分布式推理服务已启动")
+        logger.info("分布式推理服务已启动")
     
     def stop(self):
         """停止推理服务"""
         self.is_running = False
-        print("[DistributedInference] 分布式推理服务已停止")
+        logger.info("分布式推理服务已停止")
     
     def _handle_inference_request(self, message, addr):
         """处理推理请求（作为工作节点）"""
@@ -64,7 +68,7 @@ class DistributedInferenceService:
             max_tokens = message.get("max_tokens", 512)
             temperature = message.get("temperature", 0.7)
             
-            print(f"[DistributedInference] 收到推理请求: {task_id[:8]}")
+            logger.info(f"收到推理请求: {task_id[:8]}")
             
             # 使用本地模型服务执行推理
             if self.local_model_service and self.local_model_service.is_loaded:
@@ -75,7 +79,7 @@ class DistributedInferenceService:
             else:
                 self._send_inference_result(task_id, {"success": False, "error": "本地模型未加载"})
         except Exception as e:
-            print(f"[DistributedInference] 处理推理请求失败: {e}")
+            logger.error(f"处理推理请求失败: {e}", exc_info=True)
             self._send_inference_result(task_id, {"success": False, "error": str(e)})
     
     def _send_inference_result(self, task_id: str, result: Dict[str, Any]):
@@ -97,10 +101,10 @@ class DistributedInferenceService:
                             sock.connect((node.ip_address, self.cluster_manager.lan_node.DATA_PORT))
                             sock.sendall((result_data + "\n").encode('utf-8'))
                             sock.close()
-                        except:
-                            pass
+                        except (socket.error, OSError) as e:
+                            logger.debug(f"节点连接失败: {e}")
         except Exception as e:
-            print(f"[DistributedInference] 发送推理结果失败: {e}")
+            logger.error(f"发送推理结果失败: {e}", exc_info=True)
     
     def _handle_inference_result(self, message, addr):
         """处理推理结果"""
@@ -119,9 +123,9 @@ class DistributedInferenceService:
                 task.completed_at = time.time()
                 task.progress = 100.0
                 
-                print(f"[DistributedInference] 推理任务 {task_id[:8]} 完成")
+                logger.info(f"推理任务 {task_id[:8]} 完成")
         except Exception as e:
-            print(f"[DistributedInference] 处理推理结果失败: {e}")
+            logger.error(f"处理推理结果失败: {e}", exc_info=True)
     
     def submit_inference(self, model_name: str, prompt: str, 
                         max_tokens: int = 512, temperature: float = 0.7) -> str:
@@ -157,7 +161,7 @@ class DistributedInferenceService:
                 task.completed_at = time.time()
                 return result
             except Exception as e:
-                print(f"[DistributedInference] 本地推理失败: {e}")
+                logger.error(f"本地推理失败: {e}", exc_info=True)
         
         # 如果本地不可用，尝试分布式推理
         if self.cluster_manager:

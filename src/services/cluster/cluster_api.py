@@ -210,7 +210,7 @@ class ClusterAPIServer:
         self.is_running = False
         if self.server:
             self.server.server_close()
-        print("[ClusterAPI] API服务器已停止")
+        logger.info("API服务器已停止")
 
 
 # 测试

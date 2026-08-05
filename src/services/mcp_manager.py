@@ -11,6 +11,10 @@ from enum import Enum
 import importlib.util
 import sys
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 class MCPConnectionState(Enum):
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
@@ -48,9 +52,9 @@ class MCPServerManager:
         """注册一个MCP服务器"""
         with self._lock:
             if config.name in self.servers:
-                print(f"[MCP] 服务器 '{config.name}' 已存在，将被替换")
+                logger.warning(f"服务器 '{config.name}' 已存在，将被替换")
             self.servers[config.name] = MCPServer(config=config)
-            print(f"[MCP] 服务器 '{config.name}' 已注册")
+            logger.info(f"服务器 '{config.name}' 已注册")
     
     def unregister_server(self, name: str) -> bool:
         """取消注册一个MCP服务器"""
@@ -61,7 +65,7 @@ class MCPServerManager:
             if server.state == MCPConnectionState.CONNECTED:
                 self._stop_server(name)
             del self.servers[name]
-            print(f"[MCP] 服务器 '{name}' 已取消注册")
+            logger.info(f"服务器 '{name}' 已取消注册")
             return True
     
     def add_message_handler(self, handler: Callable[[str, Any], None]) -> None:
@@ -82,7 +86,7 @@ class MCPServerManager:
             server = self.servers[name]
             
         if server.config.enabled is False:
-            print(f"[MCP] 服务器 '{name}' 已禁用")
+            logger.info(f"服务器 '{name}' 已禁用")
             return False
         
         try:
@@ -90,7 +94,7 @@ class MCPServerManager:
             env.update(server.config.env)
             
             cmd = [server.config.command] + server.config.args
-            print(f"[MCP] 启动服务器 '{name}': {' '.join(cmd)}")
+            logger.info(f"启动服务器 '{name}': {' '.join(cmd)}")
             
             server.process = subprocess.Popen(
                 cmd,
@@ -104,13 +108,13 @@ class MCPServerManager:
             server.state = MCPConnectionState.CONNECTED
             server.reconnect_attempts = 0
             server.last_error = None
-            print(f"[MCP] 服务器 '{name}' 已启动")
+            logger.info(f"服务器 '{name}' 已启动")
             return True
             
         except Exception as e:
             server.state = MCPConnectionState.ERROR
             server.last_error = str(e)
-            print(f"[MCP] 服务器 '{name}' 启动失败: {e}")
+            logger.error(f"服务器 '{name}' 启动失败: {e}", exc_info=True)
             return False
     
     def _stop_server(self, name: str) -> None:
@@ -127,11 +131,11 @@ class MCPServerManager:
             except subprocess.TimeoutExpired:
                 server.process.kill()
             except Exception as e:
-                print(f"[MCP] 停止服务器 '{name}' 时出错: {e}")
+                logger.error(f"停止服务器 '{name}' 时出错: {e}", exc_info=True)
             server.process = None
         
         server.state = MCPConnectionState.DISCONNECTED
-        print(f"[MCP] 服务器 '{name}' 已停止")
+        logger.info(f"服务器 '{name}' 已停止")
     
     def start_all(self) -> None:
         """启动所有已注册的MCP服务器"""
@@ -193,7 +197,7 @@ class MCPServerManager:
             server.process.stdin.flush()
             return request
         except Exception as e:
-            print(f"[MCP] 发送请求到 '{server_name}' 失败: {e}")
+            logger.error(f"发送请求到 '{server_name}' 失败: {e}", exc_info=True)
             return None
     
     def notify(self, server_name: str, method: str, params: Optional[Dict] = None) -> bool:

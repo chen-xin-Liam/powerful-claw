@@ -6,6 +6,10 @@
 import json
 from typing import List, Dict, Any, Callable, Optional
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class ToolRegistry:
     """工具注册表（单例模式）"""

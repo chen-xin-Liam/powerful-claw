@@ -13,6 +13,10 @@ from abc import ABC, abstractmethod
 import hashlib
 import ast
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 PLUGIN_API_VERSION = "1.0.0"
 
 class PluginState(Enum):
@@ -163,6 +167,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.services.plugin_manager import BasePlugin, PluginInfo
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class SamplePlugin(BasePlugin):
     """示例插件类"""
@@ -176,18 +183,18 @@ class SamplePlugin(BasePlugin):
     )
     
     def on_load(self) -> bool:
-        print("[SamplePlugin] 插件已加载")
+        logger.info("插件已加载")
         return True
-    
+
     def on_enable(self) -> bool:
-        print("[SamplePlugin] 插件已启用")
+        logger.info("插件已启用")
         return True
-    
+
     def on_disable(self) -> None:
-        print("[SamplePlugin] 插件已禁用")
-    
+        logger.info("插件已禁用")
+
     def on_unload(self) -> None:
-        print("[SamplePlugin] 插件已卸载")
+        logger.info("插件已卸载")
     
     def get_info(self) -> PluginInfo:
         return self.PLUGIN_INFO
@@ -228,7 +235,7 @@ def get_plugin_class():
                         result = callback(*args, **kwargs)
                         results.append(result)
                     except Exception as e:
-                        print(f"[PluginManager] 钩子 '{hook_name}' 执行失败: {e}")
+                        logger.error(f"钩子 '{hook_name}' 执行失败: {e}", exc_info=True)
             return results
     
     def _scan_plugins(self) -> List[str]:
@@ -244,7 +251,8 @@ def get_plugin_class():
         try:
             with open(file_path, 'rb') as f:
                 return hashlib.md5(f.read()).hexdigest()
-        except:
+        except OSError as e:
+            logger.debug(f"获取文件哈希失败: {file_path}", exc_info=True)
             return ""
     
     def _load_plugin_from_file(self, file_path: str) -> Optional[Plugin]:
@@ -300,8 +308,7 @@ def get_plugin_class():
             return plugin
             
         except Exception as e:
-            print(f"[PluginManager] 加载插件 '{file_path}' 失败: {e}")
-            traceback.print_exc()
+            logger.error(f"加载插件 '{file_path}' 失败: {e}", exc_info=True)
             return None
     
     def discover_plugins(self) -> List[Plugin]:
@@ -320,7 +327,7 @@ def get_plugin_class():
         """加载插件"""
         with self._lock:
             if plugin_name in self.plugins:
-                print(f"[PluginManager] 插件 '{plugin_name}' 已加载")
+                logger.info(f"插件 '{plugin_name}' 已加载")
                 return True
             
             plugin_files = self._scan_plugins()
@@ -332,7 +339,7 @@ def get_plugin_class():
                         if plugin.instance.on_load():
                             self.plugins[plugin_name] = plugin
                             plugin.state = PluginState.LOADED
-                            print(f"[PluginManager] 插件 '{plugin_name}' 加载成功")
+                            logger.info(f"插件 '{plugin_name}' 加载成功")
                             self.call_hooks('plugin_loaded', plugin_name)
                             return True
                         else:
@@ -342,10 +349,10 @@ def get_plugin_class():
                     except Exception as e:
                         plugin.state = PluginState.FAILED
                         plugin.error_message = str(e)
-                        print(f"[PluginManager] 插件 '{plugin_name}' 加载失败: {e}")
+                        logger.error(f"插件 '{plugin_name}' 加载失败: {e}", exc_info=True)
                         return False
             
-            print(f"[PluginManager] 未找到插件 '{plugin_name}'")
+            logger.warning(f"未找到插件 '{plugin_name}'")
             return False
     
     def enable_plugin(self, plugin_name: str) -> bool:
@@ -362,12 +369,12 @@ def get_plugin_class():
                         plugin.state = PluginState.LOADED
                         if plugin_name not in self.enabled_plugins:
                             self.enabled_plugins.append(plugin_name)
-                        print(f"[PluginManager] 插件 '{plugin_name}' 已启用")
+                        logger.info(f"插件 '{plugin_name}' 已启用")
                         self.call_hooks('plugin_enabled', plugin_name)
                         return True
                 except Exception as e:
-                    print(f"[PluginManager] 启用插件 '{plugin_name}' 失败: {e}")
-            
+                    logger.error(f"启用插件 '{plugin_name}' 失败: {e}", exc_info=True)
+
             return False
     
     def disable_plugin(self, plugin_name: str) -> bool:
@@ -383,11 +390,11 @@ def get_plugin_class():
                 plugin.state = PluginState.DISABLED
                 if plugin_name in self.enabled_plugins:
                     self.enabled_plugins.remove(plugin_name)
-                print(f"[PluginManager] 插件 '{plugin_name}' 已禁用")
+                logger.info(f"插件 '{plugin_name}' 已禁用")
                 self.call_hooks('plugin_disabled', plugin_name)
                 return True
             except Exception as e:
-                print(f"[PluginManager] 禁用插件 '{plugin_name}' 失败: {e}")
+                logger.error(f"禁用插件 '{plugin_name}' 失败: {e}", exc_info=True)
                 return False
     
     def unload_plugin(self, plugin_name: str) -> bool:
@@ -405,11 +412,11 @@ def get_plugin_class():
                 plugin.instance.on_unload()
                 plugin.state = PluginState.UNLOADED
                 del self.plugins[plugin_name]
-                print(f"[PluginManager] 插件 '{plugin_name}' 已卸载")
+                logger.info(f"插件 '{plugin_name}' 已卸载")
                 self.call_hooks('plugin_unloaded', plugin_name)
                 return True
             except Exception as e:
-                print(f"[PluginManager] 卸载插件 '{plugin_name}' 失败: {e}")
+                logger.error(f"卸载插件 '{plugin_name}' 失败: {e}", exc_info=True)
                 return False
     
     def reload_plugin(self, plugin_name: str) -> bool:
@@ -423,7 +430,7 @@ def get_plugin_class():
     def start_hot_reload(self, interval: float = 2.0) -> None:
         """启动热重载监控"""
         if self._hot_reload_enabled:
-            print("[PluginManager] 热重载已在运行")
+            logger.warning("热重载已在运行")
             return
         
         self._hot_reload_enabled = True
@@ -434,7 +441,7 @@ def get_plugin_class():
                 try:
                     self._check_for_changes()
                 except Exception as e:
-                    print(f"[PluginManager] 热重载检查失败: {e}")
+                    logger.error(f"热重载检查失败: {e}", exc_info=True)
                 self._stop_hot_reload.wait(interval)
         
         self._hot_reload_thread = threading.Thread(
@@ -443,7 +450,7 @@ def get_plugin_class():
             name="HotReloadWorker"
         )
         self._hot_reload_thread.start()
-        print(f"[PluginManager] 热重载已启动 (间隔: {interval}秒)")
+        logger.info(f"热重载已启动 (间隔: {interval}秒)")
     
     def stop_hot_reload(self) -> None:
         """停止热重载监控"""
@@ -457,7 +464,7 @@ def get_plugin_class():
             self._hot_reload_thread.join(timeout=5)
             self._hot_reload_thread = None
         
-        print("[PluginManager] 热重载已停止")
+        logger.info("热重载已停止")
     
     def _check_for_changes(self) -> None:
         """检查文件变化"""
@@ -470,7 +477,7 @@ def get_plugin_class():
                 current_hash = self._get_file_hash(plugin.file_path)
                 
                 if current_mtime != plugin.last_modified or current_hash != plugin.file_hash:
-                    print(f"[PluginManager] 检测到插件 '{plugin_name}' 发生变化，开始热重载...")
+                    logger.info(f"检测到插件 '{plugin_name}' 发生变化，开始热重载...")
                     plugin.last_modified = current_mtime
                     plugin.file_hash = current_hash
                     self.reload_plugin(plugin_name)
@@ -484,11 +491,11 @@ def get_plugin_class():
                 try:
                     if plugin.instance.on_load():
                         plugin.state = PluginState.LOADED
-                        print(f"[PluginManager] 自动加载插件 '{plugin.name}'")
+                        logger.info(f"自动加载插件 '{plugin.name}'")
                 except Exception as e:
                     plugin.state = PluginState.FAILED
                     plugin.error_message = str(e)
-                    print(f"[PluginManager] 自动加载插件 '{plugin.name}' 失败: {e}")
+                    logger.error(f"自动加载插件 '{plugin.name}' 失败: {e}", exc_info=True)
     
     def enable_all_plugins(self) -> None:
         """启用所有插件"""

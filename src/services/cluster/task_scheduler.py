@@ -11,6 +11,10 @@ from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class TaskStatus(Enum):
     """任务状态枚举"""
@@ -72,14 +76,14 @@ class TaskScheduler:
             daemon=True
         )
         self.scheduler_thread.start()
-        print("[TaskScheduler] 任务调度器已启动")
+        logger.info("任务调度器已启动")
     
     def stop(self):
         """停止调度器"""
         self.is_running = False
         if self.scheduler_thread:
             self.scheduler_thread.join(timeout=5)
-        print("[TaskScheduler] 任务调度器已停止")
+        logger.info("任务调度器已停止")
     
     def _scheduler_loop(self):
         """调度器主循环"""
@@ -88,7 +92,7 @@ class TaskScheduler:
                 self._process_queue()
                 time.sleep(0.5)
             except Exception as e:
-                print(f"[TaskScheduler] 调度器错误: {e}")
+                logger.error(f"调度器错误: {e}", exc_info=True)
     
     def _process_queue(self):
         """处理任务队列"""
@@ -195,7 +199,7 @@ class TaskScheduler:
         # 发送任务请求
         self._send_task_to_node(task, node)
         
-        print(f"[TaskScheduler] 任务 {task.task_id[:8]} 已分配到节点 {node.node_id[:8]}")
+        logger.info(f"任务 {task.task_id[:8]} 已分配到节点 {node.node_id[:8]}")
     
     def _send_task_to_node(self, task: TaskInfo, node):
         """向节点发送任务"""
@@ -217,7 +221,7 @@ class TaskScheduler:
             sock.sendall((task_data + "\n").encode('utf-8'))
             sock.close()
         except Exception as e:
-            print(f"[TaskScheduler] 发送任务失败: {e}")
+            logger.error(f"发送任务失败: {e}", exc_info=True)
             with self.lock:
                 task.status = TaskStatus.FAILED
                 task.error = str(e)
@@ -239,7 +243,7 @@ class TaskScheduler:
             self.tasks[task_id] = task
             self.task_queue.append(task)
         
-        print(f"[TaskScheduler] 任务 {task_id[:8]} 已提交")
+        logger.info(f"任务 {task_id[:8]} 已提交")
         return task_id
     
     def get_task(self, task_id: str) -> Optional[TaskInfo]:
@@ -260,7 +264,7 @@ class TaskScheduler:
                 if task.status in [TaskStatus.PENDING, TaskStatus.QUEUED]:
                     task.status = TaskStatus.CANCELLED
                     self.task_queue.remove(task)
-                    print(f"[TaskScheduler] 任务 {task_id[:8]} 已取消")
+                    logger.info(f"任务 {task_id[:8]} 已取消")
                     return True
         return False
     
@@ -271,7 +275,7 @@ class TaskScheduler:
             task_type = message.get("task_type")
             data = message.get("data", {})
             
-            print(f"[TaskScheduler] 收到任务请求: {task_id[:8]}")
+            logger.info(f"收到任务请求: {task_id[:8]}")
             
             # 本地处理任务
             result = self._execute_task(task_type, data)
@@ -279,7 +283,7 @@ class TaskScheduler:
             # 发送结果
             self._send_task_result(task_id, result)
         except Exception as e:
-            print(f"[TaskScheduler] 处理任务请求失败: {e}")
+            logger.error(f"处理任务请求失败: {e}", exc_info=True)
     
     def _execute_task(self, task_type: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """执行任务（占位方法，需子类实现）"""
@@ -308,10 +312,10 @@ class TaskScheduler:
                         sock.connect((node.ip_address, self.lan_node.TASK_PORT))
                         sock.sendall((result_data + "\n").encode('utf-8'))
                         sock.close()
-                    except:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"节点连接失败: {e}")
         except Exception as e:
-            print(f"[TaskScheduler] 发送任务结果失败: {e}")
+            logger.error(f"发送任务结果失败: {e}", exc_info=True)
     
     def _handle_task_result(self, message, addr):
         """处理任务结果"""
@@ -327,10 +331,10 @@ class TaskScheduler:
                     task.completed_at = time.time()
                     task.progress = 100.0
             
-            print(f"[TaskScheduler] 任务 {task_id[:8]} 完成")
+            logger.info(f"任务 {task_id[:8]} 完成")
             self._notify_task_update(task_id)
         except Exception as e:
-            print(f"[TaskScheduler] 处理任务结果失败: {e}")
+            logger.error(f"处理任务结果失败: {e}", exc_info=True)
     
     def _handle_task_status(self, message, addr):
         """处理任务状态更新"""
@@ -349,7 +353,7 @@ class TaskScheduler:
                         except ValueError:
                             pass
         except Exception as e:
-            print(f"[TaskScheduler] 处理任务状态失败: {e}")
+            logger.error(f"处理任务状态失败: {e}", exc_info=True)
     
     def _notify_task_update(self, task_id: str):
         """通知任务更新"""
@@ -359,7 +363,7 @@ class TaskScheduler:
                 try:
                     callback(task)
                 except Exception as e:
-                    print(f"[TaskScheduler] 回调执行失败: {e}")
+                    logger.error(f"回调执行失败: {e}", exc_info=True)
     
     def add_task_callback(self, task_id: str, callback: Callable):
         """添加任务回调"""
