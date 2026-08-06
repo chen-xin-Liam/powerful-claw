@@ -334,6 +334,240 @@ def test_websocket_server():
     print("WebSocket服务器模块导入成功")
     return True
 
+def test_high_risk_detector():
+    """测试高危操作检测器（平台感知 + 黑名单 + 敏感路径 + 白名单）"""
+    print("\n=== 测试高危操作检测 ===")
+    from system.high_risk_detector import HighRiskDetector
+
+    detector = HighRiskDetector()
+    print(f"当前平台: {detector.platform}")
+
+    failures = []
+
+    # 1. 白名单：查看类命令不应判为高危
+    safe_cmds = ["ls", "ls -la", "echo hello", "whoami", "date", "ps aux", "dir"]
+    safe_fail = 0
+    for cmd in safe_cmds:
+        high, reason = detector.is_high_risk_command(cmd)
+        if high:
+            failures.append(f"白名单命令被误判为高危: {cmd!r} -> {reason}")
+            safe_fail += 1
+    print(f"白名单命令检查: {len(safe_cmds)} 个，{'通过' if safe_fail == 0 else f'失败 {safe_fail} 个'}")
+
+    # 2. 当前平台高危命令应被识别
+    if detector.platform == "Windows":
+        high_risk_cmds = ["format D:", "reg add HKLM\\Software\\X", "netsh interface",
+                          "taskkill /f /im explorer.exe", "shutdown /s /t 0",
+                          "del /f /s C:\\Windows\\temp"]
+    else:
+        high_risk_cmds = ["sudo apt update", "rm -rf /", "systemctl stop nginx",
+                          "chmod 777 /etc", "dd if=/dev/zero of=/dev/sda",
+                          "useradd newuser"]
+    hr_fail = 0
+    for cmd in high_risk_cmds:
+        high, reason = detector.is_high_risk_command(cmd)
+        if not high:
+            failures.append(f"高危命令未被识别: {cmd!r}")
+            hr_fail += 1
+        else:
+            print(f"  ✓ 识别高危: {cmd!r} ({reason})")
+    print(f"高危命令检查: {len(high_risk_cmds)} 个，{'通过' if hr_fail == 0 else f'失败 {hr_fail} 个'}")
+
+    # 3. 危险热键应被识别
+    high, reason = detector.is_high_risk_hotkey(["alt", "f4"])
+    if not high:
+        failures.append("危险热键 Alt+F4 未被识别")
+    else:
+        print(f"  ✓ 识别危险热键: Alt+F4 ({reason})")
+
+    # 4. 安全热键不应误判
+    high, _ = detector.is_high_risk_hotkey(["ctrl", "c"])
+    if high:
+        failures.append("安全热键 Ctrl+C 被误判为高危")
+
+    # 5. 操作类型分发（用当前平台的高危命令 + 安全操作）
+    high, _ = detector.is_high_risk_operation("execute_command", {"command": high_risk_cmds[0]})
+    if not high:
+        failures.append(f"is_high_risk_operation 未识别 execute_command 高危: {high_risk_cmds[0]!r}")
+    high, _ = detector.is_high_risk_operation("mouse_move", {"x": 100, "y": 100})
+    if high:
+        failures.append("is_high_risk_operation 误判 mouse_move 为高危")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+
+    print("✓ 高危操作检测全部通过")
+    return True
+
+
+def test_privilege_manager():
+    """测试提权管理器（单例 + 平台探测 + fail-safe + PrivilegeTool 注册）"""
+    print("\n=== 测试提权管理器 ===")
+    from system.privilege_manager import PrivilegeManager
+
+    mgr = PrivilegeManager()
+    print(f"当前平台: {mgr.platform}")
+    failures = []
+
+    # 1. 单例
+    if mgr is not PrivilegeManager():
+        failures.append("PrivilegeManager 不是单例")
+
+    # 2. 平台支持
+    if not mgr.is_available():
+        failures.append(f"当前平台 {mgr.platform} 不在支持列表")
+    else:
+        print(f"  ✓ 平台支持提权: {mgr.platform}")
+
+    # 3. fail-safe：未配置 ConfirmationManager 时拒绝提权（不触发实际 UAC/sudo）
+    result = mgr.execute_privileged("whoami", reason="测试提权")
+    if result.get("success"):
+        failures.append("fail-safe 失败：未配置确认管理器时不应允许提权")
+    else:
+        print(f"  ✓ fail-safe 生效（未配置时拒绝）")
+
+    # 4. 空命令拒绝
+    if mgr.execute_privileged("").get("success"):
+        failures.append("空命令不应执行")
+
+    # 5. PrivilegeTool 已注册到 AIAgent 且分类为 system
+    try:
+        import json as _json
+        from services.ai_agent import AIAgent
+        agent = AIAgent()
+        tools_desc = agent.get_tool_descriptions(format="json")
+        if "PrivilegeTool" not in tools_desc:
+            failures.append("PrivilegeTool 未注册到 AIAgent")
+        else:
+            print("  ✓ PrivilegeTool 已注册到 AIAgent")
+            tools_list = _json.loads(tools_desc)
+            priv_tool = next((t for t in tools_list if t["name"] == "PrivilegeTool"), None)
+            if priv_tool and priv_tool.get("category") != "system":
+                failures.append(f"PrivilegeTool category 应为 system，实际: {priv_tool.get('category')}")
+            elif priv_tool:
+                print("  ✓ PrivilegeTool 分类为 system")
+    except Exception as e:
+        failures.append(f"AIAgent 注册检查失败: {e}")
+
+    # 6. 真实权限检测（is_elevated，不弹框，可与系统命令交叉验证）
+    try:
+        import subprocess as _sp
+        elevated = mgr.is_elevated()
+        print(f"  ✓ 真实权限检测: 当前{'已提权' if elevated else '未提权（普通权限）'}")
+        # 交叉验证：用系统命令核对 is_elevated 的真实性
+        if mgr.platform == "Windows":
+            chk = _sp.run("whoami /groups", shell=True, capture_output=True, text=True, timeout=10)
+            has_high = "S-1-16-12288" in chk.stdout  # High Mandatory Level SID
+            if elevated and not has_high:
+                failures.append("is_elevated=True 但 whoami /groups 未显示高完整性，可能误报")
+            print(f"    交叉验证（whoami /groups 高完整性）: {has_high}")
+        else:
+            chk = _sp.run("id -u", shell=True, capture_output=True, text=True, timeout=10)
+            is_root = chk.stdout.strip() == "0"
+            if elevated != is_root:
+                failures.append(f"is_elevated={elevated} 与 id -u=0={is_root} 不一致")
+            print(f"    交叉验证（id -u == 0）: {is_root}")
+    except Exception as e:
+        failures.append(f"真实权限检测失败: {e}")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+    print("✓ 提权管理器测试全部通过")
+    return True
+
+
+def test_privilege_manager_cli():
+    """测试提权管理器 __main__ CLI 入口（端到端，stdin 喂 no 走拒绝路径，不触发 UAC）"""
+    print("\n=== 测试提权管理器 CLI 入口 ===")
+    import subprocess as _sp
+    import sys as _sys
+    project_root = os.path.dirname(os.path.abspath(__file__))
+
+    # 用 -m 运行（src 作为包），stdin 喂 "no" 模拟用户拒绝 → 不触发 UAC/sudo
+    try:
+        proc = _sp.run(
+            [_sys.executable, "-m", "src.system.privilege_manager", "whoami"],
+            input="no\n", capture_output=True, text=True,
+            timeout=30, cwd=project_root,
+        )
+    except _sp.TimeoutExpired:
+        print("  ✗ CLI 测试超时（可能卡在 input/UAC）")
+        return False
+
+    failures = []
+    combined = proc.stdout + proc.stderr
+
+    # 1. 拒绝路径退出码应为 1（sys.exit(0 if success else 1)）
+    if proc.returncode != 1:
+        failures.append(f"拒绝路径退出码应为 1，实际 {proc.returncode}")
+    else:
+        print("  ✓ 拒绝路径退出码 = 1")
+
+    # 2. 输出含真实权限检测
+    if "当前已提权" in combined:
+        print("  ✓ 输出含真实权限检测")
+    else:
+        failures.append("输出未含权限检测信息（当前已提权）")
+
+    # 3. 输出含拒绝信息
+    if "用户未授权" in combined or "已拒绝" in combined:
+        print("  ✓ 输出含拒绝信息")
+    else:
+        failures.append("输出未含拒绝信息")
+
+    # 4. 拒绝路径不应触发 UAC
+    if "UAC" in combined and "失败" in combined:
+        failures.append("拒绝路径不应触发 UAC")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+    print("✓ 提权管理器 CLI 入口测试通过")
+    return True
+
+
+def test_privilege_verify():
+    """测试真实提权验证方法（在系统目录创建/写/删 test.txt）"""
+    print("\n=== 测试提权验证方法 ===")
+    from system.privilege_manager import PrivilegeManager
+    mgr = PrivilegeManager()
+    failures = []
+
+    # 1. verify_privilege 可调用且返回结构正确（未提权失败，已提权成功）
+    result = mgr.verify_privilege()
+    if "success" not in result or "message" not in result:
+        failures.append("verify_privilege 返回结构异常")
+    elif result.get("success"):
+        print("  ✓ verify_privilege 成功（当前以管理员运行，真实提权生效）")
+    else:
+        print(f"  ✓ verify_privilege 失败（未提权，符合预期）")
+
+    # 2. _verify_shell_command 返回非空
+    cmd = mgr._verify_shell_command()
+    if not cmd:
+        failures.append("_verify_shell_command 返回空")
+    else:
+        print(f"  ✓ verify shell 命令已生成（长度 {len(cmd)}）")
+
+    # 3. execute_privileged("__verify__") 未配置确认管理器时 fail-safe 拒绝（不弹 UAC）
+    no_confirm = mgr.execute_privileged("__verify__", reason="验证测试")
+    if no_confirm.get("success"):
+        failures.append("未配置确认管理器时 verify 不应成功")
+    else:
+        print("  ✓ fail-safe 生效（未配置时拒绝 verify，不弹 UAC）")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+    print("✓ 提权验证方法测试通过")
+    return True
+
 def _parse_test_args(argv):
     """解析 test_main.py 的命令行参数。
 
@@ -431,6 +665,10 @@ def main():
         ("屏幕监控", test_screen_monitor),
         ("API服务器", test_api_server),
         ("WebSocket服务器", test_websocket_server),
+        ("高危操作检测", test_high_risk_detector),
+        ("提权管理器", test_privilege_manager),
+        ("提权CLI入口", test_privilege_manager_cli),
+        ("提权验证方法", test_privilege_verify),
     ]
 
     # --deps-only：仅保留依赖检查测试

@@ -120,6 +120,13 @@ class AIService:
         self.client = None
         self.current_provider = provider
         self.system_controller = SystemController()
+        # 注入高危操作二次授权（ConfirmationManager 单例，GUI/终端模式由 main.py 启动时配置）
+        from src.system.confirmation import ConfirmationManager
+        from src.system.high_risk_detector import HighRiskDetector
+        self.system_controller.set_confirmation_manager(ConfirmationManager())
+        self.system_controller.set_high_risk_enabled(settings.high_risk_confirmation)
+        # 应用 .env 自定义黑名单/白名单到检测器（单例，已初始化则追加规则）
+        HighRiskDetector(settings.high_risk_extra_blacklist, settings.high_risk_whitelist)
         self.conversation_history = []
         self.max_history_length = 20
         if provider:

@@ -67,7 +67,7 @@ class BaseTool(ABC):
             parameters=parameters,
             return_type=str,
             func=cls.execute,
-            category="general"
+            category=getattr(cls, "category", "general")
         )
     
     @abstractmethod
@@ -93,6 +93,8 @@ class AIAgent:
         self.register_tool(FileWriteTool)
         # 命令执行工具
         self.register_tool(CommandTool)
+        # 提权执行工具（管理员/root，双重授权）
+        self.register_tool(PrivilegeTool)
         # 搜索工具
         self.register_tool(SearchTool)
         # Python 执行工具
@@ -328,6 +330,35 @@ class CommandTool(BaseTool):
             return "命令执行超时"
         except Exception as e:
             return f"执行失败: {str(e)}"
+
+
+class PrivilegeTool(BaseTool):
+    """以管理员/root 权限执行命令（提权执行）
+
+    执行前需双重授权：① 项目二次授权（弹窗/input）② OS 系统授权（UAC/sudo）。
+    适用于安装系统服务、修改系统配置等需要特权的操作。
+
+    参数:
+        command: 要以特权执行的命令
+        reason: 提权原因（用于二次授权提示，建议填写）
+    """
+    category = "system"
+
+    @classmethod
+    def execute(cls, command: str, reason: str = "") -> str:
+        if not command:
+            return "错误：请提供命令"
+        from src.system.privilege_manager import PrivilegeManager
+        result = PrivilegeManager().execute_privileged(command, reason=reason)
+        parts = [f"成功: {result.get('success', False)}",
+                 f"消息: {result.get('message', '')}"]
+        if result.get('output'):
+            parts.append(f"输出:\n{result['output']}")
+        if result.get('error'):
+            parts.append(f"错误:\n{result['error']}")
+        if 'returncode' in result:
+            parts.append(f"返回码: {result['returncode']}")
+        return "\n".join(parts)
 
 
 class SearchTool(BaseTool):

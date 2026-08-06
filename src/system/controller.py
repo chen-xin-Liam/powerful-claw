@@ -14,6 +14,11 @@ from enum import Enum
 from src.utils.image_processor import ImageProcessor
 from src.utils.yolo_detector import YOLODetector
 from src.utils.video_analyzer import VideoAnalyzer
+from src.system.high_risk_detector import HighRiskDetector
+from src.system.confirmation import ConfirmationManager
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class PermissionLevel(Enum):
     NONE = "none"
@@ -43,6 +48,10 @@ class SystemController:
         self.image_processor = ImageProcessor()
         self._yolo_detector = None
         self._video_analyzer = None
+        # 高危操作二次授权
+        self.high_risk_detector = HighRiskDetector()
+        self.confirmation_manager: Optional[ConfirmationManager] = None
+        self.high_risk_enabled: bool = True
     
     @property
     def yolo_detector(self):
@@ -102,6 +111,65 @@ class SystemController:
     def set_individual_permission(self, permission: str, value: bool):
         if hasattr(self.permissions, permission):
             setattr(self.permissions, permission, value)
+
+    def set_confirmation_manager(self, mgr: ConfirmationManager) -> None:
+        """注入确认管理器（由 AIService 在启动时注入，GUI/终端模式由启动方式决定）。"""
+        self.confirmation_manager = mgr
+
+    def set_high_risk_enabled(self, enabled: bool) -> None:
+        """开关高危操作二次授权。"""
+        self.high_risk_enabled = enabled
+
+    def _check_high_risk(self, op_type: str, operation: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """高危检查：若操作高危且被拒绝，返回拒绝结果字典；否则返回 None（放行）。
+
+        若二次授权总开关关闭（high_risk_enabled=False），高危操作直接拒绝（fail-safe）。
+        若未注入 confirmation_manager，高危操作直接拒绝。
+        """
+        if not self.high_risk_enabled:
+            # 总开关关闭：按 fail-safe 拒绝所有高危操作
+            is_high, reason = self.high_risk_detector.is_high_risk_operation(op_type, operation)
+            if is_high:
+                logger.warning(f"高危操作被拒绝（二次授权已关闭）: {reason}")
+                return {
+                    "success": False,
+                    "operation": op_type,
+                    "message": "高危操作已被禁用（二次授权总开关关闭）",
+                    "data": {"reason": reason, "denied": True, "high_risk_disabled": True},
+                }
+            return None
+
+        if self.confirmation_manager is None:
+            is_high, reason = self.high_risk_detector.is_high_risk_operation(op_type, operation)
+            if is_high:
+                logger.warning(f"高危操作被拒绝（未注入确认管理器）: {reason}")
+                return {
+                    "success": False,
+                    "operation": op_type,
+                    "message": "高危操作无法确认（确认管理器未初始化）",
+                    "data": {"reason": reason, "denied": True},
+                }
+            return None
+
+        is_high, reason = self.high_risk_detector.is_high_risk_operation(op_type, operation)
+        if not is_high:
+            return None
+
+        # 高危：请求二次授权
+        desc = (f"{reason}\n操作类型: {op_type}\n"
+                f"内容: {json.dumps(operation, ensure_ascii=False)[:200]}")
+        logger.info(f"高危操作触发二次授权: {reason}")
+        approved = self.confirmation_manager.confirm(desc)
+        if approved:
+            logger.info("用户已授权高危操作，继续执行")
+            return None
+        logger.warning("用户拒绝高危操作")
+        return {
+            "success": False,
+            "operation": op_type,
+            "message": "用户未授权此高危操作（已拒绝）",
+            "data": {"reason": reason, "denied": True},
+        }
 
     def mouse_move(self, x: int, y: int, duration: float = 0.3) -> Dict[str, Any]:
         result = {"success": False, "message": "", "data": {}}
@@ -221,6 +289,10 @@ class SystemController:
         if not self.permissions.execute_command:
             result["message"] = "权限不足：执行命令"
             return result
+        # 高危操作二次授权检查（直接调用入口也受保护）
+        denied = self._check_high_risk("execute_command", {"command": cmd})
+        if denied is not None:
+            return denied
         try:
             output = subprocess.run(
                 cmd,
@@ -442,6 +514,11 @@ class SystemController:
         }
 
         op_type = operation.get("type")
+
+        # 高危操作二次授权检查（统一入口，覆盖所有 AI 指令路径）
+        denied = self._check_high_risk(op_type, operation)
+        if denied is not None:
+            return denied
 
         if op_type == "mouse_move":
             x = operation.get("x", 0)

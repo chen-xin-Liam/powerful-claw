@@ -51,8 +51,11 @@ class ErrorCode(IntEnum):
     E_VAL_INVALID_ARG     = 5001   # 参数类型/取值非法
     E_VAL_MISSING_REQUIRED = 5002   # 必填参数缺失
     E_VAL_OUT_OF_RANGE     = 5003
+    E_PERMISSION_HIGH_RISK_DENIED = 5004   # 高危操作被用户二次授权拒绝
+    E_VALIDATION_MATH_ERROR = 5005   # 数学计算/节点图执行错误
 
     # ── 6xxx 外部依赖 ──
+    E_EXT_DEPENDENCY_MISSING = 6000   # 通用外部依赖缺失
     E_EXT_PSUTIL        = 6001
     E_EXT_NVIDIA_SMI   = 6002   # nvidia-smi 调用失败/不可用
     E_EXT_OPENCV        = 6003

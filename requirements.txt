@@ -148,3 +148,5 @@ celery>=5.4.0
 line-profiler>=4.1.2
 memory-profiler>=0.61.0
 pre-commit>=3.6.0
+
+cppyy>=3.0  # C++ 节点引擎反射绑定（运行时即时编译 C++，零构建步骤）

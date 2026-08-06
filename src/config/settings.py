@@ -53,6 +53,12 @@ class Settings(BaseSettings):
 
     permission_level: str = "normal"
 
+    # ── 高危操作二次授权 ──
+    high_risk_confirmation: bool = True   # 二次授权总开关（True 开启，False 则高危操作直接拒绝）
+    high_risk_timeout: int = 30           # 确认超时（秒，超时默认拒绝）
+    high_risk_whitelist: str = ""         # 免确认命令（逗号分隔，如 ls,cat,whoami）
+    high_risk_extra_blacklist: str = ""   # 追加黑名单关键词（逗号分隔）
+
     db_dir: str = "userspick"
     db_type: str = "sqlite"
 

@@ -329,7 +329,14 @@ class CustomTkinterApp:
         
         self.root.deiconify()  # 显示主窗口
         self.root.after(100, self.process_queue)
-        
+
+        # 配置高危操作二次授权（GUI 模式：队列 + after 桥接 messagebox 到主线程）
+        try:
+            from src.system.confirmation import ConfirmationManager
+            ConfirmationManager().configure_gui(self.root, timeout=settings.high_risk_timeout)
+        except Exception as e:
+            print(f"[警告] GUI 确认管理器配置失败，高危操作将默认拒绝: {e}")
+
         # 初始化Windows美化效果
         self._init_windows_styles()
         

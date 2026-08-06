@@ -507,6 +507,12 @@ def main():
 
         if noui_mode:
             exit_code = start_services(args)
+            # 终端模式：配置高危操作二次授权用 input 确认
+            try:
+                from src.system.confirmation import ConfirmationManager
+                ConfirmationManager().configure_terminal(timeout=settings.high_risk_timeout)
+            except Exception as e:
+                logger.warning(f"终端确认管理器配置失败，高危操作将默认拒绝: {e}")
             try:
                 while True:
                     time.sleep(1)
