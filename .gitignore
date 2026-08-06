@@ -157,7 +157,6 @@ $RECYCLE.BIN/
 # ==============================
 # Binaries / Compiled output
 # ==============================
-*.exe
 *.dll
 *.so
 *.dylib
