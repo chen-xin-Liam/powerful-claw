@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     ai_api_key: Optional[str] = None
     ai_base_url: Optional[str] = None
 
+    # ── GitHub Copilot SDK ──
+    copilot_model: str = "auto"                     # 模型名（auto 或具体模型）
+    copilot_github_token: Optional[str] = None       # GitHub Token（不设则读 GITHUB_TOKEN 环境变量）
+    copilot_auto_approve_permissions: bool = True    # 自动批准 Copilot 权限请求（AI 自动控制电脑场景必需）
+
     max_history: int = 100
     auto_save: bool = True
     auto_save_interval: int = 300

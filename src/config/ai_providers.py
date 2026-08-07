@@ -65,6 +65,16 @@ class AIProviderManager:
                 description="本地模型"
             )
         )
+        # GitHub Copilot SDK（agentic engine，通过 copilot-service 走 JSON-RPC 到 Copilot CLI）
+        self.add_provider(
+            AIProvider(
+                name="GitHubCopilot",
+                base_url="copilot://github",
+                api_key="",
+                default_model="auto",
+                description="GitHub Copilot SDK Agent（需 pip install github-copilot-sdk + GITHUB_TOKEN）"
+            )
+        )
     
     def add_provider(self, provider: AIProvider):
         self.providers[provider.name] = provider

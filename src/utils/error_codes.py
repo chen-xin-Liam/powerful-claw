@@ -20,6 +20,16 @@ from enum import IntEnum
 class ErrorCode(IntEnum):
     """错误码枚举。所有自定义异常 AppError 必须携带一个 ErrorCode。"""
 
+    def __str__(self) -> str:
+        """返回错误码名称（如 ``E_EXT_DEPENDENCY_MISSING``），便于日志与测试可读。
+
+        IntEnum 默认 ``str()`` 返回整数值字符串（如 ``"6000"``），但本项目
+        错误码在对外输出（如 ``math_calculator_tool`` 的 ``code:`` 字段、
+        Copilot fail-safe 断言）中统一使用名称形式。此处覆写以保持一致；
+        ``int()`` / 哈希 / 比较运算仍按整数值工作，不受影响。
+        """
+        return self.name
+
     # ── 1xxx 配置 ──
     E_CONFIG_LOAD_FAILED      = 1001   # .env / settings.json 解析失败
     E_CONFIG_INVALID_VALUE    = 1002   # 配置项取值非法

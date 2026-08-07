@@ -135,25 +135,37 @@ class AIService:
     def _initialize_client(self, provider: Optional[AIProvider] = None):
         if provider:
             self.current_provider = provider
-        
+
         if not self.current_provider:
             raise ValueError("No AI provider configured")
-        
+
         api_key = self.current_provider.api_key
         base_url = self.current_provider.base_url
-        
+
         # Handle Local provider
         if self.is_local_provider():
             self.local_model_service = LocalModelService()
             self.client = None
             return
-        
+
         # Handle Ollama provider - use native Ollama API
         if self.is_ollama_provider():
             self.ollama_base_url = base_url.rstrip("/")
             self.client = None  # Ollama uses native API, not OpenAI client
             return
-        
+
+        # Handle GitHub Copilot SDK provider - 通过 CopilotService 走 JSON-RPC 到 Copilot CLI
+        if self.is_copilot_provider():
+            from src.services.copilot_service import CopilotService
+            self.copilot_service = CopilotService(
+                model=self.current_provider.default_model or settings.copilot_model,
+                github_token=settings.copilot_github_token,
+                auto_approve_permissions=settings.copilot_auto_approve_permissions,
+                system_prompt=_SYSTEM_PROMPT,
+            )
+            self.client = None  # Copilot 走自己的 client，不用 OpenAI
+            return
+
         if not base_url:
             raise ValueError("Base URL is not set for the selected provider")
         
@@ -186,18 +198,26 @@ class AIService:
     
     def generate_title(self, prompt: str) -> str:
         # Initialize client for all providers
-        if not self.client and not hasattr(self, 'ollama_base_url') and not hasattr(self, 'local_model_service'):
+        if not self.client and not hasattr(self, 'ollama_base_url') and not hasattr(self, 'local_model_service') and not hasattr(self, 'copilot_service'):
             self._initialize_client()
-        
+
         if not self.current_provider:
             raise ValueError("No AI provider configured")
-        
+
+        # Handle GitHub Copilot SDK
+        if self.is_copilot_provider():
+            try:
+                return self.copilot_service.generate_title(prompt)
+            except Exception as e:
+                raise RuntimeError(f"Failed to generate title with Copilot: {e}")
+
         # Handle local model
         if self.is_local_provider():
             if not hasattr(self, 'local_model_service'):
                 self.local_model_service = LocalModelService()
-            
+
             model_name = self.current_provider.default_model or "Qwen-0.5B"
+
             response = self.local_model_service.chat(prompt, max_new_tokens=50)
             return response.strip()
         
@@ -256,6 +276,13 @@ class AIService:
         if not self.current_provider:
             return False
         return self.current_provider.name.lower() == "local" or                (self.current_provider.base_url and self.current_provider.base_url.lower() == "local")
+
+    def is_copilot_provider(self) -> bool:
+        if not self.current_provider:
+            return False
+        name = self.current_provider.name.lower()
+        base = (self.current_provider.base_url or "").lower()
+        return name == "githubcopilot" or base.startswith("copilot://")
     
     def list_ollama_models(self) -> List[str]:
         if not self.current_provider:
@@ -309,11 +336,17 @@ class AIService:
     
     def chat_completion_stream(self, messages: List[Dict[str, str]]) -> Generator[Tuple[str, str], None, None]:
         # Initialize client for all providers
-        if not self.client and not hasattr(self, 'ollama_base_url') and not hasattr(self, 'local_model_service'):
+        if not self.client and not hasattr(self, 'ollama_base_url') and not hasattr(self, 'local_model_service') and not hasattr(self, 'copilot_service'):
             self._initialize_client()
-        
+
         if not self.current_provider:
             raise ValueError("No AI provider configured")
+
+        # Handle GitHub Copilot SDK provider - 走 CopilotService 的 async→同步桥接
+        if self.is_copilot_provider():
+            for reasoning_content, content in self.copilot_service.chat_completion_stream(messages):
+                yield reasoning_content, content
+            return
         
         # Handle local model
         if self.is_local_provider():

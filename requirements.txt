@@ -150,3 +150,4 @@ memory-profiler>=0.61.0
 pre-commit>=3.6.0
 
 cppyy>=3.0  # C++ 节点引擎反射绑定（运行时即时编译 C++，零构建步骤）
+github-copilot-sdk>=1.0  # GitHub Copilot SDK（agentic engine 接入，需 GitHub Copilot 订阅 + GITHUB_TOKEN）

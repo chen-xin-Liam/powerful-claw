@@ -1019,6 +1019,127 @@ def test_math_calculator_tool():
     return True
 
 
+def test_copilot_provider():
+    """测试 GitHub Copilot SDK provider 接入（fail-safe：SDK 未安装时正确报错）"""
+    print("\n=== 测试 GitHub Copilot provider ===")
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    failures = []
+
+    # 1. GitHubCopilot provider 已注册到 AIProviderManager
+    try:
+        from src.config.ai_providers import AIProviderManager
+        mgr = AIProviderManager()
+        names = mgr.list_providers()
+        if "GitHubCopilot" not in names:
+            failures.append(f"GitHubCopilot 未注册，当前 providers: {names}")
+        else:
+            p = mgr.get_provider("GitHubCopilot")
+            print(f"  ✓ GitHubCopilot provider 已注册: base_url={p.base_url}, model={p.default_model}")
+            if not p.base_url.startswith("copilot://"):
+                failures.append(f"base_url 应以 copilot:// 开头，实际: {p.base_url}")
+    except Exception as e:
+        failures.append(f"AIProviderManager 检查失败: {e}")
+
+    # 2. settings 含 copilot 配置项
+    try:
+        from src.config import settings
+        for attr in ["copilot_model", "copilot_github_token", "copilot_auto_approve_permissions"]:
+            if not hasattr(settings, attr):
+                failures.append(f"settings 缺少 {attr}")
+        # 默认值检查
+        if hasattr(settings, 'copilot_model') and settings.copilot_model != "auto":
+            failures.append(f"copilot_model 默认值应为 auto，实际: {settings.copilot_model}")
+        if hasattr(settings, 'copilot_auto_approve_permissions') and not settings.copilot_auto_approve_permissions:
+            failures.append("copilot_auto_approve_permissions 默认应为 True")
+        print("  ✓ settings 配置项完整: copilot_model/copilot_github_token/copilot_auto_approve_permissions")
+    except Exception as e:
+        failures.append(f"settings 检查失败: {e}")
+
+    # 3. AIService.is_copilot_provider 正确识别
+    try:
+        from src.services.ai_service import AIService
+        from src.config.ai_providers import AIProvider
+        svc = AIService(provider=AIProvider(name="GitHubCopilot", base_url="copilot://github", api_key="", default_model="auto"))
+        if not svc.is_copilot_provider():
+            failures.append("is_copilot_provider() 应识别 GitHubCopilot provider")
+        # 反例：OpenAI provider 不应被识别为 copilot
+        svc2 = AIService(provider=AIProvider(name="OpenAI", base_url="https://api.openai.com/v1", api_key="sk-test", default_model="gpt-4o"))
+        if svc2.is_copilot_provider():
+            failures.append("OpenAI provider 不应被识别为 copilot")
+        print("  ✓ is_copilot_provider() 正确识别 GitHubCopilot 与非 Copilot provider")
+    except Exception as e:
+        # 当前没装 github-copilot-sdk 时实例化会抛 ExternalDependencyError，这是预期
+        from src.utils.errors import ExternalDependencyError
+        if "ExternalDependencyError" in type(e).__name__ or isinstance(e, ExternalDependencyError):
+            print(f"  ✓ Copilot SDK 未安装时实例化 AIService 抛 ExternalDependencyError（fail-safe 正常）")
+        else:
+            # 但 is_copilot_provider 应该不依赖 SDK 也能判断（不实例化 CopilotService 就行）
+            # 这里走 _initialize_client 失败，但 is_copilot_provider 是 provider 字段判断
+            failures.append(f"AIService 实例化异常: {type(e).__name__}: {e}")
+
+    # 4. CopilotService fail-safe：未安装 github-copilot-sdk 时抛 ExternalDependencyError
+    try:
+        # 模拟 SDK 未安装：临时把 copilot 模块设为 None
+        import sys as _sys
+        original = _sys.modules.get('copilot')
+        _sys.modules['copilot'] = None  # 让 import copilot 失败
+        try:
+            from src.services.copilot_service import CopilotService
+            try:
+                svc = CopilotService(model="auto")
+                failures.append("SDK 未安装时 CopilotService 应抛 ExternalDependencyError，但实例化成功")
+            except Exception as ex:
+                from src.utils.errors import ExternalDependencyError
+                if isinstance(ex, ExternalDependencyError):
+                    code = getattr(ex, 'code', None)
+                    code_str = str(code) if code is not None else ''
+                    if 'E_EXT_DEPENDENCY_MISSING' in code_str or 'EXT_DEPENDENCY' in code_str:
+                        print(f"  ✓ CopilotService fail-safe: 抛 ExternalDependencyError(E_EXT_DEPENDENCY_MISSING)")
+                    else:
+                        failures.append(f"ExternalDependencyError 但错误码不对: {code}")
+                else:
+                    failures.append(f"应抛 ExternalDependencyError，实际抛: {type(ex).__name__}")
+        finally:
+            # 恢复
+            if original is not None:
+                _sys.modules['copilot'] = original
+            else:
+                _sys.modules.pop('copilot', None)
+    except Exception as e:
+        failures.append(f"CopilotService fail-safe 测试异常: {e}")
+
+    # 5. requirements.txt 含 github-copilot-sdk
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt"), "r", encoding="utf-8") as f:
+            reqs = f.read()
+        if "github-copilot-sdk" not in reqs:
+            failures.append("requirements.txt 缺少 github-copilot-sdk")
+        else:
+            print("  ✓ requirements.txt 含 github-copilot-sdk")
+    except Exception as e:
+        failures.append(f"requirements.txt 读取失败: {e}")
+
+    # 6. .env.example 含 COPILOT_ 配置项
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env.example"), "r", encoding="utf-8") as f:
+            env_ex = f.read()
+        for key in ["COPILOT_MODEL", "COPILOT_GITHUB_TOKEN", "COPILOT_AUTO_APPROVE_PERMISSIONS"]:
+            if key not in env_ex:
+                failures.append(f".env.example 缺少 {key}")
+        if not failures:
+            print("  ✓ .env.example 含 COPILOT_MODEL/COPILOT_GITHUB_TOKEN/COPILOT_AUTO_APPROVE_PERMISSIONS")
+    except Exception as e:
+        failures.append(f".env.example 读取失败: {e}")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+    print("✓ GitHub Copilot provider 测试全部通过")
+    return True
+
+
 def _parse_test_args(argv):
     """解析 test_main.py 的命令行参数。
 
@@ -1123,6 +1244,7 @@ def main():
         ("节点引擎运行时", test_node_engine_runtime),
         ("数学节点正确性", test_math_nodes_correctness),
         ("数学计算器工具", test_math_calculator_tool),
+        ("Copilot provider", test_copilot_provider),
     ]
 
     # --deps-only：仅保留依赖检查测试
