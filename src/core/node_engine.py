@@ -1083,39 +1083,39 @@ class NodeEngine:
         if self._initialized:
             return
         self._initialized = True
+        from src.utils.logger import get_logger
+        logger = get_logger(__name__)
 
+        backend = "cppyy"
+        cppyy_available = False
         try:
             import cppyy
             self._cppyy = cppyy
+            cppyy_available = True
         except ImportError:
-            from src.utils.errors import ExternalDependencyError
-            from src.utils.error_codes import ErrorCode
-            raise ExternalDependencyError(
-                ErrorCode.E_EXT_DEPENDENCY_MISSING,
-                "cppyy",
-                module="src.core.node_engine",
-                suggestion="pip install cppyy"
-            )
+            pass
 
-        try:
-            self._cppyy.cppdef(EMBEDDED_CPP)
-        except Exception as e:
-            from src.utils.errors import ExternalDependencyError
-            from src.utils.error_codes import ErrorCode
-            err_lines = str(e).splitlines()
-            summary = " | ".join(err_lines[:3]) if err_lines else str(e)[:200]
-            raise ExternalDependencyError(
-                ErrorCode.E_EXT_DEPENDENCY_MISSING,
-                f"cppyy C++ 编译失败: {summary}",
-                module="src.core.node_engine",
-                suggestion="请检查 EMBEDDED_CPP 中的 C++ 语法或更新 cppyy 到最新版"
-            )
+        if cppyy_available:
+            try:
+                self._cppyy.cppdef(EMBEDDED_CPP)
+                for name in _ALL_CLASS_NAMES:
+                    cls_obj = getattr(self._cppyy.gbl.nodecalc, name)
+                    setattr(self, name, cls_obj)
+                backend = "cppyy"
+                logger.info("NodeEngine: C++ 后端已加载 (cppyy)")
+            except Exception as e:
+                logger.warning(f"cppyy C++ 编译失败，回退纯 Python：{e}")
+                backend = "python"
+        else:
+            logger.warning("cppyy 未安装，回退纯 Python 实现（功能完整，性能稍慢）")
+            backend = "python"
 
-        for name in _ALL_CLASS_NAMES:
-            cls_obj = getattr(self._cppyy.gbl.nodecalc, name)
-            setattr(self, name, cls_obj)
+        if backend == "python":
+            _register_python_fallback(self)
 
-        self.node_classes = _NODE_CLASS_NAMES.copy()
+        self.backend = backend
+        if not hasattr(self, "node_classes"):
+            self.node_classes = _NODE_CLASS_NAMES.copy()
 
 
 def execute_graph(g):
@@ -1156,3 +1156,835 @@ def quick_add(g, *nodes):
     for n in nodes:
         indices.append(g.add_node(n))
     return indices
+
+
+class PyPortType:
+    SCALAR = 'scalar'
+    VECTOR = 'vector'
+    MATRIX = 'matrix'
+
+
+class PyPort:
+    def __init__(self, type_, name, s=0.0, v=None, m=None):
+        self.type = type_
+        self.name = name
+        self.s = s
+        self.v = v if v is not None else []
+        self.m = m if m is not None else []
+
+
+class PyNode:
+    def __init__(self, name):
+        self.name = name
+        self.inputs = []
+        self.outputs = []
+
+    def compute(self):
+        raise NotImplementedError
+
+    def connect_input(self, dst_in_idx, src, src_out_idx):
+        if dst_in_idx >= len(self.inputs):
+            raise RuntimeError("connect_input: dst_in_idx out of range")
+        if src is None:
+            raise RuntimeError("connect_input: src node is null")
+        if src_out_idx >= len(src.outputs):
+            raise RuntimeError("connect_input: src_out_idx out of range")
+        sport = src.outputs[src_out_idx]
+        dport = self.inputs[dst_in_idx]
+        if sport.type != dport.type:
+            raise RuntimeError(f"connect_input: type mismatch: {sport.type}->{dport.type}")
+        dport.s = sport.s
+        dport.v = list(sport.v)
+        dport.m = [list(r) for r in sport.m]
+
+
+class PyNumber(PyNode):
+    def __init__(self, v):
+        super().__init__("Number")
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+        self.outputs[-1].s = v
+
+    def compute(self):
+        pass
+
+
+class PyVariable(PyNode):
+    def __init__(self, n="x"):
+        super().__init__("Variable")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "value"))
+        self.inputs[-1].s = 0.0
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+        self.outputs[-1].name = n
+
+    def compute(self):
+        self.outputs[0].s = self.inputs[0].s
+
+
+class PyAdd(PyNode):
+    def __init__(self):
+        super().__init__("Add")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = self.inputs[0].s + self.inputs[1].s
+
+
+class PySub(PyNode):
+    def __init__(self):
+        super().__init__("Sub")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = self.inputs[0].s - self.inputs[1].s
+
+
+class PyMul(PyNode):
+    def __init__(self):
+        super().__init__("Mul")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = self.inputs[0].s * self.inputs[1].s
+
+
+class PyDiv(PyNode):
+    def __init__(self):
+        super().__init__("Div")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[1].s == 0.0:
+            raise RuntimeError("Div: division by zero")
+        self.outputs[0].s = self.inputs[0].s / self.inputs[1].s
+
+
+class PyMod(PyNode):
+    def __init__(self):
+        super().__init__("Mod")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[1].s == 0.0:
+            raise RuntimeError("Mod: division by zero")
+        self.outputs[0].s = math.fmod(self.inputs[0].s, self.inputs[1].s)
+
+
+class PyNegate(PyNode):
+    def __init__(self):
+        super().__init__("Negate")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = -self.inputs[0].s
+
+
+class PyAbs(PyNode):
+    def __init__(self):
+        super().__init__("Abs")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.fabs(self.inputs[0].s)
+
+
+class PyPow(PyNode):
+    def __init__(self):
+        super().__init__("Pow")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.pow(self.inputs[0].s, self.inputs[1].s)
+
+
+class PySqrt(PyNode):
+    def __init__(self):
+        super().__init__("Sqrt")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[0].s < 0.0:
+            raise RuntimeError("Sqrt: x < 0")
+        self.outputs[0].s = math.sqrt(self.inputs[0].s)
+
+
+class PyCbrt(PyNode):
+    def __init__(self):
+        super().__init__("Cbrt")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        x = self.inputs[0].s
+        self.outputs[0].s = math.copysign(abs(x) ** (1.0 / 3.0), x)
+
+
+class PyExp(PyNode):
+    def __init__(self):
+        super().__init__("Exp")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.exp(self.inputs[0].s)
+
+
+class PyLog(PyNode):
+    def __init__(self, base=2.718281828459045):
+        super().__init__("Log")
+        if base <= 0.0 or base == 1.0:
+            raise RuntimeError("Log: invalid base")
+        self.base = base
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[0].s <= 0.0:
+            raise RuntimeError("Log: x <= 0")
+        self.outputs[0].s = math.log(self.inputs[0].s) / math.log(self.base)
+
+
+class PyLog2(PyNode):
+    def __init__(self):
+        super().__init__("Log2")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[0].s <= 0.0:
+            raise RuntimeError("Log2: x <= 0")
+        self.outputs[0].s = math.log2(self.inputs[0].s)
+
+
+class PyLog10(PyNode):
+    def __init__(self):
+        super().__init__("Log10")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[0].s <= 0.0:
+            raise RuntimeError("Log10: x <= 0")
+        self.outputs[0].s = math.log10(self.inputs[0].s)
+
+
+class PySin(PyNode):
+    def __init__(self):
+        super().__init__("Sin")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.sin(self.inputs[0].s)
+
+
+class PyCos(PyNode):
+    def __init__(self):
+        super().__init__("Cos")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.cos(self.inputs[0].s)
+
+
+class PyTan(PyNode):
+    def __init__(self):
+        super().__init__("Tan")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.tan(self.inputs[0].s)
+
+
+class PyAsin(PyNode):
+    def __init__(self):
+        super().__init__("Asin")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        x = self.inputs[0].s
+        if x < -1.0 or x > 1.0:
+            raise RuntimeError("Asin: x out of domain [-1,1]")
+        self.outputs[0].s = math.asin(x)
+
+
+class PyAcos(PyNode):
+    def __init__(self):
+        super().__init__("Acos")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        x = self.inputs[0].s
+        if x < -1.0 or x > 1.0:
+            raise RuntimeError("Acos: x out of domain [-1,1]")
+        self.outputs[0].s = math.acos(x)
+
+
+class PyAtan(PyNode):
+    def __init__(self):
+        super().__init__("Atan")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.atan(self.inputs[0].s)
+
+
+class PySinh(PyNode):
+    def __init__(self):
+        super().__init__("Sinh")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.sinh(self.inputs[0].s)
+
+
+class PyCosh(PyNode):
+    def __init__(self):
+        super().__init__("Cosh")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.cosh(self.inputs[0].s)
+
+
+class PyTanh(PyNode):
+    def __init__(self):
+        super().__init__("Tanh")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "x"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = math.tanh(self.inputs[0].s)
+
+
+class PyVecCreate(PyNode):
+    def __init__(self, n=3):
+        super().__init__("VecCreate")
+        if n < 1:
+            raise RuntimeError("VecCreate: n must be >= 1")
+        self.n = n
+        for i in range(n):
+            self.inputs.append(PyPort(PyPortType.SCALAR, f"s{i}"))
+        self.outputs.append(PyPort(PyPortType.VECTOR, "out"))
+
+    def compute(self):
+        self.outputs[0].v = [self.inputs[i].s for i in range(self.n)]
+
+
+class PyVecAdd(PyNode):
+    def __init__(self):
+        super().__init__("VecAdd")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "a"))
+        self.inputs.append(PyPort(PyPortType.VECTOR, "b"))
+        self.outputs.append(PyPort(PyPortType.VECTOR, "out"))
+
+    def compute(self):
+        if len(self.inputs[0].v) != len(self.inputs[1].v):
+            raise RuntimeError("VecAdd: vector size mismatch")
+        n = len(self.inputs[0].v)
+        self.outputs[0].v = [self.inputs[0].v[i] + self.inputs[1].v[i] for i in range(n)]
+
+
+class PyVecDot(PyNode):
+    def __init__(self):
+        super().__init__("VecDot")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "a"))
+        self.inputs.append(PyPort(PyPortType.VECTOR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if len(self.inputs[0].v) != len(self.inputs[1].v):
+            raise RuntimeError("VecDot: vector size mismatch")
+        s = 0.0
+        for a, b in zip(self.inputs[0].v, self.inputs[1].v):
+            s += a * b
+        self.outputs[0].s = s
+
+
+class PyVecNorm(PyNode):
+    def __init__(self):
+        super().__init__("VecNorm")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "v"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        s = 0.0
+        for x in self.inputs[0].v:
+            s += x * x
+        self.outputs[0].s = math.sqrt(s)
+
+
+class PyVecSum(PyNode):
+    def __init__(self):
+        super().__init__("VecSum")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "v"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        s = 0.0
+        for x in self.inputs[0].v:
+            s += x
+        self.outputs[0].s = s
+
+
+def _py_lu_decompose(A):
+    n = len(A)
+    LU = [list(row) for row in A]
+    P = list(range(n))
+    sign = 1
+    for k in range(n):
+        max_val = abs(LU[k][k])
+        max_row = k
+        for i in range(k + 1, n):
+            if abs(LU[i][k]) > max_val:
+                max_val = abs(LU[i][k])
+                max_row = i
+        if max_val < 1e-15:
+            singular = True
+            return (LU, P, sign, singular)
+        if max_row != k:
+            LU[k], LU[max_row] = LU[max_row], LU[k]
+            P[k], P[max_row] = P[max_row], P[k]
+            sign = -sign
+        for i in range(k + 1, n):
+            LU[i][k] /= LU[k][k]
+            for j in range(k + 1, n):
+                LU[i][j] -= LU[i][k] * LU[k][j]
+    singular = False
+    return (LU, P, sign, singular)
+
+
+def _py_lu_solve(LU, P, b):
+    n = len(LU)
+    Pb = [b[P[i]] for i in range(n)]
+    y = [0.0] * n
+    for i in range(n):
+        y[i] = Pb[i]
+        for j in range(i):
+            y[i] -= LU[i][j] * y[j]
+    x = [0.0] * n
+    for i in range(n - 1, -1, -1):
+        x[i] = y[i]
+        for j in range(i + 1, n):
+            x[i] -= LU[i][j] * x[j]
+        x[i] /= LU[i][i]
+    return x
+
+
+class PyMatCreate(PyNode):
+    def __init__(self, rows=2, cols=2):
+        super().__init__("MatCreate")
+        if rows < 1 or cols < 1:
+            raise RuntimeError("MatCreate: rows/cols must be >= 1")
+        self.rows = rows
+        self.cols = cols
+        for i in range(rows * cols):
+            self.inputs.append(PyPort(PyPortType.SCALAR, f"e{i}"))
+        self.outputs.append(PyPort(PyPortType.MATRIX, "out"))
+
+    def compute(self):
+        self.outputs[0].m = []
+        for i in range(self.rows):
+            row = []
+            for j in range(self.cols):
+                row.append(self.inputs[i * self.cols + j].s)
+            self.outputs[0].m.append(row)
+
+
+class PyMatMul(PyNode):
+    def __init__(self):
+        super().__init__("MatMul")
+        self.inputs.append(PyPort(PyPortType.MATRIX, "A"))
+        self.inputs.append(PyPort(PyPortType.MATRIX, "B"))
+        self.outputs.append(PyPort(PyPortType.MATRIX, "C"))
+
+    def compute(self):
+        A = self.inputs[0].m
+        B = self.inputs[1].m
+        if not A or not B:
+            raise RuntimeError("MatMul: empty matrix")
+        N = len(A)
+        K = len(A[0])
+        M = len(B[0])
+        if len(B) != K:
+            raise RuntimeError("MatMul: K dimension mismatch")
+        C = [[0.0] * M for _ in range(N)]
+        for i in range(N):
+            for k in range(K):
+                a = A[i][k]
+                for j in range(M):
+                    C[i][j] += a * B[k][j]
+        self.outputs[0].m = C
+
+
+class PyMatTranspose(PyNode):
+    def __init__(self):
+        super().__init__("MatTranspose")
+        self.inputs.append(PyPort(PyPortType.MATRIX, "A"))
+        self.outputs.append(PyPort(PyPortType.MATRIX, "AT"))
+
+    def compute(self):
+        A = self.inputs[0].m
+        if not A:
+            raise RuntimeError("MatTranspose: empty matrix")
+        rows = len(A)
+        cols = len(A[0])
+        AT = [[0.0] * rows for _ in range(cols)]
+        for i in range(rows):
+            for j in range(cols):
+                AT[j][i] = A[i][j]
+        self.outputs[0].m = AT
+
+
+class PyMatDet(PyNode):
+    def __init__(self):
+        super().__init__("MatDet")
+        self.inputs.append(PyPort(PyPortType.MATRIX, "A"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "det"))
+
+    def compute(self):
+        A = self.inputs[0].m
+        if not A:
+            raise RuntimeError("MatDet: empty matrix")
+        n = len(A)
+        for i in range(n):
+            if len(A[i]) != n:
+                raise RuntimeError("MatDet: matrix is not square")
+        LU, P, sign, singular = _py_lu_decompose(A)
+        if singular:
+            self.outputs[0].s = 0.0
+            return
+        det = sign
+        for i in range(n):
+            det *= LU[i][i]
+        self.outputs[0].s = det
+
+
+class PyMatInverse(PyNode):
+    def __init__(self):
+        super().__init__("MatInverse")
+        self.inputs.append(PyPort(PyPortType.MATRIX, "A"))
+        self.outputs.append(PyPort(PyPortType.MATRIX, "Ainv"))
+
+    def compute(self):
+        A = self.inputs[0].m
+        if not A:
+            raise RuntimeError("MatInverse: empty matrix")
+        n = len(A)
+        for i in range(n):
+            if len(A[i]) != n:
+                raise RuntimeError("MatInverse: matrix is not square")
+        LU, P, sign, singular = _py_lu_decompose(A)
+        if singular:
+            raise RuntimeError("MatInverse: singular matrix")
+        Ainv = [[0.0] * n for _ in range(n)]
+        for col in range(n):
+            e = [0.0] * n
+            e[col] = 1.0
+            x = _py_lu_solve(LU, P, e)
+            for row in range(n):
+                Ainv[row][col] = x[row]
+        self.outputs[0].m = Ainv
+
+
+class PySum(PyNode):
+    def __init__(self):
+        super().__init__("Sum")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "data"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        s = 0.0
+        for x in self.inputs[0].v:
+            s += x
+        self.outputs[0].s = s
+
+
+class PyMean(PyNode):
+    def __init__(self):
+        super().__init__("Mean")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "data"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        n = len(self.inputs[0].v)
+        if n < 1:
+            raise RuntimeError("Mean: empty data")
+        s = 0.0
+        for x in self.inputs[0].v:
+            s += x
+        self.outputs[0].s = s / n
+
+
+class PyStdDev(PyNode):
+    def __init__(self):
+        super().__init__("StdDev")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "data"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        n = len(self.inputs[0].v)
+        if n < 1:
+            raise RuntimeError("StdDev: n < 1")
+        s = 0.0
+        for x in self.inputs[0].v:
+            s += x
+        mean = s / n
+        var = 0.0
+        for x in self.inputs[0].v:
+            d = x - mean
+            var += d * d
+        var /= n
+        self.outputs[0].s = math.sqrt(var)
+
+
+class PyMin(PyNode):
+    def __init__(self):
+        super().__init__("Min")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "data"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if not self.inputs[0].v:
+            raise RuntimeError("Min: empty data")
+        m = self.inputs[0].v[0]
+        for x in self.inputs[0].v:
+            if x < m:
+                m = x
+        self.outputs[0].s = m
+
+
+class PyMax(PyNode):
+    def __init__(self):
+        super().__init__("Max")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "data"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if not self.inputs[0].v:
+            raise RuntimeError("Max: empty data")
+        m = self.inputs[0].v[0]
+        for x in self.inputs[0].v:
+            if x > m:
+                m = x
+        self.outputs[0].s = m
+
+
+class PyMedian(PyNode):
+    def __init__(self):
+        super().__init__("Median")
+        self.inputs.append(PyPort(PyPortType.VECTOR, "data"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        n = len(self.inputs[0].v)
+        if n < 1:
+            raise RuntimeError("Median: empty data")
+        tmp = sorted(self.inputs[0].v)
+        if n % 2 == 1:
+            k = n // 2
+            self.outputs[0].s = tmp[k]
+        else:
+            k1 = n // 2 - 1
+            k2 = n // 2
+            self.outputs[0].s = (tmp[k1] + tmp[k2]) / 2.0
+
+
+class PyClamp(PyNode):
+    def __init__(self):
+        super().__init__("Clamp")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "v"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "lo"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "hi"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        v = self.inputs[0].s
+        lo = self.inputs[1].s
+        hi = self.inputs[2].s
+        if lo > hi:
+            raise RuntimeError("Clamp: lo > hi")
+        if v < lo:
+            v = lo
+        elif v > hi:
+            v = hi
+        self.outputs[0].s = v
+
+
+class PyLerp(PyNode):
+    def __init__(self):
+        super().__init__("Lerp")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "t"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        self.outputs[0].s = self.inputs[0].s + self.inputs[2].s * (self.inputs[1].s - self.inputs[0].s)
+
+
+class PyIf(PyNode):
+    def __init__(self):
+        super().__init__("If")
+        self.inputs.append(PyPort(PyPortType.SCALAR, "cond"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "a"))
+        self.inputs.append(PyPort(PyPortType.SCALAR, "b"))
+        self.outputs.append(PyPort(PyPortType.SCALAR, "out"))
+
+    def compute(self):
+        if self.inputs[0].s != 0.0:
+            self.outputs[0].s = self.inputs[1].s
+        else:
+            self.outputs[0].s = self.inputs[2].s
+
+
+class PyGraph:
+    def __init__(self, nodes=None):
+        self.nodes = []
+        self.edges = []
+        self._topo = []
+        if nodes:
+            for n in nodes:
+                self.add_node(n)
+
+    def add_node(self, n):
+        if n is None:
+            raise RuntimeError("Graph add_node: null node")
+        self.nodes.append(n)
+        return len(self.nodes) - 1
+
+    def connect(self, src_n, src_o, dst_n, dst_i):
+        self.edges.append((src_n, src_o, dst_n, dst_i))
+
+    def validate(self):
+        for e in self.edges:
+            sn, so, dn, di = e
+            if dn >= len(self.nodes):
+                raise RuntimeError("Graph validate: dst_node_idx out of range")
+            if di >= len(self.nodes[dn].inputs):
+                raise RuntimeError("Graph validate: input out of range")
+            if sn >= len(self.nodes):
+                raise RuntimeError("Graph validate: src_node_idx out of range")
+            if so >= len(self.nodes[sn].outputs):
+                raise RuntimeError("Graph validate: src output out of range")
+
+        n = len(self.nodes)
+        color = [0] * n
+        parent = [-1] * n
+        for s in range(n):
+            if color[s] == 0:
+                stack = [(s, 0)]
+                while stack:
+                    u, ei = stack[-1]
+                    color[u] = 1
+                    out_edges_idx = []
+                    for k in range(len(self.edges)):
+                        if self.edges[k][0] == u:
+                            out_edges_idx.append(k)
+                    found = False
+                    while ei < len(out_edges_idx):
+                        v = self.edges[out_edges_idx[ei]][2]
+                        ei += 1
+                        stack[-1] = (u, ei)
+                        if color[v] == 1:
+                            path = [self.nodes[v].name]
+                            cur = u
+                            while cur != v and cur != -1:
+                                path.append(self.nodes[cur].name)
+                                cur = parent[cur]
+                            path.append(self.nodes[v].name)
+                            path.reverse()
+                            msg = "Graph validate: cycle detected: " + " -> ".join(path)
+                            raise RuntimeError(msg)
+                        elif color[v] == 0:
+                            parent[v] = u
+                            stack.append((v, 0))
+                            found = True
+                            break
+                    if not found:
+                        color[u] = 2
+                        stack.pop()
+
+        in_degree = [0] * n
+        adj = [[] for _ in range(n)]
+        for i in range(len(self.edges)):
+            u = self.edges[i][0]
+            v = self.edges[i][2]
+            adj[u].append(v)
+            in_degree[v] += 1
+        q = []
+        for i in range(n):
+            if in_degree[i] == 0:
+                q.append(i)
+        self._topo = []
+        head = 0
+        while head < len(q):
+            u = q[head]
+            head += 1
+            self._topo.append(u)
+            for v in adj[u]:
+                in_degree[v] -= 1
+                if in_degree[v] == 0:
+                    q.append(v)
+        if len(self._topo) != n:
+            raise RuntimeError("Graph validate: topo sort failed")
+
+    def execute(self):
+        self.validate()
+        for i in self._topo:
+            for sn, so, dn, di in self.edges:
+                if dn == i:
+                    self.nodes[i].connect_input(di, self.nodes[sn], so)
+            try:
+                self.nodes[i].compute()
+            except RuntimeError as e:
+                raise RuntimeError(f"[{self.nodes[i].name}] {e}") from e
+
+
+def _register_python_fallback(eng):
+    eng.PortType = PyPortType
+    eng.Port = PyPort
+    eng.Node = PyNode
+    eng.Graph = PyGraph
+    class_map = {
+        "Number": PyNumber, "Variable": PyVariable,
+        "Add": PyAdd, "Sub": PySub, "Mul": PyMul, "Div": PyDiv, "Mod": PyMod,
+        "Negate": PyNegate, "Abs": PyAbs,
+        "Pow": PyPow, "Sqrt": PySqrt, "Cbrt": PyCbrt, "Exp": PyExp,
+        "Log": PyLog, "Log2": PyLog2, "Log10": PyLog10,
+        "Sin": PySin, "Cos": PyCos, "Tan": PyTan,
+        "Asin": PyAsin, "Acos": PyAcos, "Atan": PyAtan,
+        "Sinh": PySinh, "Cosh": PyCosh, "Tanh": PyTanh,
+        "VecCreate": PyVecCreate, "VecAdd": PyVecAdd, "VecDot": PyVecDot,
+        "VecNorm": PyVecNorm, "VecSum": PyVecSum,
+        "MatCreate": PyMatCreate, "MatMul": PyMatMul, "MatTranspose": PyMatTranspose,
+        "MatDet": PyMatDet, "MatInverse": PyMatInverse,
+        "Sum": PySum, "Mean": PyMean, "StdDev": PyStdDev,
+        "Min": PyMin, "Max": PyMax, "Median": PyMedian,
+        "Clamp": PyClamp, "Lerp": PyLerp, "If": PyIf,
+    }
+    for k, v in class_map.items():
+        setattr(eng, k, v)
+    eng.node_classes = list(class_map.keys())
+    eng.backend = "python"

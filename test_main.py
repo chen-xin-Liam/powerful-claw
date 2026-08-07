@@ -568,6 +568,457 @@ def test_privilege_verify():
     print("✓ 提权验证方法测试通过")
     return True
 
+
+def test_node_engine_runtime():
+    """测试节点引擎运行时（后端自动检测 + 图执行 + 环检测）"""
+    print("\n=== 测试节点引擎运行时 ===")
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+    try:
+        from src.core.node_engine import NodeEngine, make_graph, execute_graph
+    except Exception as e:
+        print(f"  ✗ 导入失败: {e}")
+        return False
+
+    try:
+        eng = NodeEngine()
+    except Exception as e:
+        print(f"  ✗ NodeEngine 实例化失败: {e}")
+        return False
+
+    failures = []
+
+    # a. backend 检查
+    if eng.backend not in ('python', 'cppyy'):
+        failures.append(f"backend 应为 python/cppyy，实际: {eng.backend}")
+    else:
+        print(f"  ✓ backend: {eng.backend}")
+
+    # b. node_classes 数量
+    nc_len = len(eng.node_classes)
+    if nc_len < 44:
+        failures.append(f"node_classes 数量应 >= 44，实际: {nc_len}")
+    else:
+        print(f"  ✓ node_classes 数量: {nc_len}")
+
+    # c. Number(2)+Number(3)→Add→output.s==5
+    try:
+        n2 = eng.Number(2)
+        n3 = eng.Number(3)
+        add_node = eng.Add()
+        g = make_graph(n2, n3, add_node)
+        idx_n2 = 0
+        idx_n3 = 1
+        idx_add = 2
+        g.connect(idx_n2, 0, idx_add, 0)
+        g.connect(idx_n3, 0, idx_add, 1)
+        execute_graph(g)
+        out_s = add_node.outputs[0].s
+        if abs(float(out_s) - 5.0) < 1e-9:
+            print(f"  ✓ Number(2)+Number(3) = {out_s}")
+        else:
+            failures.append(f"Number(2)+Number(3) 应为 5.0，实际: {out_s}")
+    except Exception as e:
+        failures.append(f"Number+Add 图执行失败: {e}")
+
+    # d. 环检测：Add A 连 Add B，Add B 连 Add A
+    try:
+        num1 = eng.Number(1)
+        add_a = eng.Add()
+        add_b = eng.Add()
+        g2 = make_graph(num1, add_a, add_b)
+        idx_num1 = 0
+        idx_a = 1
+        idx_b = 2
+        g2.connect(idx_num1, 0, idx_a, 0)
+        g2.connect(idx_a, 0, idx_b, 0)
+        g2.connect(idx_b, 0, idx_a, 1)
+        has_cycle_err = False
+        try:
+            execute_graph(g2)
+        except Exception as e2:
+            err_msg = str(e2).lower()
+            if "cycle" in err_msg:
+                has_cycle_err = True
+            else:
+                failures.append(f"环检测异常信息不含 'cycle': {e2}")
+        if has_cycle_err:
+            print("  ✓ 环检测生效（cycle detected）")
+        else:
+            failures.append("环检测未触发异常")
+    except Exception as e:
+        failures.append(f"环检测测试异常: {e}")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+    print("✓ 节点引擎运行时测试全部通过")
+    return True
+
+
+def test_math_nodes_correctness():
+    """测试 12+ 数学节点与 Python math/statistics 对照正确性"""
+    print("\n=== 测试数学节点正确性 ===")
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+    import math as _math
+    try:
+        from src.core.node_engine import NodeEngine, make_graph, execute_graph
+    except Exception as e:
+        print(f"  ✗ 导入失败: {e}")
+        return False
+
+    eng = NodeEngine()
+    failures = []
+
+    def _run_single(node_cls, inputs_info, expected, tol=1e-9):
+        """通用：实例化节点，设 inputs，连边 make_graph 执行，取 outputs[0].s 比较"""
+        try:
+            node = node_cls()
+        except Exception as e:
+            return f"实例化 {node_cls.__name__ if hasattr(node_cls, '__name__') else node_cls} 失败: {e}"
+        g = make_graph(node)
+        try:
+            for i, val in enumerate(inputs_info):
+                if isinstance(val, (int, float)):
+                    node.inputs[i].s = float(val)
+                elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], (list, tuple)):
+                    node.inputs[i].m = [[float(x) for x in r] for r in val]
+                elif isinstance(val, list):
+                    node.inputs[i].v = [float(x) for x in val]
+        except Exception as e:
+            return f"设 {node.name} inputs 失败: {e}"
+        try:
+            execute_graph(g)
+        except Exception as e:
+            return f"{node.name} execute 失败: {e}"
+        out = node.outputs[0].s
+        try:
+            out_f = float(out)
+        except Exception:
+            return f"{node.name} outputs[0].s 不是标量: {out}"
+        if abs(out_f - expected) < tol:
+            return None
+        return f"{node.name} 预期 {expected}，实际 {out_f}"
+
+    def _check(label, err):
+        if err is None:
+            print(f"  ✓ {label}")
+        else:
+            print(f"  ✗ {label}: {err}")
+            failures.append(label)
+
+    # Number
+    try:
+        num = eng.Number(3.14)
+        if abs(float(num.outputs[0].s) - 3.14) < 1e-9:
+            print("  ✓ Number(3.14) == 3.14")
+        else:
+            _check("Number(3.14)", f"实际 {num.outputs[0].s}")
+    except Exception as e:
+        _check("Number(3.14)", f"失败: {e}")
+
+    # Add / Sub / Mul / Div / Mod
+    def _make_bin(cls, a, b, expected):
+        na = eng.Number(a)
+        nb = eng.Number(b)
+        n = cls()
+        g = make_graph(na, nb, n)
+        g.connect(0, 0, 2, 0)
+        g.connect(1, 0, 2, 1)
+        execute_graph(g)
+        return float(n.outputs[0].s)
+
+    def _check_bin(name, a, b, expected):
+        cls_map = {"Add": eng.Add, "Sub": eng.Sub, "Mul": eng.Mul, "Div": eng.Div, "Mod": eng.Mod, "Pow": eng.Pow}
+        try:
+            v = _make_bin(cls_map[name], a, b, expected)
+            if abs(v - expected) < 1e-9:
+                print(f"  ✓ {name}({a},{b}) == {expected}")
+            else:
+                _check(f"{name}({a},{b})", f"实际 {v}")
+        except Exception as e:
+            _check(f"{name}({a},{b})", f"失败: {e}")
+
+    _check_bin("Add", 1.5, 2.5, 4.0)
+    _check_bin("Sub", 5, 2, 3.0)
+    _check_bin("Mul", 3, 4, 12.0)
+    _check_bin("Div", 7, 2, 3.5)
+    _check_bin("Mod", 7, 3, 1.0)
+
+    # Negate / Abs (单输入)
+    def _make_un(cls, x, expected):
+        nx = eng.Number(x)
+        n = cls()
+        g = make_graph(nx, n)
+        g.connect(0, 0, 1, 0)
+        execute_graph(g)
+        return float(n.outputs[0].s)
+
+    def _check_un(name, x, expected):
+        cls_map = {"Negate": eng.Negate, "Abs": eng.Abs, "Sqrt": eng.Sqrt, "Exp": eng.Exp,
+                   "Log2": eng.Log2, "Log10": eng.Log10, "Sin": eng.Sin, "Cos": eng.Cos, "Asin": eng.Asin}
+        try:
+            v = _make_un(cls_map[name], x, expected)
+            if abs(v - expected) < 1e-9:
+                print(f"  ✓ {name}({x}) == {expected}")
+            else:
+                _check(f"{name}({x})", f"实际 {v}")
+        except Exception as e:
+            _check(f"{name}({x})", f"失败: {e}")
+
+    _check_un("Negate", -5, 5)
+    _check_un("Abs", -7, 7)
+    _check_un("Sqrt", 9, 3.0)
+    _check_un("Exp", 0, 1.0)
+    _check_un("Log2", 8, 3.0)
+    _check_un("Log10", 100, 2.0)
+    _check_un("Sin", _math.pi / 2, 1.0)
+    _check_un("Cos", 0, 1.0)
+    _check_un("Asin", 0, 0.0)
+
+    # Pow(2, 10)
+    _check_bin("Pow", 2, 10, 1024.0)
+
+    # Log(e) 自然对数
+    try:
+        ne = eng.Number(_math.e)
+        log_node = eng.Log()
+        g = make_graph(ne, log_node)
+        g.connect(0, 0, 1, 0)
+        execute_graph(g)
+        v = float(log_node.outputs[0].s)
+        if abs(v - 1.0) < 1e-9:
+            print(f"  ✓ Log(e) == 1.0")
+        else:
+            _check("Log(e)", f"实际 {v}")
+    except Exception as e:
+        _check("Log(e)", f"失败: {e}")
+
+    # VecDot([1,2,3],[4,5,6]) = 32
+    try:
+        vc1 = eng.VecCreate(3)
+        vc1.inputs[0].s = 1.0
+        vc1.inputs[1].s = 2.0
+        vc1.inputs[2].s = 3.0
+        vc2 = eng.VecCreate(3)
+        vc2.inputs[0].s = 4.0
+        vc2.inputs[1].s = 5.0
+        vc2.inputs[2].s = 6.0
+        vd = eng.VecDot()
+        g = make_graph(vc1, vc2, vd)
+        g.connect(0, 0, 2, 0)
+        g.connect(1, 0, 2, 1)
+        execute_graph(g)
+        v = float(vd.outputs[0].s)
+        if abs(v - 32.0) < 1e-9:
+            print(f"  ✓ VecDot([1,2,3],[4,5,6]) == 32")
+        else:
+            _check("VecDot", f"实际 {v}")
+    except Exception as e:
+        _check("VecDot", f"失败: {e}")
+
+    # VecNorm([3,4]) = 5.0
+    try:
+        vc = eng.VecCreate(2)
+        vc.inputs[0].s = 3.0
+        vc.inputs[1].s = 4.0
+        vn = eng.VecNorm()
+        g = make_graph(vc, vn)
+        g.connect(0, 0, 1, 0)
+        execute_graph(g)
+        v = float(vn.outputs[0].s)
+        if abs(v - 5.0) < 1e-9:
+            print(f"  ✓ VecNorm([3,4]) == 5.0")
+        else:
+            _check("VecNorm", f"实际 {v}")
+    except Exception as e:
+        _check("VecNorm", f"失败: {e}")
+
+    # Det([[1,2],[3,4]]) = -2.0
+    try:
+        mc = eng.MatCreate(2, 2)
+        mc.inputs[0].s = 1.0
+        mc.inputs[1].s = 2.0
+        mc.inputs[2].s = 3.0
+        mc.inputs[3].s = 4.0
+        md = eng.MatDet()
+        g = make_graph(mc, md)
+        g.connect(0, 0, 1, 0)
+        execute_graph(g)
+        v = float(md.outputs[0].s)
+        if abs(v - (-2.0)) < 1e-9:
+            print(f"  ✓ Det([[1,2],[3,4]]) == -2.0")
+        else:
+            _check("Det", f"实际 {v}")
+    except Exception as e:
+        _check("Det", f"失败: {e}")
+
+    # Median([3,1,4,1,5,9,2,6]) = 3.5
+    try:
+        data = [3.0, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0, 6.0]
+        vc8 = eng.VecCreate(8)
+        for i in range(8):
+            vc8.inputs[i].s = data[i]
+        med = eng.Median()
+        g = make_graph(vc8, med)
+        g.connect(0, 0, 1, 0)
+        execute_graph(g)
+        v = float(med.outputs[0].s)
+        if abs(v - 3.5) < 1e-9:
+            print(f"  ✓ Median([3,1,4,1,5,9,2,6]) == 3.5")
+        else:
+            _check("Median", f"实际 {v}")
+    except Exception as e:
+        _check("Median", f"失败: {e}")
+
+    # Clamp(5, 1, 3) = 3
+    def _make_ter(cls, v, lo, hi, expected):
+        nv = eng.Number(v)
+        nlo = eng.Number(lo)
+        nhi = eng.Number(hi)
+        n = cls()
+        g = make_graph(nv, nlo, nhi, n)
+        g.connect(0, 0, 3, 0)
+        g.connect(1, 0, 3, 1)
+        g.connect(2, 0, 3, 2)
+        execute_graph(g)
+        return float(n.outputs[0].s)
+
+    def _check_ter(name, v, lo, hi, expected):
+        cls_map = {"Clamp": eng.Clamp, "Lerp": eng.Lerp, "If": eng.If}
+        try:
+            val = _make_ter(cls_map[name], v, lo, hi, expected)
+            if abs(val - expected) < 1e-9:
+                print(f"  ✓ {name}({v},{lo},{hi}) == {expected}")
+            else:
+                _check(f"{name}({v},{lo},{hi})", f"实际 {val}")
+        except Exception as e:
+            _check(f"{name}({v},{lo},{hi})", f"失败: {e}")
+
+    _check_ter("Clamp", 5, 1, 3, 3.0)
+    _check_ter("Lerp", 0, 10, 0.5, 5.0)
+    _check_ter("If", 1, 100, 200, 100.0)
+    _check_ter("If", 0, 100, 200, 200.0)
+
+    if failures:
+        return False
+    print("✓ 数学节点正确性测试全部通过")
+    return True
+
+
+def test_math_calculator_tool():
+    """测试 MathCalculatorTool evaluate/build_graph 及 AIAgent 注册"""
+    print("\n=== 测试 MathCalculatorTool ===")
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+    import json as _json
+    import re as _re
+    try:
+        from src.services.math_calculator_tool import MathCalculatorTool
+        from src.services.ai_agent import AIAgent
+    except Exception as e:
+        print(f"  ✗ 导入失败: {e}")
+        return False
+
+    failures = []
+
+    def _parse_result(text):
+        code_match = _re.search(r'^code:\s*(\S+)', text, _re.MULTILINE)
+        code = code_match.group(1) if code_match else None
+        data_match = _re.search(r'^data:\s*(\{.*\})', text, _re.MULTILINE)
+        data = None
+        if data_match:
+            try:
+                data = _json.loads(data_match.group(1))
+            except Exception:
+                data = None
+        return code, data
+
+    # a. evaluate: 'sin(pi/2)+sqrt(16)' => code=OK, value=5.0
+    try:
+        res = MathCalculatorTool.execute(mode="evaluate", expression="sin(pi/2)+sqrt(16)")
+        code, data = _parse_result(res)
+        if code == "OK" and data and abs(float(data.get("value", 0)) - 5.0) < 1e-9:
+            print(f"  ✓ evaluate sin(pi/2)+sqrt(16) = {data.get('value')}")
+        else:
+            failures.append(f"evaluate sin(pi/2)+sqrt(16) 失败: code={code}, data={data}, raw={res[:200]}")
+    except Exception as e:
+        failures.append(f"evaluate a 异常: {e}")
+
+    # b. evaluate: '(1+2)*(3-4)/5' == -0.6
+    try:
+        res = MathCalculatorTool.execute(mode="evaluate", expression="(1+2)*(3-4)/5")
+        code, data = _parse_result(res)
+        if code == "OK" and data and abs(float(data.get("value", 0)) - (-0.6)) < 1e-9:
+            print(f"  ✓ evaluate (1+2)*(3-4)/5 = {data.get('value')}")
+        else:
+            failures.append(f"evaluate (1+2)*(3-4)/5 失败: code={code}, data={data}")
+    except Exception as e:
+        failures.append(f"evaluate b 异常: {e}")
+
+    # c. evaluate with variables: 'x*x + 2*x + 1', variables='{"x":3}' == 16.0
+    try:
+        res = MathCalculatorTool.execute(mode="evaluate", expression="x*x + 2*x + 1", variables='{"x":3}')
+        code, data = _parse_result(res)
+        if code == "OK" and data and abs(float(data.get("value", 0)) - 16.0) < 1e-9:
+            print(f"  ✓ evaluate with x=3: x*x+2x+1 = {data.get('value')}")
+        else:
+            failures.append(f"evaluate with vars 失败: code={code}, data={data}")
+    except Exception as e:
+        failures.append(f"evaluate c 异常: {e}")
+
+    # d. build_graph JSON: Number(2)×Number(3)=Mul 输出 6
+    try:
+        graph_desc = {
+            "nodes": [
+                {"id": "n1", "type": "Number", "params": {"value": 2}},
+                {"id": "n2", "type": "Number", "params": {"value": 3}},
+                {"id": "n3", "type": "Mul"},
+            ],
+            "edges": [
+                {"from": "n1", "out": 0, "to": "n3", "in": 0},
+                {"from": "n2", "out": 0, "to": "n3", "in": 1},
+            ],
+        }
+        res = MathCalculatorTool.execute(mode="build_graph", graph_json=_json.dumps(graph_desc))
+        code, data = _parse_result(res)
+        out_val = None
+        if data and "outputs_by_id" in data:
+            out_val = data["outputs_by_id"].get("n3")
+        ok = (code == "OK") and (out_val is not None) and (abs(float(out_val) - 6.0) < 1e-9)
+        if ok:
+            print(f"  ✓ build_graph Number(2)*Number(3) = {out_val}")
+        else:
+            failures.append(f"build_graph Mul 失败: code={code}, out={out_val}, raw={res[:200]}")
+    except Exception as e:
+        failures.append(f"build_graph d 异常: {e}")
+
+    # e. AIAgent().get_tool_descriptions() 含 MathCalculatorTool 且 category=math
+    try:
+        agent = AIAgent()
+        desc = agent.get_tool_descriptions(format="json")
+        desc_list = _json.loads(desc)
+        found = False
+        for t in desc_list:
+            if t.get("name") == "MathCalculatorTool":
+                found = True
+                if t.get("category") == "math":
+                    print("  ✓ MathCalculatorTool 已注册且 category=math")
+                else:
+                    failures.append(f"MathCalculatorTool category 应为 math，实际: {t.get('category')}")
+                break
+        if not found:
+            failures.append("AIAgent 工具列表未含 MathCalculatorTool")
+    except Exception as e:
+        failures.append(f"AIAgent 注册检查异常: {e}")
+
+    if failures:
+        for f in failures:
+            print(f"  ✗ {f}")
+        return False
+    print("✓ MathCalculatorTool 测试全部通过")
+    return True
+
+
 def _parse_test_args(argv):
     """解析 test_main.py 的命令行参数。
 
@@ -669,6 +1120,9 @@ def main():
         ("提权管理器", test_privilege_manager),
         ("提权CLI入口", test_privilege_manager_cli),
         ("提权验证方法", test_privilege_verify),
+        ("节点引擎运行时", test_node_engine_runtime),
+        ("数学节点正确性", test_math_nodes_correctness),
+        ("数学计算器工具", test_math_calculator_tool),
     ]
 
     # --deps-only：仅保留依赖检查测试

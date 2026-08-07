@@ -1003,14 +1003,23 @@ def evaluate_expression(expression: str, variables: Optional[Dict[str, Any]] = N
 
         port = output_node.outputs[0]
         port_type = port.type
-        if str(port_type) == "PortType.SCALAR" or int(port_type) == 0:
+        type_str = str(port_type)
+        tag = type_str.split('.')[-1] if '.' in type_str else type_str
+        if tag in ('SCALAR', 'scalar', '0'):
             value = port.s
-        elif str(port_type) == "PortType.VECTOR" or int(port_type) == 1:
+        elif tag in ('VECTOR', 'vector', '1'):
             value = list(port.v)
-        elif str(port_type) == "PortType.MATRIX" or int(port_type) == 2:
+        elif tag in ('MATRIX', 'matrix', '2'):
             value = [list(row) for row in port.m]
         else:
-            value = port.s
+            try:
+                iv = int(port_type)
+                if iv == 0: value = port.s
+                elif iv == 1: value = list(port.v)
+                elif iv == 2: value = [list(row) for row in port.m]
+                else: value = port.s
+            except Exception:
+                value = port.s
 
         return {
             "value": value,

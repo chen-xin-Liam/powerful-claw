@@ -38,6 +38,19 @@
 - 🎨 **Glassmorphism 桌面 UI** —— 纯 Python（Pillow）与 C++（OpenGL）双实现毛玻璃 / 光晕 / 窗口动画，跨平台且热可插拔
 - 🛠️ **原生 Python 实现** —— 比 OpenClaw 更轻量、更易二次开发、更易调试
 
+## 📚 技术栈 / Tech Stack
+
+| 模块 | 技术 / 语言 | 说明 |
+|------|------------|------|
+| AI Agent | Python 3.13+ | 多模态大模型驱动，多 AI 提供者（Ollama/OpenAI/NVIDIA） |
+| 视觉感知 | Python + YOLOv8 | 屏幕截图、目标检测、高 DPI 适配 |
+| 桌面控制 | Python (pyautogui/keyboard) | 跨平台鼠标键盘自动化，四级权限控制 |
+| 视频推流 | Python + FFmpeg | RTMP/SRT/WebRTC 多协议，帧差压缩分块编码 |
+| UI 界面 | Python (CustomTkinter) + C++/OpenGL | 毛玻璃/光晕/窗口动画，热可插拔双实现 |
+| 集群计算 | Python + UDP/加密 | 局域网节点发现、任务调度、Fernet/RSA 加密传输 |
+| 日志/错误 | Python (Loguru/Rich) | 统一错误码体系、分级日志、Debug 模式全链路追踪 |
+| 节点化数学计算引擎 | C++17 + cppyy 嵌入 Python | 44 节点（算术/三角/幂根/向量/矩阵LU/统计），自动降级纯Python |
+
 ## 🚀 已实现功能（清晰、可验证）
 
 - [x] 多 AI 提供者支持（Ollama、OpenAI、NVIDIA，可扩展）

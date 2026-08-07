@@ -95,6 +95,9 @@ class AIAgent:
         self.register_tool(CommandTool)
         # 提权执行工具（管理员/root，双重授权）
         self.register_tool(PrivilegeTool)
+        # 节点化数学计算器（evaluate 表达式 + build_graph 节点图）
+        from src.services.math_calculator_tool import MathCalculatorTool
+        self.register_tool(MathCalculatorTool)
         # 搜索工具
         self.register_tool(SearchTool)
         # Python 执行工具
