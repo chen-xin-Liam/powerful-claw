@@ -1,5 +1,5 @@
 
-# 🤖 powerful-claw
+# **🤖 powerful-claw**
 <div align="center">
 
 <!-- TODO: 替换为真实 Logo（建议 256×256 PNG/SVG，放 docs/images/logo.png）
