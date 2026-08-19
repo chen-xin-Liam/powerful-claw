@@ -12,7 +12,7 @@
     "description": "OpenAI API"
   },
   "Ollama": {
-    "base_url": "http://155.212.139.85:11434/",
+    "base_url": "",
     "api_key": "",
     "default_model": "smollm2:135m",
     "description": "Ollama Local AI"
