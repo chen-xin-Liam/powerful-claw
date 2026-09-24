@@ -1,132 +1,81 @@
-
-# **🤖 powerful-claw**
+# 🤖 powerful-claw
 <div align="center">
-
 <!-- TODO: 替换为真实 Logo（建议 256×256 PNG/SVG，放 docs/images/logo.png）
 <img src="docs/images/logo.png" alt="powerful-claw" width="200" height="200" />
 -->
 
-#### ⚠️ **当前状态：开发中 / WIP / 存在已知 Bug，请勿用于生产环境**
-#### ⚠️ **请在github上提交代码，其他均为镜像，不建议直接修改**
+#### ⚠️ **当前状态：开发中 / WIP，存在已知 Bug，请勿用于生产环境**
+#### ⚠️ **GitHub为本项目唯一主仓库，其他平台均为镜像，不建议直接提交修改**
+
 [GitHub主仓库]: https://github.com/chen-xin-Liam/powerful-claw
 
-**让 AI 真正"看见并操作"你的电脑** —— 一个把多模态大模型变成桌面自动化 Agent 的开源控制中枢，开箱即用地串联起 **AI 对话 → 视觉感知 → 鼠键控制 → 桌面推流 → 视频剪辑 → 局域网算力共享**。
+**让 AI 看见并操作本地电脑** —— 开源桌面自动化 Agent 控制中枢。
+可以串联多模态大模型、屏幕视觉感知、键鼠自动化；附带桌面推流、简易视频剪辑、局域网算力节点调度等配套模块。
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-success.svg?logo=windows&logoColor=white)](#)
-[![License](https://img.shields.io/badge/License-GPL--3.0%20%2B%20NonCommercial-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/chen-xin-Liam/powerful-claw?style=social)](https://github.com/chen-xin-Liam/powerful-claw/stargazers)
 [![bilibili](https://img.shields.io/badge/bilibili-%E6%95%B0%E7%A7%91%E6%99%BA%E6%98%9F-00A1D6.svg?logo=bilibili&logoColor=white)](https://space.bilibili.com/3493111196027162)
-
 <!-- TODO: 启用 CI 后替换为真实构建/覆盖率徽章
 [![Build](https://img.shields.io/github/actions/workflow/status/chen-xin-Liam/powerful-claw/.github/workflows/ci.yml?branch=main&label=build)](...)
 [![Coverage](https://img.shields.io/codecov/c/github/chen-xin-Liam/powerful-claw.svg)](...)
 -->
-
 </div>
 
 ---
 
-> 💡 **一句话定位**：如果你想要一个不只是聊天、而是能**真的帮你在电脑上干活**的 AI 助手 —— 截屏看屏幕、移动鼠标点击、推流远程监控、剪辑录屏、还能把闲置的局域网电脑凑成算力池 —— 那它就是了。
+> 💡 项目定位：
+> 很多AI Agent项目只停留在对话。本项目尝试构建一套端侧本地Agent，**读取屏幕画面、理解界面内容，调用键鼠完成电脑上的操作任务**。
+> 桌面推流、视频剪辑、局域网算力集群属于附属配套模块，部分仍在开发中。
 
-## ✨ 核心亮点（比 OpenClaw 更强）
-
-- 🧠 **AI Agent 落地，而非聊天框** —— 多模态大模型（NVIDIA / OpenAI / Ollama / 自定义）驱动，能截图、能看屏幕（YOLO 目标检测）、能控制鼠标键盘，四级权限（None/View/Limited/Full）保证安全
-- 📺 **桌面实时推流** —— 1–30 FPS 可调，多协议视频（RTMP/SRT/SRTP）+ 多协议音频（WebRTC/SRTP/SMPTE 2110）自适应，浏览器打开即看，帧差压缩 + 分块编码大幅降带宽
-- 🎬 **内置 Web 视频剪辑器** —— 多轨时间轴、调色滤镜、字幕 SRT/ASS、语音转字幕，1080P/2K/4K 导出 MP4/MOV/GIF/WebM
-- 🌐 **局域网算力共享** —— UDP 自动发现节点，CPU/内存/GPU/NPU 实时监控，任务智能调度 + Fernet/RSA 加密传输，把闲置电脑拼成一个推理集群
-- 🎨 **Glassmorphism 桌面 UI** —— 纯 Python（Pillow）与 C++（OpenGL）双实现毛玻璃 / 光晕 / 窗口动画，跨平台且热可插拔
-- 🛠️ **原生 Python 实现** —— 比 OpenClaw 更轻量、更易二次开发、更易调试
+## ✨ 项目特点
+- 🧠 **端侧桌面AI Agent**：对接多模态大模型（Ollama / OpenAI兼容接口 / NVIDIA API），基于YOLO做屏幕目标检测，实现截图理解、键鼠自动化；内置四级权限模型（None/View/Limited/Full）控制Agent操作权限，降低误操作风险。
+- 📺 **桌面实时推流模块**：帧率1–30FPS可调，支持RTMP/SRT/WebRTC多协议音视频推流；使用帧差压缩+分块编码降低传输带宽，浏览器可直接访问查看桌面。
+- 🎬 **内置Web视频剪辑器（基础实现）**：多轨时间轴、调色滤镜、SRT/ASS字幕、语音转字幕，支持导出 MP4/MOV/GIF/WebM（1080P/2K/4K）。
+- 🌐 **局域网算力调度（WIP）**：UDP自动发现内网节点，采集CPU/内存/GPU/NPU负载，支持任务调度，Fernet/RSA加密传输，可将多台闲置机器组成推理集群。
+- 🎨 **可插拔桌面UI**：两套渲染实现，Python(Pillow) 轻量版本 + C++/OpenGL 高性能毛玻璃、窗口动画实现，跨平台可切换。
+- 🛠️ **原生Python主体**：架构轻量化，便于阅读源码、二次开发与本地调试。
 
 ## 📚 技术栈 / Tech Stack
-
 | 模块 | 技术 / 语言 | 说明 |
 |------|------------|------|
-| AI Agent | Python 3.13+ | 多模态大模型驱动，多 AI 提供者（Ollama/OpenAI/NVIDIA） |
-| 视觉感知 | Python + YOLOv8 | 屏幕截图、目标检测、高 DPI 适配 |
+| AI Agent | Python 3.13+ | 多模态大模型驱动，可接入 Ollama/OpenAI/NVIDIA 等模型服务 |
+| 视觉感知 | Python + YOLOv8 | 屏幕截图、界面目标检测，适配高DPI显示器 |
 | 桌面控制 | Python (pyautogui/keyboard) | 跨平台鼠标键盘自动化，四级权限控制 |
-| 视频推流 | Python + FFmpeg | RTMP/SRT/WebRTC 多协议，帧差压缩分块编码 |
-| UI 界面 | Python (CustomTkinter) + C++/OpenGL | 毛玻璃/光晕/窗口动画，热可插拔双实现 |
-| 集群计算 | Python + UDP/加密 | 局域网节点发现、任务调度、Fernet/RSA 加密传输 |
-| 日志/错误 | Python (Loguru/Rich) | 统一错误码体系、分级日志、Debug 模式全链路追踪 |
-| 节点化数学计算引擎 | C++17 + cppyy 嵌入 Python | 44 节点（算术/三角/幂根/向量/矩阵LU/统计），自动降级纯Python |
+| 视频推流 | Python + FFmpeg | RTMP/SRT/WebRTC 多协议，帧差压缩与分块编码 |
+| UI 界面 | CustomTkinter + C++/OpenGL | 毛玻璃/光晕窗口动画，双实现可插拔 |
+| 集群计算 | Python + UDP/加密 | 局域网节点发现、任务调度，Fernet/RSA加密传输 |
+| 日志/错误 | Loguru/Rich | 统一错误码、分级日志，全链路Debug追踪 |
+| 节点化数学引擎 | C++17 + cppyy嵌入Python | 44节点运算单元（算术/三角/矩阵LU/统计），可降级到纯Python运行 |
 
 ## 🚀 已实现功能
+- [x] 多AI后端接入（Ollama、OpenAI兼容API、NVIDIA），易于扩展新增服务商
+- [x] 屏幕截图 + YOLO目标检测视觉识别
+- [x] 鼠标、键盘自动化控制
+- [x] 桌面实时推流 RTMP/SRT/WebRTC
+- [x] 局域网节点发现与硬件监控
+- [x] 统一日志、异常错误处理体系
+- [x] 基础窗口UI管理
+- [x] 问答交互入口
 
-- [x] 多 AI 提供者支持（Ollama、OpenAI、NVIDIA，可扩展）
-- [x] 屏幕识别与截图（YOLO 目标检测）
-- [x] 鼠标键盘自动化控制
-- [x] 桌面实时推流（RTMP/SRT/WebRTC）
-- [x] 局域网节点发现与监控
-- [x] 统一错误处理与日志系统
-- [x] 窗口 UI 管理
-- [x] 快速问答交互
-
-## 🐛 已知问题
-
-- 部分高 DPI 显示器识别可能存在偏差
-- 切换分辨率时偶现屏幕闪烁
-- 仅在 Windows 10/11 完成基础测试
-- 设置主题会有卡死现象
-- 局域网算力共享节点还未完成
-- 视频剪辑只是基础架构
+## 🐛 已知问题 & 未完成模块
+> 这部分是重点，坦诚写出限制，会大幅增加开发者信任感
+- 高DPI显示器下屏幕坐标识别存在偏差
+- 切换显示器分辨率时，偶发画面闪烁
+- 目前仅在 Windows10/11 完成基础验证
+- 修改主题设置有概率卡死UI
+- 局域网算力调度：节点调度逻辑尚未完成
+- 视频剪辑模块：仅完成基础架构，功能不完善
 
 ## 🛠️ 快速开始
-
 ```bash
 # 1. 克隆项目
 git clone https://github.com/chen-xin-Liam/powerful-claw.git
 cd powerful-claw
-
 # 2. 安装依赖
 pip install -r requirements.txt
-
 # 3. 运行主程序
 python src/main.py
-
 # 4. 访问 WebUI（推流+剪辑）
 # 浏览器打开：http://localhost:8080
-```
-
-## 📌 开发路线图
-
-### 近期（1–2 个月）
-- 修复已知 Bug，优化多显示器兼容性
-- 实现全局热键支持
-- 完善窗口一键布局功能
-- 打包为 Windows 可执行文件（exe）
-
-### 中期（3–6 个月）
-- 完整 Mac/Linux 平台适配
-- 增强局域网算力调度算法
-- 支持更多 AI 模型（如 DeepSeek、CodeGemma）
-- 增加自定义 Skill 系统（类似 OpenClaw）
-- 完善文档与使用教程
-- 完善mcp工具支持，增加更多功能
-
-### 长期
-- 跨平台统一安装包
-- 云端管理面板
-- 企业级安全与权限控制
-- 插件生态系统
-
-## 🤝 欢迎贡献
-
-欢迎任何形式的贡献：
-- 提交 Issue 反馈 Bug 或提出功能建议
-- 提交 PR 修复问题、实现新功能
-- 完善文档、补充测试用例
-- 分享使用案例、制作教程
-
-### 贡献流程
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/xxx`)
-3. 提交修改 (`git commit -m 'Add some feature'`)
-4. 推送到分支 (`git push origin feature/xxx`)
-5. 提交 Pull Request
-
-## 📄 许可证
-
-本项目采用 **GPL-3.0** 许可证，详见 [LICENSE](LICENSE) 文件。
-
-
