@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import configparser
 from typing import Dict, List, Optional
@@ -114,16 +115,17 @@ class ThemeManager:
         return False
     
     def _clean_value(self, value: str) -> str:
-        """清理配置值中的注释和多余空格"""
+        """清理配置值中的行尾注释和多余空格
+
+        注意：仅把"空白符之后的 ; 或 #"视为注释起始，避免破坏以 # 开头的十六进制颜色值。
+        """
+        import re
         if not value:
             return value
-        
-        # 去除行尾注释（; 或 # 开头）
-        if ';' in value:
-            value = value.split(';')[0]
-        if '#' in value:
-            value = value.split('#')[0]
-        
+
+        # 去除行尾注释（注释符前必须有空白，如 "100 # 说明" / "abc ; 说明"）
+        value = re.split(r'\s+[;#]', value, maxsplit=1)[0]
+
         # 去除首尾空格
         return value.strip()
         
@@ -332,6 +334,201 @@ class ThemeManager:
                 print(f"Error exporting theme: {e}")
                 return False
         return False
+
+    # ── CustomTkinter 热加载支持 ──────────────────────────────────────
+
+    def get_ctk_theme_cache_path(self, name: str) -> str:
+        """获取 ini 主题对应的 CustomTkinter JSON 缓存路径"""
+        cache_dir = os.path.join(self.themes_dir, '.cache')
+        safe_name = ''.join(c if c.isalnum() or c in '-_' else '_' for c in name)
+        return os.path.join(cache_dir, f'{safe_name}.json')
+
+    def build_ctk_theme_dict(self, name: str) -> Optional[dict]:
+        """将 ini 主题（含亮色/暗色两套颜色）转换为 CustomTkinter 主题 JSON 字典
+
+        JSON 中双色字段统一按 [light, dark] 顺序，与官方 blue.json 保持一致。
+        """
+        theme = self.themes.get(name)
+        if not theme:
+            return None
+
+        light = theme.light_colors
+        dark = theme.dark_colors
+        pair = lambda light_color, dark_color: [light_color, dark_color]
+
+        theme_dict = {
+            "CTk": {
+                "fg_color": pair(light.background, dark.background)
+            },
+            "CTkToplevel": {
+                "fg_color": pair(light.background, dark.background)
+            },
+            "CTkFrame": {
+                "corner_radius": 6,
+                "border_width": 0,
+                "fg_color": pair(light.surface, dark.surface),
+                "top_fg_color": pair(light.card, dark.card),
+                "border_color": pair(light.border, dark.border)
+            },
+            "CTkButton": {
+                "corner_radius": 6,
+                "border_width": 0,
+                "fg_color": pair(light.primary, dark.primary),
+                "hover_color": pair(light.secondary, dark.secondary),
+                "border_color": pair(light.border, dark.border),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkLabel": {
+                "corner_radius": 0,
+                "fg_color": "transparent",
+                "text_color": pair(light.text_primary, dark.text_primary)
+            },
+            "CTkEntry": {
+                "corner_radius": 6,
+                "border_width": 2,
+                "fg_color": pair(light.card, dark.card),
+                "border_color": pair(light.border, dark.border),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "placeholder_text_color": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkCheckBox": {
+                "corner_radius": 6,
+                "border_width": 3,
+                "fg_color": pair(light.primary, dark.primary),
+                "border_color": pair(light.border, dark.border),
+                "hover_color": pair(light.secondary, dark.secondary),
+                "checkmark_color": pair(light.text_primary, dark.text_primary),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkSwitch": {
+                "corner_radius": 1000,
+                "border_width": 3,
+                "button_length": 0,
+                "fg_color": pair(light.border, dark.border),
+                "progress_color": pair(light.primary, dark.primary),
+                "button_color": pair(light.text_primary, dark.text_primary),
+                "button_hover_color": pair(light.text_secondary, dark.text_secondary),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkRadioButton": {
+                "corner_radius": 1000,
+                "border_width_checked": 6,
+                "border_width_unchecked": 3,
+                "fg_color": pair(light.primary, dark.primary),
+                "border_color": pair(light.border, dark.border),
+                "hover_color": pair(light.secondary, dark.secondary),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkProgressBar": {
+                "corner_radius": 1000,
+                "border_width": 0,
+                "fg_color": pair(light.border, dark.border),
+                "progress_color": pair(light.primary, dark.primary),
+                "border_color": pair(light.border, dark.border)
+            },
+            "CTkSlider": {
+                "corner_radius": 1000,
+                "button_corner_radius": 1000,
+                "border_width": 6,
+                "button_length": 0,
+                "fg_color": pair(light.border, dark.border),
+                "progress_color": pair(light.secondary, dark.secondary),
+                "button_color": pair(light.primary, dark.primary),
+                "button_hover_color": pair(light.secondary, dark.secondary)
+            },
+            "CTkOptionMenu": {
+                "corner_radius": 6,
+                "fg_color": pair(light.primary, dark.primary),
+                "button_color": pair(light.secondary, dark.secondary),
+                "button_hover_color": pair(light.accent, dark.accent),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkComboBox": {
+                "corner_radius": 6,
+                "border_width": 2,
+                "fg_color": pair(light.card, dark.card),
+                "border_color": pair(light.border, dark.border),
+                "button_color": pair(light.border, dark.border),
+                "button_hover_color": pair(light.text_disabled, dark.text_secondary),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkScrollbar": {
+                "corner_radius": 1000,
+                "border_spacing": 4,
+                "fg_color": "transparent",
+                "button_color": pair(light.text_disabled, dark.border),
+                "button_hover_color": pair(light.text_secondary, dark.text_secondary)
+            },
+            "CTkSegmentedButton": {
+                "corner_radius": 6,
+                "border_width": 2,
+                "fg_color": pair(light.border, dark.border),
+                "selected_color": pair(light.primary, dark.primary),
+                "selected_hover_color": pair(light.secondary, dark.secondary),
+                "unselected_color": pair(light.border, dark.border),
+                "unselected_hover_color": pair(light.text_disabled, dark.text_secondary),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "text_color_disabled": pair(light.text_disabled, dark.text_disabled)
+            },
+            "CTkTextbox": {
+                "corner_radius": 6,
+                "border_width": 0,
+                "fg_color": pair(light.card, dark.card),
+                "border_color": pair(light.border, dark.border),
+                "text_color": pair(light.text_primary, dark.text_primary),
+                "scrollbar_button_color": pair(light.text_disabled, dark.border),
+                "scrollbar_button_hover_color": pair(light.text_secondary, dark.text_secondary)
+            },
+            "CTkScrollableFrame": {
+                "label_fg_color": pair(light.card, dark.card)
+            },
+            "DropdownMenu": {
+                "fg_color": pair(light.surface, dark.surface),
+                "hover_color": pair(light.card, dark.card),
+                "text_color": pair(light.text_primary, dark.text_primary)
+            },
+            "CTkFont": {
+                "macOS": {
+                    "family": "SF Display",
+                    "size": 13,
+                    "weight": "normal"
+                },
+                "Windows": {
+                    "family": "Roboto",
+                    "size": 13,
+                    "weight": "normal"
+                },
+                "Linux": {
+                    "family": "Roboto",
+                    "size": 13,
+                    "weight": "normal"
+                }
+            }
+        }
+
+        return theme_dict
+
+    def export_ctk_theme_json(self, name: str, output_path: Optional[str] = None) -> Optional[str]:
+        """导出主题为 CustomTkinter JSON 文件（默认写入缓存目录），返回文件路径；失败返回 None"""
+        theme_dict = self.build_ctk_theme_dict(name)
+        if theme_dict is None:
+            return None
+
+        target_path = output_path or self.get_ctk_theme_cache_path(name)
+        try:
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            with open(target_path, 'w', encoding='utf-8') as f:
+                json.dump(theme_dict, f, ensure_ascii=False, indent=2)
+            return target_path
+        except Exception as e:
+            print(f"Error exporting CTk theme json for {name}: {e}")
+            return None
 
 # 全局主题管理器实例
 theme_manager = ThemeManager()

@@ -38,11 +38,199 @@ except ImportError:
 logger = setup_logger(__name__)
 
 
+# ── 主题热加载（运行时换肤） ─────────────────────────────────────────
+# 控件类 -> [(控件 configure 颜色属性, 主题 JSON section, 主题 JSON 字段)]
+# 仅列出各控件实际支持的颜色属性；未列出的控件（如纯 tkinter 控件）保持不变。
+_CTK_THEME_BINDINGS = {
+    "CTk": [("fg_color", "CTk", "fg_color")],
+    "CTkToplevel": [("fg_color", "CTkToplevel", "fg_color")],
+    "CTkFrame": [("fg_color", "CTkFrame", "fg_color"),
+                 ("top_fg_color", "CTkFrame", "top_fg_color"),
+                 ("border_color", "CTkFrame", "border_color")],
+    "CTkButton": [("fg_color", "CTkButton", "fg_color"),
+                  ("hover_color", "CTkButton", "hover_color"),
+                  ("border_color", "CTkButton", "border_color"),
+                  ("text_color", "CTkButton", "text_color"),
+                  ("text_color_disabled", "CTkButton", "text_color_disabled")],
+    "CTkLabel": [("fg_color", "CTkLabel", "fg_color"),
+                 ("text_color", "CTkLabel", "text_color")],
+    "CTkEntry": [("fg_color", "CTkEntry", "fg_color"),
+                 ("border_color", "CTkEntry", "border_color"),
+                 ("text_color", "CTkEntry", "text_color"),
+                 ("placeholder_text_color", "CTkEntry", "placeholder_text_color")],
+    "CTkCheckBox": [("fg_color", "CTkCheckBox", "fg_color"),
+                    ("border_color", "CTkCheckBox", "border_color"),
+                    ("hover_color", "CTkCheckBox", "hover_color"),
+                    ("checkmark_color", "CTkCheckBox", "checkmark_color"),
+                    ("text_color", "CTkCheckBox", "text_color"),
+                    ("text_color_disabled", "CTkCheckBox", "text_color_disabled")],
+    "CTkSwitch": [("fg_color", "CTkSwitch", "fg_color"),
+                  ("progress_color", "CTkSwitch", "progress_color"),
+                  ("button_color", "CTkSwitch", "button_color"),
+                  ("button_hover_color", "CTkSwitch", "button_hover_color"),
+                  ("text_color", "CTkSwitch", "text_color"),
+                  ("text_color_disabled", "CTkSwitch", "text_color_disabled")],
+    "CTkRadioButton": [("fg_color", "CTkRadioButton", "fg_color"),
+                       ("border_color", "CTkRadioButton", "border_color"),
+                       ("hover_color", "CTkRadioButton", "hover_color"),
+                       ("text_color", "CTkRadioButton", "text_color"),
+                       ("text_color_disabled", "CTkRadioButton", "text_color_disabled")],
+    "CTkProgressBar": [("fg_color", "CTkProgressBar", "fg_color"),
+                       ("progress_color", "CTkProgressBar", "progress_color"),
+                       ("border_color", "CTkProgressBar", "border_color")],
+    "CTkSlider": [("fg_color", "CTkSlider", "fg_color"),
+                  ("progress_color", "CTkSlider", "progress_color"),
+                  ("button_color", "CTkSlider", "button_color"),
+                  ("button_hover_color", "CTkSlider", "button_hover_color")],
+    "CTkOptionMenu": [("fg_color", "CTkOptionMenu", "fg_color"),
+                      ("button_color", "CTkOptionMenu", "button_color"),
+                      ("button_hover_color", "CTkOptionMenu", "button_hover_color"),
+                      ("text_color", "CTkOptionMenu", "text_color"),
+                      ("text_color_disabled", "CTkOptionMenu", "text_color_disabled")],
+    "CTkComboBox": [("fg_color", "CTkComboBox", "fg_color"),
+                    ("border_color", "CTkComboBox", "border_color"),
+                    ("button_color", "CTkComboBox", "button_color"),
+                    ("button_hover_color", "CTkComboBox", "button_hover_color"),
+                    ("text_color", "CTkComboBox", "text_color"),
+                    ("text_color_disabled", "CTkComboBox", "text_color_disabled")],
+    "CTkScrollbar": [("button_color", "CTkScrollbar", "button_color"),
+                     ("button_hover_color", "CTkScrollbar", "button_hover_color")],
+    "CTkSegmentedButton": [("fg_color", "CTkSegmentedButton", "fg_color"),
+                           ("selected_color", "CTkSegmentedButton", "selected_color"),
+                           ("selected_hover_color", "CTkSegmentedButton", "selected_hover_color"),
+                           ("unselected_color", "CTkSegmentedButton", "unselected_color"),
+                           ("unselected_hover_color", "CTkSegmentedButton", "unselected_hover_color"),
+                           ("text_color", "CTkSegmentedButton", "text_color"),
+                           ("text_color_disabled", "CTkSegmentedButton", "text_color_disabled")],
+    "CTkTextbox": [("fg_color", "CTkTextbox", "fg_color"),
+                   ("border_color", "CTkTextbox", "border_color"),
+                   ("text_color", "CTkTextbox", "text_color"),
+                   ("scrollbar_button_color", "CTkTextbox", "scrollbar_button_color"),
+                   ("scrollbar_button_hover_color", "CTkTextbox", "scrollbar_button_hover_color")],
+    "CTkScrollableFrame": [("fg_color", "CTkFrame", "fg_color"),
+                           ("top_fg_color", "CTkFrame", "top_fg_color"),
+                           ("border_color", "CTkFrame", "border_color"),
+                           ("label_fg_color", "CTkScrollableFrame", "label_fg_color")],
+    "CTkTabview": [("fg_color", "CTkFrame", "fg_color"),
+                   ("top_fg_color", "CTkFrame", "top_fg_color"),
+                   ("border_color", "CTkFrame", "border_color")],
+}
+
+# 换肤前的主题基线：用于判断控件颜色是"跟随主题"还是"代码显式指定"。
+# 启动应用主题后需同步刷新此基线（sync_ctk_theme_baseline）。
+_ctk_theme_baseline: dict = {}
+
+
+def sync_ctk_theme_baseline():
+    """以当前 CustomTkinter 主题作为后续换肤的比较基线"""
+    from customtkinter.windows.widgets.theme import ThemeManager as _CtkThemeManager
+    import copy
+    _ctk_theme_baseline.clear()
+    _ctk_theme_baseline.update(copy.deepcopy(_CtkThemeManager.theme))
+
+
+def _normalize_theme_color(value):
+    """把颜色值归一化，便于比较主题默认值与控件当前值"""
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        return tuple(str(item) for item in value)
+    return str(value)
+
+
+def _iter_all_widgets(widget):
+    """递归遍历控件树（Toplevel 是根窗口的 Tk 子级，同样会被遍历到）"""
+    yield widget
+    try:
+        children = widget.winfo_children()
+    except Exception:
+        children = []
+    for child in children:
+        yield from _iter_all_widgets(child)
+
+
+def apply_theme_to_existing_widgets(root):
+    """将已通过 ctk.set_default_color_theme 加载的新主题，即时应用到所有已存在控件。
+
+    规则：
+    - 颜色仍等于旧主题默认值的控件 -> 更新为新主题对应颜色；
+    - 代码中显式指定颜色的控件（如绿色保存按钮、红色删除按钮、灰色说明文字）-> 保留；
+    - CTkFrame 系列区分 fg_color/top_fg_color 的嵌套层级，换肤后保持层次感。
+    """
+    from customtkinter.windows.widgets.theme import ThemeManager as _CtkThemeManager
+    import copy
+
+    new_theme = _CtkThemeManager.theme
+    old_theme = _ctk_theme_baseline or {}
+    frame_like = {"CTkFrame", "CTkScrollableFrame", "CTkTabview"}
+
+    for widget in _iter_all_widgets(root):
+        widget_class = type(widget).__name__
+        bindings = _CTK_THEME_BINDINGS.get(widget_class)
+        if not bindings:
+            continue
+
+        for attr, section, theme_key in bindings:
+            new_section = new_theme.get(section, {})
+            old_section = old_theme.get(section, {})
+            if theme_key not in new_section:
+                continue
+
+            new_value = new_section[theme_key]
+
+            # 框架类容器的 fg_color 需要保持 fg/top_fg 的嵌套层次
+            if widget_class in frame_like and attr == "fg_color":
+                try:
+                    current = _normalize_theme_color(widget.cget("fg_color"))
+                except Exception:
+                    continue
+                if current == _normalize_theme_color(old_section.get("top_fg_color")):
+                    new_value = new_section.get("top_fg_color", new_value)
+                elif current == _normalize_theme_color(old_section.get("fg_color")):
+                    new_value = new_section.get("fg_color", new_value)
+                else:
+                    continue  # 显式颜色，保留
+            else:
+                old_default = old_section.get(theme_key)
+                if old_default is not None:
+                    try:
+                        current = _normalize_theme_color(widget.cget(attr))
+                    except Exception:
+                        continue
+                    if current != _normalize_theme_color(old_default):
+                        continue  # 显式颜色，保留
+
+            try:
+                widget.configure(**{attr: new_value})
+            except Exception as e:
+                logger.debug(f"热换肤跳过 {widget_class}.{attr}: {e}")
+
+    # 更新基线，保证连续多次换肤时，上一次主题驱动的控件仍能继续跟随
+    _ctk_theme_baseline.clear()
+    _ctk_theme_baseline.update(copy.deepcopy(new_theme))
+    root.update_idletasks()
+
+
+def apply_ctk_theme_hot(root, theme_name) -> bool:
+    """热加载指定 ini 主题：导出 CTk JSON -> 切换全局主题 -> 刷新所有存量控件"""
+    from src.config import theme_manager
+
+    json_path = theme_manager.export_ctk_theme_json(theme_name)
+    if not json_path:
+        return False
+
+    ctk.set_default_color_theme(json_path)
+    if not theme_manager.set_theme(theme_name):
+        return False
+
+    apply_theme_to_existing_widgets(root)
+    return True
+
+
 class CustomTkinterApp:
     def __init__(self):
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
-        
+        self._apply_startup_theme()
+
         self.root = ctk.CTk()
         self.root.title("AI电脑控制")
         self.root.geometry("1200x800")
@@ -105,7 +293,32 @@ class CustomTkinterApp:
         self.title_color = None
         self.use_acrylic = False
         self.use_mica = False
-        
+
+    def _apply_startup_theme(self):
+        """启动时应用上次保存的外观模式和自定义主题（在创建根窗口前调用）"""
+        from src.config import theme_manager
+
+        # 外观模式：dark / light / system
+        mode = (getattr(settings, "theme", None) or "dark").lower()
+        if mode not in ("dark", "light", "system"):
+            mode = "dark"
+        ctk.set_appearance_mode(mode)
+
+        # 自定义主题：读取热加载时导出的 CTk JSON 缓存；不存在则回退内置 blue
+        theme_name = getattr(settings, "theme_name", None)
+        if theme_name and theme_name not in ("blue", "green", "dark-blue", "sweetkind"):
+            cache_path = theme_manager.get_ctk_theme_cache_path(theme_name)
+            if os.path.exists(cache_path):
+                try:
+                    ctk.set_default_color_theme(cache_path)
+                    theme_manager.load_all_themes()
+                    theme_manager.set_theme(theme_name)
+                except Exception as e:
+                    print(f"警告: 加载主题 '{theme_name}' 失败，使用默认主题: {e}")
+
+        # 以启动时实际生效的主题作为热换肤基线
+        sync_ctk_theme_baseline()
+
     def _init_ui_effects(self):
         """初始化UI视觉特效引擎"""
         try:
@@ -1766,7 +1979,7 @@ class SettingsWindow:
             text="刷新状态",
             command=self.refresh_pc_status
         )
-        refresh_btn.grid(row=1, column=0, pady=5)
+        refresh_btn.pack(pady=5)
     
     def setup_ai_mode_tab(self):
         """AI模式设置标签页"""
@@ -1974,7 +2187,8 @@ class SettingsWindow:
         self.theme_combobox = ctk.CTkComboBox(
             theme_select_frame,
             values=self.theme_names,
-            width=250
+            width=250,
+            command=self.on_theme_combo_change
         )
         self.theme_combobox.pack(pady=5)
         
@@ -2047,7 +2261,8 @@ class SettingsWindow:
                 mode_frame,
                 text=name,
                 variable=self.theme_var,
-                value=value
+                value=value,
+                command=self.on_appearance_mode_change
             )
             radio.pack(anchor="w", padx=10, pady=2)
         
@@ -2357,14 +2572,33 @@ class SettingsWindow:
                 text=f"作者: {theme.author} | 版本: {theme.version} | 描述: {theme.description}"
             )
     
+    def on_theme_combo_change(self, theme_name):
+        """主题下拉框选择变化时即时更新预览"""
+        self.update_theme_preview()
+
+    def on_appearance_mode_change(self):
+        """界面模式（深色/浅色/跟随系统）即时切换"""
+        mode = self.theme_var.get()
+        try:
+            ctk.set_appearance_mode(mode)
+            settings.theme = mode
+        except Exception as e:
+            print(f"切换界面模式失败: {e}")
+
     def refresh_themes(self):
-        """刷新主题列表（热加载）"""
+        """刷新主题列表（热加载），当前主题被修改时即时重新应用"""
         from src.config import theme_manager
-        
+
         changes = theme_manager.hot_reload()
         self.theme_names = theme_manager.get_theme_names()
         self.theme_combobox.configure(values=self.theme_names)
-        
+
+        # 当前正在使用的主题文件被更新时，重新生成 JSON 并即时换肤
+        current_name = getattr(theme_manager.current_theme, "name", None)
+        if current_name and current_name in changes.get("updated", []):
+            if apply_ctk_theme_hot(self.parent, current_name):
+                self.update_theme_preview()
+
         # 显示变化信息
         msg = ""
         if changes['added']:
@@ -2373,26 +2607,38 @@ class SettingsWindow:
             msg += f"更新主题: {', '.join(changes['updated'])}\n"
         if changes['removed']:
             msg += f"删除主题: {', '.join(changes['removed'])}\n"
-        
+
+        if current_name and current_name in changes.get("updated", []):
+            msg += "\n当前主题已重新加载并即时生效"
+
         if msg:
             messagebox.showinfo("主题刷新", msg)
         else:
             messagebox.showinfo("主题刷新", "没有检测到变化")
-        
+
         # 更新预览
         self.update_theme_preview()
-    
+
     def apply_theme(self):
-        """应用选中的主题"""
+        """应用选中的主题（热加载，无需重启）"""
         from src.config import theme_manager
-        
+
         theme_name = self.theme_combobox.get()
-        if theme_manager.set_theme(theme_name):
-            settings.theme_name = theme_name
-            messagebox.showinfo("应用主题", f"主题 '{theme_name}' 已应用\n重启应用后生效")
-            self.update_theme_preview()
-        else:
-            messagebox.showerror("错误", "无法应用主题")
+        theme = theme_manager.get_theme(theme_name)
+        if theme is None:
+            messagebox.showerror("错误", f"主题 '{theme_name}' 不存在，请先点击\"刷新主题\"")
+            return
+
+        try:
+            if apply_ctk_theme_hot(self.parent, theme_name):
+                settings.theme_name = theme_name
+                self.update_theme_preview()
+                messagebox.showinfo("应用主题", f"主题 '{theme_name}' 已即时生效，无需重启")
+            else:
+                messagebox.showerror("错误", "无法应用主题")
+        except Exception as e:
+            logger.exception("热加载主题失败")
+            messagebox.showerror("错误", f"应用主题失败: {e}")
     
     def load_settings(self):
         """加载设置"""
