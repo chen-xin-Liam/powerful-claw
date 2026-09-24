@@ -1,5 +1,5 @@
 import pytest
-from src.system import SystemController, PermissionLevel
+from src.system.controller import SystemController, PermissionLevel
 
 class TestSystemController:
     def test_permission_levels(self):

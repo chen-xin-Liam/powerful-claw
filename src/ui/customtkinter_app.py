@@ -8,25 +8,14 @@ import time
 import sys
 import os
 import time
-from PIL import Image, ImageTk
-import pystray
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from src.config.ai_providers import AIProviderManager
+# ── 启动性能：重依赖一律惰性导入（在首次使用处 import），避免 UI 模块导入期被
+# openai/requests/pydantic/pyautogui/PIL 等拖慢 5s+。以下符号在使用点局部导入：
+#   AIService / LocalModelService / WebSocketServer / APIServer / VideoEditor /
+#   screen_monitor / SystemController / VisionCapture / MarkdownRenderer /
+#   AIProviderManager / SplashScreen / GLEffects / pystray / PIL.Image
 from src.config.settings import settings
-from src.services.ai_service import AIService
-from src.services.local_model_service import LocalModelService
-from src.services.websocket_server import WebSocketServer
-from src.services.api_server import APIServer
-from src.services.screen_monitor import screen_monitor
-from src.services.video_editor import VideoEditor
-from src.system.controller import SystemController
-from src.system.vision import VisionCapture
 from src.utils.logger import setup_logger
-from src.utils.markdown_renderer import MarkdownRenderer
-from src.ui.splash_screen import SplashScreen
-from src.ui.effects import GLEffects, GLColor, GlassEffectParams, GlowEffectParams
 
 try:
     import pywinstyles
@@ -235,37 +224,51 @@ class CustomTkinterApp:
         self.root.title("AI电脑控制")
         self.root.geometry("1200x800")
         self.root.withdraw()  # 隐藏主窗口
-        
-        # 初始化UI视觉特效引擎
-        self._init_ui_effects()
-        
-        # 显示启动画面
+
+        # 先显示启动画面，让用户立即看到反馈；特效与重服务在其后初始化
+        from src.ui.splash_screen import SplashScreen
         self.splash_screen = SplashScreen(self.root, self.on_splash_close)
-        
-        # 初始化服务（在后台进行）
+        self.root.update_idletasks()
+
+        # 初始化UI视觉特效引擎（惰性导入 GLEffects 链）
+        self._init_ui_effects()
+
+        # 初始化服务（重依赖惰性导入；主程序经 src/main.py 启动时服务已在后台线程启动，
+        # 这里保证直接运行 UI（start.py）时同样完整可用）
+        from src.services.ai_service import AIService
+        from src.config.ai_providers import AIProviderManager
+        from src.system.controller import SystemController
+        from src.system.vision import VisionCapture
+        from src.utils.markdown_renderer import MarkdownRenderer
+        from src.services.local_model_service import LocalModelService
+        from src.services.websocket_server import WebSocketServer
+        from src.services.api_server import APIServer
+        from src.services.screen_monitor import screen_monitor
+        from src.services.video_editor import VideoEditor
+
         self.ai_service = AIService()
         self.ai_provider_manager = AIProviderManager()
         self.system_controller = SystemController()
         self.vision_capture = VisionCapture()
         self.markdown_renderer = MarkdownRenderer()
         self.local_model_service = LocalModelService()
-        
+
         # 启动WebSocket服务器（从settings读取配置）
         self.websocket_server = WebSocketServer(host=settings.host, port=settings.websocket_port)
         self.websocket_server.start()
         print(f"WebSocket服务器已启动，端口: {settings.websocket_port}")
         print(f"网页控制端地址: http://localhost:{settings.websocket_port}")
-        
+
         # 启动API服务器（从settings读取配置）
         self.api_server = APIServer(host=settings.host, port=settings.api_port)
         self.api_server.start()
         print(f"API服务器已启动，端口: {settings.api_port}")
         print(f"API网页控制端地址: http://localhost:{settings.api_port}")
-        
+
         # 启动桌面监控服务器
         screen_monitor.start()
         print(f"桌面监控服务器已启动，端口: {screen_monitor.port}")
-        
+
         # 启动视频剪辑服务器
         self.video_editor = VideoEditor()
         self.video_editor.start()
@@ -322,6 +325,7 @@ class CustomTkinterApp:
     def _init_ui_effects(self):
         """初始化UI视觉特效引擎"""
         try:
+            from src.ui.effects import GLEffects, GLColor, GlassEffectParams, GlowEffectParams
             self.effects_engine = GLEffects()
             # 初始化特效引擎（使用默认窗口大小）
             self.effects_engine.init(800, 600)
@@ -1679,6 +1683,7 @@ class CustomTkinterApp:
     def _create_tray_icon(self):
         """创建系统托盘图标"""
         try:
+            import pystray
             # 创建图标（使用简单的文本图标）
             icon_image = self._create_simple_icon()
             
@@ -1700,6 +1705,7 @@ class CustomTkinterApp:
     
     def _create_simple_icon(self):
         """创建简单的图标"""
+        from PIL import Image
         # 创建一个简单的256x256像素图像
         img = Image.new('RGB', (64, 64), color=(45, 45, 45))
         # 添加一些简单的图形

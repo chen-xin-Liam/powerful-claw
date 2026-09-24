@@ -587,9 +587,9 @@ def test_node_engine_runtime():
 
     failures = []
 
-    # a. backend 检查
-    if eng.backend not in ('python', 'cppyy'):
-        failures.append(f"backend 应为 python/cppyy，实际: {eng.backend}")
+    # a. backend 检查（native = MinGW 编译的 C++ DLL，cppyy = JIT C++，python = 回退）
+    if eng.backend not in ('python', 'cppyy', 'native'):
+        failures.append(f"backend 应为 native/cppyy/python，实际: {eng.backend}")
     else:
         print(f"  ✓ backend: {eng.backend}")
 

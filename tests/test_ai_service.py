@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from src.services import AIService
+from src.services.ai_service import AIService
 
 class TestAIService:
     def test_initialization_with_env_key(self, monkeypatch):

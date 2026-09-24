@@ -1,0 +1,23 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  Ts/call  Ts/call  name    
+
+			Call graph
+
+
+granularity: each sample hit covers 4 byte(s) no time propagated
+
+index % time    self  children    called     name
+
+Index by function name
+
+
+
+==== 阶段计时（chrono，-O1 -fno-inline 插桩构建）====
+acc=7203938.098325 iters=100000
+phase_build_us_per_round=27.021
+phase_exec_us_per_round=79.914
+
+说明：build=节点图构建（add/connect/对象构造），exec=validate+拓扑+compute

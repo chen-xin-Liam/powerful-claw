@@ -1,0 +1,2777 @@
+﻿python : import time: self [us] | cumulative | imported package
+At line:15 char:5671
++ ... pgrep\bin'; python -X importtime -c "import src.ui.customtkinter_app" ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (import time: se...mported package 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+import time:        65 |         65 | winreg
+import time:       196 |        196 |   _io
+import time:        32 |         32 |   marshal
+import time:       216 |        216 |   nt
+import time:       576 |       1017 | _frozen_importlib_external
+import time:        70 |         70 |   time
+import time:       200 |        270 | zipimport
+import time:        48 |         48 |     _codecs
+import time:       478 |        526 |   codecs
+import time:      1216 |       1216 |   encodings.aliases
+import time:      1766 |       3507 | encodings
+import time:       677 |        677 | encodings.utf_8
+import time:        43 |         43 | _signal
+import time:        24 |         24 |     _abc
+import time:       134 |        157 |   abc
+import time:       120 |        277 | io
+import time:        53 |         53 |       _stat
+import time:        84 |        137 |     stat
+import time:       691 |        691 |     _collections_abc
+import time:        75 |         75 |       genericpath
+import time:        73 |         73 |       _winapi
+import time:       178 |        325 |     ntpath
+import time:       389 |       1541 |   os
+import time:        74 |         74 |   _sitebuiltins
+import time:        46 |         46 |   errno
+import time:      1050 |       1050 |   encodings.utf_8_sig
+import time:      1132 |       1132 |     types
+import time:       625 |        625 |       cuda
+import time:       837 |        837 |       cuda.bindings._version
+import time:      1012 |       2473 |     cuda.bindings
+import time:      3641 |       7245 |   _cuda_bindings_redirector
+import time:      1016 |       1016 |   _distutils_hack
+import time:       980 |        980 |     pywin32_system32
+import time:      1515 |       2495 |   pywin32_bootstrap
+import time:      1117 |       1117 |     importlib
+import time:       880 |        880 |     importlib._abc
+import time:       193 |       2188 |   importlib.util
+import time:        58 |         58 |   importlib.machinery
+import time:       526 |        526 |   sitecustomize
+import time:       455 |        455 |   usercustomize
+import time:      5398 |      22088 | site
+import time:      1256 |       1256 | linecache
+import time:       830 |        830 |             pydantic_settings.exceptions
+import time:       881 |        881 |               __future__
+import time:       181 |        181 |                     itertools
+import time:      1123 |       1123 |                     keyword
+import time:       100 |        100 |                       _operator
+import time:      1345 |       1445 |                     operator
+import time:       882 |        882 |                     reprlib
+import time:        76 |         76 |                     _collections
+import time:      1481 |       5186 |                   collections
+import time:       804 |        804 |                     concurrent
+import time:        78 |         78 |                               _functools
+import time:      1391 |       1468 |                             functools
+import time:      1831 |       3299 |                           enum
+import time:        75 |         75 |                             _sre
+import time:       847 |        847 |                               re._constan
+ts
+import time:       947 |       1793 |                             re._parser
+import time:      1066 |       1066 |                             re._casefix
+import time:      1241 |       4173 |                           re._compiler
+import time:      1088 |       1088 |                           copyreg
+import time:      1295 |       9854 |                         re
+import time:      1382 |       1382 |                           textwrap
+import time:       977 |        977 |                           warnings
+import time:      1532 |       1532 |                           contextlib
+import time:       874 |        874 |                           _colorize
+import time:      1515 |       6278 |                         traceback
+import time:       798 |        798 |                           _weakrefset
+import time:      1097 |       1894 |                         weakref
+import time:        56 |         56 |                           _string
+import time:      1223 |       1278 |                         string
+import time:      1330 |       1330 |                         threading
+import time:        55 |         55 |                         atexit
+import time:      2419 |      23106 |                       logging
+import time:      1249 |      24354 |                     concurrent.futures._b
+ase
+import time:       993 |      26150 |                   concurrent.futures
+import time:       137 |        137 |                     _heapq
+import time:      1719 |       1856 |                   heapq
+import time:      3928 |       3928 |                     _socket
+import time:       109 |        109 |                       math
+import time:      1206 |       1206 |                       select
+import time:      1854 |       3167 |                     selectors
+import time:      3060 |      10154 |                   socket
+import time:        89 |         89 |                       _locale
+import time:      1869 |       1958 |                     locale
+import time:      1209 |       1209 |                     signal
+import time:      1101 |       1101 |                     fcntl
+import time:        75 |         75 |                     msvcrt
+import time:      1903 |       6244 |                   subprocess
+import time:      3892 |       3892 |                     _ssl
+import time:       102 |        102 |                         _struct
+import time:       981 |       1083 |                       struct
+import time:        62 |         62 |                       binascii
+import time:      1272 |       2416 |                     base64
+import time:      3591 |       9898 |                   ssl
+import time:       906 |        906 |                   asyncio.constants
+import time:      1158 |       1158 |                         _ast
+import time:      2015 |       3172 |                       ast
+import time:        58 |         58 |                           _opcode
+import time:       874 |        874 |                           _opcode_metadat
+a
+import time:      1058 |       1989 |                         opcode
+import time:      1922 |       3910 |                       dis
+import time:       804 |        804 |                         token
+import time:        49 |         49 |                         _tokenize
+import time:      1441 |       2293 |                       tokenize
+import time:        53 |         53 |                         _typing
+import time:      2946 |       2999 |                       typing
+import time:      2471 |      14843 |                     inspect
+import time:       679 |      15522 |                   asyncio.coroutines
+import time:        40 |         40 |                       _contextvars
+import time:       699 |        739 |                     contextvars
+import time:       553 |        553 |                     asyncio.format_helper
+s
+import time:       569 |        569 |                       asyncio.base_future
+s
+import time:       864 |        864 |                       asyncio.exceptions
+import time:       833 |        833 |                       asyncio.base_tasks
+import time:       895 |       3160 |                     _asyncio
+import time:      1019 |       5470 |                   asyncio.events
+import time:       710 |        710 |                   asyncio.futures
+import time:       595 |        595 |                   asyncio.protocols
+import time:       705 |        705 |                     asyncio.transports
+import time:       492 |        492 |                     asyncio.log
+import time:      1416 |       2612 |                   asyncio.sslproto
+import time:       475 |        475 |                       asyncio.mixins
+import time:       759 |       1233 |                     asyncio.locks
+import time:       594 |        594 |                       asyncio.queues
+import time:       747 |        747 |                       asyncio.timeouts
+import time:       775 |       2115 |                     asyncio.tasks
+import time:       549 |       3896 |                   asyncio.staggered
+import time:       528 |        528 |                   asyncio.trsock
+import time:      1636 |      91357 |                 asyncio.base_events
+import time:       885 |        885 |                 asyncio.runners
+import time:       703 |        703 |                 asyncio.streams
+import time:       582 |        582 |                 asyncio.subprocess
+import time:       611 |        611 |                 asyncio.taskgroups
+import time:       544 |        544 |                 asyncio.threads
+import time:      1303 |       1303 |                   _overlapped
+import time:      3089 |       3089 |                   asyncio.base_subprocess
+import time:      1221 |       1221 |                   asyncio.proactor_events
+import time:       962 |        962 |                   asyncio.selector_events
+import time:       614 |        614 |                   asyncio.windows_utils
+import time:      1123 |       8309 |                 asyncio.windows_events
+import time:      1144 |     104133 |               asyncio
+import time:      1112 |       1112 |                 gettext
+import time:      1360 |       2471 |               argparse
+import time:       103 |        103 |                           _datetime
+import time:       744 |        846 |                         datetime
+import time:      1439 |       2285 |                       pydantic_core._pyda
+ntic_core
+import time:       877 |        877 |                             numbers
+import time:      1068 |       1944 |                           _decimal
+import time:       975 |       2919 |                         decimal
+import time:      2550 |       2550 |                         typing_extensions
+import time:      7532 |      13000 |                       pydantic_core.core_
+schema
+import time:      1551 |      16835 |                     pydantic_core
+import time:      1133 |      17967 |                   pydantic.version
+import time:       816 |      18782 |                 pydantic._migration
+import time:      1440 |       1440 |                     typing_inspection
+import time:      1060 |       1060 |                       copy
+import time:      1516 |       2575 |                     dataclasses
+import time:      1916 |       1916 |                     typing_inspection.typ
+ing_objects
+import time:      1706 |       7635 |                   typing_inspection.intro
+spection
+import time:       796 |        796 |                   pydantic._internal
+import time:       776 |        776 |                       pydantic._internal.
+_namespace_utils
+import time:       754 |       1529 |                     pydantic._internal._t
+yping_extra
+import time:       863 |       2392 |                   pydantic._internal._rep
+r
+import time:      1446 |      12267 |                 pydantic.errors
+import time:      1096 |      32145 |               pydantic
+import time:       535 |        535 |                 pydantic._internal._inter
+nal_dataclass
+import time:      1628 |       2163 |               pydantic.aliases
+import time:       639 |        639 |               pydantic.warnings
+import time:       761 |        761 |               pydantic._internal._config
+import time:       692 |        692 |                   pydantic._internal._imp
+ort_utils
+import time:      1294 |       1986 |                 pydantic._internal._utils
+import time:       757 |       2742 |               pydantic._internal._signatu
+re
+import time:       610 |        610 |                   pydantic._internal._cor
+e_utils
+import time:      3509 |       4119 |                 pydantic._internal._decor
+ators
+import time:      1202 |       1202 |                     pydantic.plugin
+import time:       985 |       2187 |                   pydantic.plugin._schema
+_validator
+import time:      1081 |       1081 |                       pydantic._internal.
+_forward_ref
+import time:       999 |       2080 |                     pydantic._internal._g
+enerics
+import time:       608 |        608 |                     pydantic._internal._d
+ocs_extraction
+import time:       845 |       3533 |                   pydantic._internal._fie
+lds
+import time:       581 |        581 |                               posix
+import time:       471 |        471 |                               posix
+import time:       173 |       1225 |                             posixpath
+import time:       950 |       2175 |                           fnmatch
+import time:      1059 |       3233 |                         glob
+import time:      1417 |       4649 |                       pathlib._abc
+import time:       548 |        548 |                         pwd
+import time:       443 |        443 |                         grp
+import time:       991 |       1980 |                       pathlib._local
+import time:       924 |       7553 |                     pathlib
+import time:      1750 |       1750 |                     fractions
+import time:      1519 |       1519 |                     ipaddress
+import time:      1013 |       1013 |                       _uuid
+import time:      1005 |       2017 |                     uuid
+import time:      1301 |       1301 |                         sysconfig
+import time:        36 |         36 |                         _sysconfig
+import time:      1293 |       2629 |                       zoneinfo._tzpath
+import time:       933 |        933 |                       zoneinfo._common
+import time:      1025 |       1025 |                       _zoneinfo
+import time:       921 |       5507 |                     zoneinfo
+import time:       713 |        713 |                     pydantic.annotated_ha
+ndlers
+import time:      3066 |       3066 |                     pydantic.functional_v
+alidators
+import time:       661 |        661 |                       pydantic._internal.
+_core_metadata
+import time:       685 |        685 |                       pydantic._internal.
+_mock_val_ser
+import time:       642 |        642 |                       pydantic._internal.
+_schema_generation_shared
+import time:      2358 |       4344 |                     pydantic.json_schema
+import time:      1246 |       1246 |                     pydantic._internal._d
+iscriminated_union
+import time:       901 |        901 |                     pydantic._internal._k
+nown_annotated_metadata
+import time:      1045 |       1045 |                     pydantic._internal._s
+chema_gather
+import time:      1682 |      31338 |                   pydantic._internal._gen
+erate_schema
+import time:       717 |      37774 |                 pydantic._internal._datac
+lasses
+import time:      7072 |       7072 |                   annotated_types
+import time:      1188 |       1188 |                   pydantic._internal._val
+idators
+import time:      5990 |       5990 |                   pydantic.types
+import time:      2084 |      16333 |                 pydantic.fields
+import time:       848 |      59072 |               pydantic.dataclasses
+import time:      1151 |       1151 |                 pydantic._internal._model
+_construction
+import time:      1862 |       3012 |               pydantic.main
+import time:        68 |         68 |                         _json
+import time:       684 |        751 |                       json.scanner
+import time:       995 |       1746 |                     json.decoder
+import time:       760 |        760 |                     json.encoder
+import time:       857 |       3361 |                   json
+import time:       549 |        549 |                   pydantic_settings.utils
+import time:       792 |        792 |                   pydantic_settings.sourc
+es.types
+import time:       912 |        912 |                         email
+import time:        87 |         87 |                             zlib
+import time:       977 |        977 |                               _compressio
+n
+import time:       940 |        940 |                               _bz2
+import time:       985 |       2901 |                             bz2
+import time:       882 |        882 |                               _lzma
+import time:      1243 |       2124 |                             lzma
+import time:      1343 |       6455 |                           shutil
+import time:       690 |        690 |                             zipfile._path
+.glob
+import time:      1525 |       2215 |                           zipfile._path
+import time:      1779 |      10448 |                         zipfile
+import time:       837 |        837 |                         importlib.metadat
+a._meta
+import time:       587 |        587 |                         importlib.metadat
+a._collections
+import time:       436 |        436 |                         importlib.metadat
+a._functools
+import time:       398 |        398 |                         importlib.metadat
+a._itertools
+import time:        49 |         49 |                                     _bise
+ct
+import time:       804 |        852 |                                   bisect
+import time:        41 |         41 |                                   _random
+import time:      1251 |       2144 |                                 random
+import time:      1342 |       3485 |                               tempfile
+import time:       948 |        948 |                               importlib.r
+esources.abc
+import time:      1062 |       5494 |                             importlib.res
+ources._common
+import time:       584 |        584 |                             importlib.res
+ources._functional
+import time:       557 |       6634 |                           importlib.resou
+rces
+import time:       792 |       7426 |                         importlib.abc
+import time:      1591 |      22632 |                       importlib.metadata
+import time:       730 |      23361 |                     pydantic.plugin._load
+er
+import time:     69470 |      92831 |                   pydantic_settings.sourc
+es.utils
+import time:      1877 |      99409 |                 pydantic_settings.sources
+.base
+import time:      1055 |       1055 |                       pydantic_settings.s
+ources.providers.env
+import time:       860 |       1915 |                     pydantic_settings.sou
+rces.providers.aws
+import time:       905 |        905 |                       pydantic.alias_gene
+rators
+import time:       871 |       1775 |                     pydantic_settings.sou
+rces.providers.azure
+import time:      1218 |       1218 |                       shlex
+import time:      2927 |       4144 |                     pydantic_settings.sou
+rces.providers.cli
+import time:      1307 |       1307 |                           dotenv.parser
+import time:       819 |        819 |                           dotenv.variable
+s
+import time:      1012 |       3137 |                         dotenv.main
+import time:      1023 |       4160 |                       dotenv
+import time:       844 |       5004 |                     pydantic_settings.sou
+rces.providers.dotenv
+import time:       751 |        751 |                     pydantic_settings.sou
+rces.providers.gcp
+import time:       632 |        632 |                     pydantic_settings.sou
+rces.providers.json
+import time:       569 |        569 |                       pydantic_settings.s
+ources.providers.toml
+import time:       518 |       1087 |                     pydantic_settings.sou
+rces.providers.pyproject
+import time:       598 |        598 |                     pydantic_settings.sou
+rces.providers.secrets
+import time:       568 |        568 |                     pydantic_settings.sou
+rces.providers.yaml
+import time:       958 |      17427 |                   pydantic_settings.sourc
+es.providers
+import time:        31 |      17458 |                 pydantic_settings.sources
+.providers.aws
+import time:       822 |        822 |                 pydantic_settings.sources
+.providers.nested_secrets
+import time:       860 |     118548 |               pydantic_settings.sources
+import time:      2882 |     329444 |             pydantic_settings.main
+import time:       938 |        938 |             pydantic_settings.version
+import time:      1093 |     332304 |           pydantic_settings
+import time:     21911 |     354214 |         src.config.settings
+import time:      2845 |       2845 |         src.config.ai_providers
+import time:      2335 |       2335 |           configparser
+import time:      2163 |       4498 |         src.config.theme_manager
+import time:      1151 |     362706 |       src.config
+import time:       799 |        799 |                       httpx.__version__
+import time:      1812 |       1812 |                               _hashlib
+import time:        49 |         49 |                               _blake2
+import time:      1072 |       2932 |                             hashlib
+import time:       849 |        849 |                               urllib
+import time:      1525 |       1525 |                                 http
+import time:       792 |        792 |                                     email
+.errors
+import time:       688 |        688 |                                         e
+mail.quoprimime
+import time:       443 |        443 |                                         e
+mail.base64mime
+import time:       611 |        611 |                                          
+   quopri
+import time:       547 |       1158 |                                          
+ email.encoders
+import time:       590 |       1747 |                                         e
+mail.charset
+import time:       865 |       3742 |                                       ema
+il.header
+import time:      1203 |       1203 |                                         u
+rllib.parse
+import time:       725 |        725 |                                         e
+mail._parseaddr
+import time:       827 |       2754 |                                       ema
+il.utils
+import time:       676 |       7172 |                                     email
+._policybase
+import time:       960 |       8923 |                                   email.f
+eedparser
+import time:      1031 |       9954 |                                 email.par
+ser
+import time:       730 |        730 |                                   email._
+encoded_words
+import time:       649 |        649 |                                   email.i
+terators
+import time:      1084 |       2462 |                                 email.mes
+sage
+import time:      1595 |      15534 |                               http.client
+import time:       794 |        794 |                                 urllib.re
+sponse
+import time:       915 |       1709 |                               urllib.erro
+r
+import time:       801 |        801 |                               nturl2path
+import time:      2368 |      21259 |                             urllib.reques
+t
+import time:      1060 |       1060 |                             httpx._except
+ions
+import time:      1242 |       1242 |                                 calendar
+import time:      2541 |       3783 |                               http.cookie
+jar
+import time:      1287 |       1287 |                                   mimetyp
+es
+import time:      1555 |       1555 |                                   httpx._
+types
+import time:      1105 |       1105 |                                   httpx._
+utils
+import time:      1193 |       5139 |                                 httpx._mu
+ltipart
+import time:      1165 |       6304 |                               httpx._cont
+ent
+import time:      1304 |       1304 |                                   _brotli
+import time:      1218 |       2522 |                                 brotli
+import time:      3007 |       3007 |                                     _wmi
+import time:      1609 |       4616 |                                   platfor
+m
+import time:      1079 |       1079 |                                   zstanda
+rd.backend_c
+import time:      1854 |       7548 |                                 zstandard
+import time:      1258 |      11327 |                               httpx._deco
+ders
+import time:      1551 |       1551 |                               httpx._stat
+us_codes
+import time:       845 |        845 |                                     unico
+dedata
+import time:       717 |        717 |                                     idna.
+idnadata
+import time:       720 |        720 |                                     idna.
+intranges
+import time:      1673 |       3954 |                                   idna.co
+re
+import time:      1027 |       1027 |                                   idna.pa
+ckage_data
+import time:      1088 |       6068 |                                 idna
+import time:      2081 |       2081 |                                 httpx._ur
+lparse
+import time:      1062 |       9210 |                               httpx._urls
+import time:      1390 |      33563 |                             httpx._models
+import time:      1078 |      59891 |                           httpx._auth
+import time:      1073 |       1073 |                           httpx._config
+import time:       588 |        588 |                                 httpx._tr
+ansports.base
+import time:       964 |       1552 |                               httpx._tran
+sports.asgi
+import time:      1072 |       1072 |                               httpx._tran
+sports.default
+import time:       615 |        615 |                               httpx._tran
+sports.mock
+import time:       635 |        635 |                               httpx._tran
+sports.wsgi
+import time:       894 |       4767 |                             httpx._transp
+orts
+import time:        30 |       4797 |                           httpx._transpor
+ts.base
+import time:      1369 |      67128 |                         httpx._client
+import time:       751 |      67879 |                       httpx._api
+import time:      1610 |       1610 |                                     _ctyp
+es
+import time:      1055 |       1055 |                                     ctype
+s._endian
+import time:      1814 |       4478 |                                   ctypes
+import time:      1062 |       1062 |                                   ctypes.
+wintypes
+import time:      1778 |       7318 |                                 click._wi
+nconsole
+import time:      1489 |       8807 |                               click._comp
+at
+import time:       679 |        679 |                                 click.glo
+bals
+import time:       911 |        911 |                                 click.uti
+ls
+import time:       958 |       2547 |                               click.excep
+tions
+import time:      1742 |      13095 |                             click.types
+import time:      1241 |       1241 |                             click._utils
+import time:       863 |        863 |                               click.parse
+r
+import time:       977 |       1839 |                             click.formatt
+ing
+import time:      1053 |       1053 |                             click.termui
+import time:      2233 |      19459 |                           click.core
+import time:       938 |        938 |                           click.decorator
+s
+import time:      1212 |      21609 |                         click
+import time:      1256 |       1256 |                           pygments
+import time:      1971 |       1971 |                           pygments.lexers
+._mapping
+import time:       839 |        839 |                           pygments.modeli
+ne
+import time:       567 |        567 |                           pygments.plugin
+import time:      1193 |       1193 |                           pygments.util
+import time:      1207 |       7031 |                         pygments.lexers
+import time:       867 |        867 |                             rich._extensi
+on
+import time:      1212 |       2079 |                           rich
+import time:      1058 |       1058 |                           rich._null_file
+import time:       807 |        807 |                           rich.errors
+import time:       764 |        764 |                                   _compat
+_pickle
+import time:       116 |        116 |                                   _pickle
+import time:      1287 |       2166 |                                 pickle
+import time:      1124 |       1124 |                                   colorsy
+s
+import time:       873 |        873 |                                       ric
+h.color_triplet
+import time:       714 |       1587 |                                     rich.
+palette
+import time:       592 |       2179 |                                   rich._p
+alettes
+import time:       956 |        956 |                                   rich.re
+pr
+import time:       840 |        840 |                                   rich.te
+rminal_theme
+import time:      1786 |       6884 |                                 rich.colo
+r
+import time:      1051 |      10099 |                               rich.style
+import time:       902 |      11001 |                             rich.default_
+styles
+import time:       816 |        816 |                             rich.theme
+import time:       632 |      12448 |                           rich.themes
+import time:       683 |        683 |                           rich._emoji_rep
+lace
+import time:       479 |        479 |                           rich._export_fo
+rmat
+import time:      1036 |       1036 |                           rich._fileno
+import time:      1060 |       1060 |                               rich._loop
+import time:       881 |        881 |                               rich._pick
+import time:      1065 |       1065 |                                     rich.
+_unicode_data._versions
+import time:      1129 |       2193 |                                   rich._u
+nicode_data
+import time:      1478 |       3670 |                                 rich.cell
+s
+import time:      1452 |       5121 |                               rich._wrap
+import time:      1835 |       1835 |                                     rich.
+segment
+import time:      2999 |       4834 |                                   rich.ju
+pyter
+import time:       737 |        737 |                                     rich.
+protocol
+import time:      1350 |       2087 |                                   rich.me
+asure
+import time:       761 |       7680 |                                 rich.cons
+train
+import time:      1183 |       8863 |                               rich.align
+import time:       945 |        945 |                               rich.contai
+ners
+import time:       968 |        968 |                               rich.contro
+l
+import time:       758 |        758 |                               rich.emoji
+import time:      1849 |      20443 |                             rich.text
+import time:       885 |      21328 |                           rich._log_rende
+r
+import time:      1034 |       1034 |                           rich.highlighte
+r
+import time:      1475 |       1475 |                           rich.markup
+import time:       703 |        703 |                           rich.pager
+import time:       715 |        715 |                           rich.region
+import time:       705 |        705 |                           rich.screen
+import time:       580 |        580 |                           rich.styled
+import time:      3488 |      48609 |                         rich.console
+import time:        76 |         76 |                           mmap
+import time:       855 |        855 |                           rich.filesize
+import time:      1076 |       1076 |                               rich.ansi
+import time:      1081 |       2157 |                             rich.file_pro
+xy
+import time:       910 |        910 |                             rich.live_ren
+der
+import time:      1279 |       4344 |                           rich.live
+import time:       999 |        999 |                           rich.progress_b
+ar
+import time:       772 |        772 |                             rich._spinner
+s
+import time:       706 |        706 |                               rich.box
+import time:       656 |        656 |                               rich._ratio
+import time:       605 |        605 |                               rich.paddin
+g
+import time:      2082 |       4047 |                             rich.table
+import time:       804 |       5622 |                           rich.spinner
+import time:      2088 |      13983 |                         rich.progress
+import time:       586 |        586 |                             pygments.filt
+er
+import time:      1050 |       1050 |                               pygments.to
+ken
+import time:       919 |       1969 |                             pygments.filt
+ers
+import time:       851 |        851 |                             pygments.rege
+xopt
+import time:      1232 |       4636 |                           pygments.lexer
+import time:       835 |        835 |                           pygments.style
+import time:       754 |        754 |                           pygments.styles
+import time:      1406 |       7630 |                         rich.syntax
+import time:      1277 |     100136 |                       httpx._main
+import time:      1280 |     170092 |                     httpx
+import time:      1728 |     171820 |                   openai._types
+import time:       694 |        694 |                           sniffio._versio
+n
+import time:       594 |        594 |                           sniffio._impl
+import time:      1005 |       2292 |                         sniffio
+import time:       876 |       3168 |                       openai._utils._util
+s
+import time:       911 |       4078 |                     openai._utils._logs
+import time:       910 |        910 |                     openai._utils._path
+import time:       875 |        875 |                           anyio._core
+import time:       967 |       1841 |                         anyio._core._even
+tloop
+import time:       963 |        963 |                         anyio._core._exce
+ptions
+import time:       985 |        985 |                               anyio.abc._
+eventloop
+import time:       670 |        670 |                               anyio.abc._
+resources
+import time:       699 |        699 |                                 anyio._co
+re._typedattr
+import time:       746 |        746 |                                   anyio.a
+bc._tasks
+import time:       955 |       1700 |                                 anyio.abc
+._streams
+import time:       965 |       3363 |                               anyio.abc._
+sockets
+import time:       804 |        804 |                               anyio.abc._
+subprocesses
+import time:       588 |        588 |                               anyio.abc._
+testing
+import time:      1364 |       1364 |                                 anyio.low
+level
+import time:       976 |        976 |                                 anyio._co
+re._tasks
+import time:       611 |        611 |                                 anyio._co
+re._testing
+import time:      2848 |       5797 |                               anyio._core
+._synchronization
+import time:      1765 |       1765 |                               anyio.from_
+thread
+import time:       834 |      14804 |                             anyio.abc
+import time:       763 |      15567 |                           anyio.to_thread
+import time:      1788 |      17354 |                         anyio._core._file
+io
+import time:       952 |        952 |                         anyio._core._reso
+urces
+import time:       851 |        851 |                         anyio._core._sign
+als
+import time:       797 |        797 |                             anyio.streams
+import time:      1731 |       2527 |                           anyio.streams.s
+tapled
+import time:      1616 |       1616 |                           anyio.streams.t
+ls
+import time:       948 |       5090 |                         anyio._core._sock
+ets
+import time:      2063 |       2063 |                           anyio.streams.m
+emory
+import time:       811 |       2874 |                         anyio._core._stre
+ams
+import time:       748 |        748 |                         anyio._core._subp
+rocesses
+import time:       891 |        891 |                         anyio._core._temp
+file
+import time:      1365 |      32927 |                       anyio
+import time:       640 |      33566 |                     openai._utils._sync
+import time:       833 |        833 |                     openai._utils._proxy
+import time:      1119 |       1119 |                       openai._utils._date
+time_parse
+import time:       867 |       1986 |                     openai._utils._compat
+import time:       935 |        935 |                     openai._utils._typing
+import time:       786 |        786 |                     openai._utils._stream
+s
+import time:       712 |        712 |                       openai._files
+import time:       917 |       1629 |                     openai._utils._transf
+orm
+import time:       774 |        774 |                     openai._utils._reflec
+tion
+import time:      1291 |      46785 |                   openai._utils
+import time:      1006 |       1006 |                   openai._compat
+import time:       608 |        608 |                   openai._constants
+import time:       848 |        848 |                   pydantic._internal._ser
+ializers
+import time:      4898 |     225962 |                 openai._models
+import time:       988 |        988 |                 openai.types.batch_error
+import time:      1327 |       1327 |                 openai.types.batch_usage
+import time:      1403 |       1403 |                     openai.types.shared.m
+etadata
+import time:       807 |        807 |                       openai.types.shared
+.reasoning_effort
+import time:      1293 |       2099 |                     openai.types.shared.r
+easoning
+import time:       738 |        738 |                       openai.types.shared
+.chat_model
+import time:       864 |       1602 |                     openai.types.shared.a
+ll_models
+import time:       981 |        981 |                     openai.types.shared.e
+rror_object
+import time:      1000 |       1000 |                       openai.types.shared
+.comparison_filter
+import time:       930 |       1930 |                     openai.types.shared.c
+ompound_filter
+import time:       634 |        634 |                     openai.types.shared.r
+esponses_model
+import time:       817 |        817 |                     openai.types.shared.o
+auth_error_code
+import time:       592 |        592 |                       openai.types.shared
+.function_parameters
+import time:       978 |       1570 |                     openai.types.shared.f
+unction_definition
+import time:       887 |        887 |                     openai.types.shared.r
+esponse_format_text
+import time:      1000 |       1000 |                     openai.types.shared.c
+ustom_tool_input_format
+import time:       801 |        801 |                     openai.types.shared.r
+esponse_format_json_object
+import time:      1156 |       1156 |                     openai.types.shared.r
+esponse_format_json_schema
+import time:       952 |        952 |                     openai.types.shared.r
+esponse_format_text_python
+import time:      1152 |       1152 |                     openai.types.shared.r
+esponse_format_text_grammar
+import time:      1119 |      18096 |                   openai.types.shared
+import time:        35 |      18130 |                 openai.types.shared.metad
+ata
+import time:      1065 |       1065 |                 openai.types.batch_reques
+t_counts
+import time:      1720 |     249190 |               openai.types.batch
+import time:      1127 |       1127 |               openai.types.image
+import time:       797 |        797 |               openai.types.model
+import time:       919 |        919 |               openai.types.skill
+import time:       741 |        741 |                 openai.types.video_size
+import time:       789 |        789 |                 openai.types.video_model
+import time:       670 |        670 |                 openai.types.video_second
+s
+import time:       704 |        704 |                 openai.types.video_create
+_error
+import time:       951 |       3853 |               openai.types.video
+import time:       951 |        951 |                 openai.types.file_object
+import time:       927 |       1878 |               openai.types.upload
+import time:       859 |        859 |               openai.types.embedding
+import time:       552 |        552 |               openai.types.chat_model
+import time:      1210 |       1210 |                 openai.types.completion_u
+sage
+import time:      1177 |       1177 |                 openai.types.completion_c
+hoice
+import time:       859 |       3245 |               openai.types.completion
+import time:      3233 |       3233 |               openai.types.moderation
+import time:      1139 |       1139 |               openai.types.skill_list
+import time:       666 |        666 |               openai.types.audio_model
+import time:       579 |        579 |               openai.types.image_model
+import time:       513 |        513 |               openai.types.file_content
+import time:       810 |        810 |               openai.types.file_deleted
+import time:       558 |        558 |               openai.types.file_purpose
+import time:      1225 |       1225 |               openai.types.vector_store
+import time:      1099 |       1099 |               openai.types.deleted_skill
+import time:      1122 |       1122 |               openai.types.model_deleted
+import time:       594 |        594 |               openai.types.embedding_mode
+l
+import time:      1655 |       1655 |               openai.types.images_respons
+e
+import time:       659 |        659 |               openai.types.eval_list_para
+ms
+import time:       914 |        914 |               openai.types.file_list_para
+ms
+import time:       664 |        664 |               openai.types.moderation_mod
+el
+import time:       628 |        628 |               openai.types.batch_list_par
+ams
+import time:       969 |        969 |               openai.types.image_edit_par
+ams
+import time:       855 |        855 |               openai.types.skill_list_par
+ams
+import time:       736 |        736 |               openai.types.video_edit_par
+ams
+import time:       752 |        752 |               openai.types.video_list_par
+ams
+import time:       667 |        667 |               openai.types.video_model_pa
+ram
+import time:       663 |        663 |                     openai.types.shared_p
+arams.metadata
+import time:       597 |        597 |                     openai.types.shared_p
+arams.reasoning
+import time:       580 |        580 |                     openai.types.shared_p
+arams.chat_model
+import time:       595 |        595 |                       openai.types.shared
+_params.comparison_filter
+import time:       616 |       1210 |                     openai.types.shared_p
+arams.compound_filter
+import time:       533 |        533 |                     openai.types.shared_p
+arams.responses_model
+import time:       563 |        563 |                     openai.types.shared_p
+arams.oauth_error_code
+import time:       595 |        595 |                     openai.types.shared_p
+arams.reasoning_effort
+import time:       470 |        470 |                       openai.types.shared
+_params.function_parameters
+import time:       624 |       1094 |                     openai.types.shared_p
+arams.function_definition
+import time:       548 |        548 |                     openai.types.shared_p
+arams.response_format_text
+import time:       689 |        689 |                     openai.types.shared_p
+arams.custom_tool_input_format
+import time:       542 |        542 |                     openai.types.shared_p
+arams.response_format_json_object
+import time:       989 |        989 |                     openai.types.shared_p
+arams.response_format_json_schema
+import time:      1054 |       9652 |                   openai.types.shared_par
+ams
+import time:        46 |       9698 |                 openai.types.shared_param
+s.metadata
+import time:       976 |        976 |                       openai.types.grader
+s.python_grader
+import time:      1169 |       1169 |                                 openai.ty
+pes.responses.web_search_tool
+import time:       879 |        879 |                                 openai.ty
+pes.responses.custom_tool
+import time:       690 |        690 |                                 openai.ty
+pes.responses.computer_tool
+import time:       756 |        756 |                                 openai.ty
+pes.responses.function_tool
+import time:       991 |        991 |                                 openai.ty
+pes.responses.namespace_tool
+import time:       691 |        691 |                                 openai.ty
+pes.responses.apply_patch_tool
+import time:      1370 |       1370 |                                 openai.ty
+pes.responses.file_search_tool
+import time:       995 |        995 |                                 openai.ty
+pes.responses.tool_search_tool
+import time:       838 |        838 |                                       ope
+nai.types.responses.inline_skill_source
+import time:       848 |       1685 |                                     opena
+i.types.responses.inline_skill
+import time:       815 |        815 |                                     opena
+i.types.responses.skill_reference
+import time:       807 |        807 |                                     opena
+i.types.responses.container_network_policy_disabled
+import time:      1380 |       1380 |                                       ope
+nai.types.responses.container_network_policy_domain_secret
+import time:      1123 |       2502 |                                     opena
+i.types.responses.container_network_policy_allowlist
+import time:      1185 |       6992 |                                   openai.
+types.responses.container_auto
+import time:      1020 |       1020 |                                     opena
+i.types.responses.local_skill
+import time:       991 |       2011 |                                   openai.
+types.responses.local_environment
+import time:       817 |        817 |                                   openai.
+types.responses.container_reference
+import time:      1356 |      11174 |                                 openai.ty
+pes.responses.function_shell_tool
+import time:      1071 |       1071 |                                 openai.ty
+pes.responses.web_search_preview_tool
+import time:       823 |        823 |                                 openai.ty
+pes.responses.computer_use_preview_tool
+import time:      3494 |      24099 |                               openai.type
+s.responses.tool
+import time:      1047 |       1047 |                                 openai.ty
+pes.responses.response_error
+import time:      1354 |       1354 |                                 openai.ty
+pes.responses.response_usage
+import time:      1282 |       1282 |                                   openai.
+types.responses.response_input_file
+import time:      1095 |       1095 |                                   openai.
+types.responses.response_input_text
+import time:      1278 |       1278 |                                   openai.
+types.responses.response_input_image
+import time:      1127 |       4782 |                                 openai.ty
+pes.responses.response_prompt
+import time:       799 |        799 |                                 openai.ty
+pes.responses.response_status
+import time:      1070 |       1070 |                                 openai.ty
+pes.responses.tool_choice_mcp
+import time:       942 |        942 |                                 openai.ty
+pes.responses.tool_choice_shell
+import time:       983 |        983 |                                 openai.ty
+pes.responses.tool_choice_types
+import time:       831 |        831 |                                 openai.ty
+pes.responses.tool_choice_custom
+import time:       932 |        932 |                                       ope
+nai.types.responses.response_input_content
+import time:      1047 |       1978 |                                     opena
+i.types.responses.response_input_message_content_list
+import time:       995 |       2973 |                                   openai.
+types.responses.easy_input_message
+import time:      1957 |       1957 |                                     opena
+i.types.responses.response_output_text
+import time:      1026 |       1026 |                                     opena
+i.types.responses.response_output_refusal
+import time:      1207 |       4188 |                                   openai.
+types.responses.response_output_message
+import time:      1391 |       1391 |                                   openai.
+types.responses.response_reasoning_item
+import time:      1185 |       1185 |                                   openai.
+types.responses.response_custom_tool_call
+import time:      2290 |       2290 |                                       ope
+nai.types.responses.computer_action
+import time:       629 |       2918 |                                     opena
+i.types.responses.computer_action_list
+import time:      2500 |       5418 |                                   openai.
+types.responses.response_computer_tool_call
+import time:      1974 |       1974 |                                   openai.
+types.responses.response_function_tool_call
+import time:      1935 |       1935 |                                   openai.
+types.responses.response_function_web_search
+import time:      1074 |       1074 |                                   openai.
+types.responses.response_compaction_item_param
+import time:      1238 |       1238 |                                   openai.
+types.responses.response_file_search_tool_call
+import time:      1432 |       1432 |                                   openai.
+types.responses.response_custom_tool_call_output
+import time:      1493 |       1493 |                                   openai.
+types.responses.response_code_interpreter_tool_call
+import time:      1071 |       1071 |                                   openai.
+types.responses.response_tool_search_output_item_param
+import time:      1263 |       1263 |                                       ope
+nai.types.responses.response_input_file_content
+import time:      1122 |       1122 |                                       ope
+nai.types.responses.response_input_text_content
+import time:      1084 |       1084 |                                       ope
+nai.types.responses.response_input_image_content
+import time:       977 |       4444 |                                     opena
+i.types.responses.response_function_call_output_item
+import time:       998 |       5442 |                                   openai.
+types.responses.response_function_call_output_item_list
+import time:      1214 |       1214 |                                   openai.
+types.responses.response_function_shell_call_output_content
+import time:      1071 |       1071 |                                   openai.
+types.responses.response_computer_tool_call_output_screenshot
+import time:      9343 |      42435 |                                 openai.ty
+pes.responses.response_input_item
+import time:      1545 |       1545 |                                 openai.ty
+pes.responses.tool_choice_allowed
+import time:      1171 |       1171 |                                 openai.ty
+pes.responses.tool_choice_options
+import time:       980 |        980 |                                   openai.
+types.responses.response_compaction_item
+import time:      1188 |       1188 |                                   openai.
+types.responses.response_tool_search_call
+import time:      2236 |       2236 |                                   openai.
+types.responses.response_apply_patch_tool_call
+import time:      1196 |       1196 |                                   openai.
+types.responses.response_tool_search_output_item
+import time:       910 |        910 |                                     opena
+i.types.responses.response_local_environment
+import time:       832 |        832 |                                     opena
+i.types.responses.response_container_reference
+import time:      1715 |       3456 |                                   openai.
+types.responses.response_function_shell_tool_call
+import time:      1672 |       1672 |                                   openai.
+types.responses.response_apply_patch_tool_call_output
+import time:      1651 |       1651 |                                   openai.
+types.responses.response_custom_tool_call_output_item
+import time:      1078 |       1078 |                                   openai.
+types.responses.response_computer_tool_call_output_item
+import time:      1427 |       1427 |                                   openai.
+types.responses.response_function_tool_call_output_item
+import time:      1731 |       1731 |                                   openai.
+types.responses.response_function_shell_tool_call_output
+import time:      3570 |      20180 |                                 openai.ty
+pes.responses.response_output_item
+import time:      1035 |       1035 |                                     opena
+i.types.responses.response_format_text_json_schema_config
+import time:       762 |       1797 |                                   openai.
+types.responses.response_format_text_config
+import time:      1482 |       3279 |                                 openai.ty
+pes.responses.response_text_config
+import time:      1193 |       1193 |                                 openai.ty
+pes.responses.tool_choice_function
+import time:      1148 |       1148 |                                 openai.ty
+pes.responses.tool_choice_apply_patch
+import time:      4150 |      86900 |                               openai.type
+s.responses.response
+import time:      1167 |       1167 |                                 openai.ty
+pes.responses.web_search_tool_param
+import time:       952 |        952 |                                       ope
+nai.types.chat.chat_completion_audio
+import time:      1035 |       1035 |                                         o
+penai.types.chat.chat_completion_message_custom_tool_call
+import time:       935 |        935 |                                         o
+penai.types.chat.chat_completion_message_function_tool_call
+import time:       912 |       2881 |                                       ope
+nai.types.chat.chat_completion_message_tool_call
+import time:      1611 |       5443 |                                     opena
+i.types.chat.chat_completion_message
+import time:      1041 |       1041 |                                     opena
+i.types.chat.chat_completion_token_logprob
+import time:      3688 |      10172 |                                   openai.
+types.chat.chat_completion
+import time:       810 |        810 |                                   openai.
+types.chat.chat_completion_role
+import time:      3462 |       3462 |                                   openai.
+types.chat.chat_completion_chunk
+import time:      1109 |       1109 |                                   openai.
+types.chat.completion_list_params
+import time:      1066 |       1066 |                                     opena
+i.types.chat.parsed_function_tool_call
+import time:      1953 |       3019 |                                   openai.
+types.chat.parsed_chat_completion
+import time:      1339 |       1339 |                                   openai.
+types.chat.chat_completion_deleted
+import time:       907 |        907 |                                   openai.
+types.chat.chat_completion_modality
+import time:       884 |        884 |                                     opena
+i.types.chat.chat_completion_audio_param
+import time:       720 |        720 |                                         o
+penai.types.chat.chat_completion_content_part_text_param
+import time:       777 |       1497 |                                       ope
+nai.types.chat.chat_completion_tool_message_param
+import time:       910 |        910 |                                          
+ openai.types.chat.chat_completion_content_part_image_param
+import time:       995 |        995 |                                          
+ openai.types.chat.chat_completion_content_part_input_audio_param
+import time:       785 |       2688 |                                         o
+penai.types.chat.chat_completion_content_part_param
+import time:       713 |       3401 |                                       ope
+nai.types.chat.chat_completion_user_message_param
+import time:       682 |        682 |                                       ope
+nai.types.chat.chat_completion_system_message_param
+import time:       878 |        878 |                                       ope
+nai.types.chat.chat_completion_function_message_param
+import time:       737 |        737 |                                         o
+penai.types.chat.chat_completion_content_part_refusal_param
+import time:       783 |        783 |                                          
+ openai.types.chat.chat_completion_message_custom_tool_call_param
+import time:      1193 |       1193 |                                          
+ openai.types.chat.chat_completion_message_function_tool_call_param
+import time:       749 |       2724 |                                         o
+penai.types.chat.chat_completion_message_tool_call_union_param
+import time:      1019 |       4479 |                                       ope
+nai.types.chat.chat_completion_assistant_message_param
+import time:       845 |        845 |                                       ope
+nai.types.chat.chat_completion_developer_message_param
+import time:       718 |      12497 |                                     opena
+i.types.chat.chat_completion_message_param
+import time:       995 |        995 |                                       ope
+nai.types.chat.chat_completion_custom_tool_param
+import time:       793 |        793 |                                       ope
+nai.types.chat.chat_completion_function_tool_param
+import time:       674 |       2461 |                                     opena
+i.types.chat.chat_completion_tool_union_param
+import time:       835 |        835 |                                     opena
+i.types.chat.chat_completion_stream_options_param
+import time:       667 |        667 |                                     opena
+i.types.chat.chat_completion_prediction_content_param
+import time:       661 |        661 |                                       ope
+nai.types.chat.chat_completion_named_tool_choice_param
+import time:       740 |        740 |                                         o
+penai.types.chat.chat_completion_allowed_tools_param
+import time:       680 |       1419 |                                       ope
+nai.types.chat.chat_completion_allowed_tool_choice_param
+import time:       672 |        672 |                                       ope
+nai.types.chat.chat_completion_named_tool_choice_custom_param
+import time:       681 |       3433 |                                     opena
+i.types.chat.chat_completion_tool_choice_option_param
+import time:       674 |        674 |                                     opena
+i.types.chat.chat_completion_function_call_option_param
+import time:      1665 |      23112 |                                   openai.
+types.chat.completion_create_params
+import time:       638 |        638 |                                   openai.
+types.chat.completion_update_params
+import time:       727 |        727 |                                   openai.
+types.chat.chat_completion_tool_param
+import time:       842 |        842 |                                   openai.
+types.chat.chat_completion_function_tool
+import time:      1010 |       1010 |                                     opena
+i.types.chat.chat_completion_content_part_text
+import time:      1247 |       1247 |                                     opena
+i.types.chat.chat_completion_content_part_image
+import time:       970 |       3226 |                                   openai.
+types.chat.chat_completion_store_message
+import time:       695 |        695 |                                   openai.
+types.chat.chat_completion_reasoning_effort
+import time:       719 |        719 |                                   openai.
+types.chat.chat_completion_message_tool_call_param
+import time:      1543 |      52313 |                                 openai.ty
+pes.chat
+import time:       707 |        707 |                                 openai.ty
+pes.responses.custom_tool_param
+import time:       530 |        530 |                                 openai.ty
+pes.responses.computer_tool_param
+import time:       809 |        809 |                                 openai.ty
+pes.responses.function_tool_param
+import time:      1084 |       1084 |                                 openai.ty
+pes.responses.namespace_tool_param
+import time:       723 |        723 |                                 openai.ty
+pes.responses.apply_patch_tool_param
+import time:       878 |        878 |                                 openai.ty
+pes.responses.file_search_tool_param
+import time:       643 |        643 |                                 openai.ty
+pes.responses.tool_search_tool_param
+import time:       548 |        548 |                                       ope
+nai.types.responses.inline_skill_source_param
+import time:       528 |       1076 |                                     opena
+i.types.responses.inline_skill_param
+import time:       738 |        738 |                                     opena
+i.types.responses.skill_reference_param
+import time:       700 |        700 |                                     opena
+i.types.responses.container_network_policy_disabled_param
+import time:       631 |        631 |                                       ope
+nai.types.responses.container_network_policy_domain_secret_param
+import time:       738 |       1369 |                                     opena
+i.types.responses.container_network_policy_allowlist_param
+import time:       744 |       4625 |                                   openai.
+types.responses.container_auto_param
+import time:       714 |        714 |                                     opena
+i.types.responses.local_skill_param
+import time:       879 |       1592 |                                   openai.
+types.responses.local_environment_param
+import time:       793 |        793 |                                   openai.
+types.responses.container_reference_param
+import time:       617 |       7626 |                                 openai.ty
+pes.responses.function_shell_tool_param
+import time:      1185 |       1185 |                                 openai.ty
+pes.responses.web_search_preview_tool_param
+import time:       878 |        878 |                                 openai.ty
+pes.responses.computer_use_preview_tool_param
+import time:      2283 |      70822 |                               openai.type
+s.responses.tool_param
+import time:      1061 |       1061 |                                 openai.ty
+pes.responses.response_input_message_item
+import time:      1161 |       1161 |                                 openai.ty
+pes.responses.response_custom_tool_call_item
+import time:      1123 |       1123 |                                 openai.ty
+pes.responses.response_function_tool_call_item
+import time:      3381 |       6724 |                               openai.type
+s.responses.response_item
+import time:       797 |        797 |                               openai.type
+s.responses.response_input
+import time:      3315 |       3315 |                               openai.type
+s.responses.parsed_response
+import time:      1917 |       1917 |                               openai.type
+s.responses.compacted_response
+import time:      1615 |       1615 |                               openai.type
+s.responses.response_item_list
+import time:      1125 |       1125 |                               openai.type
+s.responses.response_includable
+import time:      1217 |       1217 |                               openai.type
+s.responses.response_error_event
+import time:      1327 |       1327 |                               openai.type
+s.responses.response_input_audio
+import time:      1245 |       1245 |                                     opena
+i.types.responses.response_input_file_param
+import time:      1307 |       1307 |                                     opena
+i.types.responses.response_input_text_param
+import time:       946 |        946 |                                     opena
+i.types.responses.response_input_image_param
+import time:       919 |       4416 |                                   openai.
+types.responses.response_input_message_content_list_param
+import time:       967 |       5382 |                                 openai.ty
+pes.responses.easy_input_message_param
+import time:      1146 |       1146 |                                   openai.
+types.responses.response_output_text_param
+import time:       736 |        736 |                                   openai.
+types.responses.response_output_refusal_param
+import time:       988 |       2870 |                                 openai.ty
+pes.responses.response_output_message_param
+import time:      1164 |       1164 |                                 openai.ty
+pes.responses.response_reasoning_item_param
+import time:       983 |        983 |                                 openai.ty
+pes.responses.response_custom_tool_call_param
+import time:      1245 |       1245 |                                   openai.
+types.responses.computer_action_list_param
+import time:      1640 |       2884 |                                 openai.ty
+pes.responses.response_computer_tool_call_param
+import time:      1217 |       1217 |                                 openai.ty
+pes.responses.response_function_tool_call_param
+import time:      1007 |       1007 |                                 openai.ty
+pes.responses.response_function_web_search_param
+import time:       710 |        710 |                                 openai.ty
+pes.responses.response_compaction_item_param_param
+import time:       776 |        776 |                                 openai.ty
+pes.responses.response_file_search_tool_call_param
+import time:       880 |        880 |                                 openai.ty
+pes.responses.response_custom_tool_call_output_param
+import time:       943 |        943 |                                 openai.ty
+pes.responses.response_code_interpreter_tool_call_param
+import time:       865 |        865 |                                 openai.ty
+pes.responses.response_tool_search_output_item_param_param
+import time:       901 |        901 |                                   openai.
+types.responses.response_input_file_content_param
+import time:       826 |        826 |                                   openai.
+types.responses.response_input_text_content_param
+import time:       700 |        700 |                                   openai.
+types.responses.response_input_image_content_param
+import time:       802 |       3228 |                                 openai.ty
+pes.responses.response_function_call_output_item_list_param
+import time:       728 |        728 |                                 openai.ty
+pes.responses.response_function_shell_call_output_content_param
+import time:       686 |        686 |                                 openai.ty
+pes.responses.response_computer_tool_call_output_screenshot_param
+import time:      3222 |      27541 |                               openai.type
+s.responses.response_input_param
+import time:      1246 |       1246 |                               openai.type
+s.responses.computer_action_param
+import time:       882 |        882 |                               openai.type
+s.responses.response_failed_event
+import time:       843 |        843 |                               openai.type
+s.responses.response_prompt_param
+import time:       723 |        723 |                               openai.type
+s.responses.response_queued_event
+import time:       880 |        880 |                                 openai.ty
+pes.responses.response_created_event
+import time:       860 |        860 |                                 openai.ty
+pes.responses.response_completed_event
+import time:      1097 |       1097 |                                 openai.ty
+pes.responses.response_text_done_event
+import time:       917 |        917 |                                 openai.ty
+pes.responses.response_audio_done_event
+import time:       793 |        793 |                                 openai.ty
+pes.responses.response_incomplete_event
+import time:      1105 |       1105 |                                 openai.ty
+pes.responses.response_text_delta_event
+import time:       692 |        692 |                                 openai.ty
+pes.responses.response_audio_delta_event
+import time:       654 |        654 |                                 openai.ty
+pes.responses.response_in_progress_event
+import time:       721 |        721 |                                 openai.ty
+pes.responses.response_refusal_done_event
+import time:       784 |        784 |                                 openai.ty
+pes.responses.response_refusal_delta_event
+import time:       898 |        898 |                                 openai.ty
+pes.responses.response_mcp_call_failed_event
+import time:       993 |        993 |                                 openai.ty
+pes.responses.response_output_item_done_event
+import time:      1194 |       1194 |                                 openai.ty
+pes.responses.response_content_part_done_event
+import time:      1193 |       1193 |                                 openai.ty
+pes.responses.response_output_item_added_event
+import time:      1412 |       1412 |                                 openai.ty
+pes.responses.response_content_part_added_event
+import time:      1276 |       1276 |                                 openai.ty
+pes.responses.response_mcp_call_completed_event
+import time:      1040 |       1040 |                                 openai.ty
+pes.responses.response_reasoning_text_done_event
+import time:      1199 |       1199 |                                 openai.ty
+pes.responses.response_mcp_call_in_progress_event
+import time:      1003 |       1003 |                                 openai.ty
+pes.responses.response_reasoning_text_delta_event
+import time:       850 |        850 |                                 openai.ty
+pes.responses.response_audio_transcript_done_event
+import time:       943 |        943 |                                 openai.ty
+pes.responses.response_mcp_list_tools_failed_event
+import time:       841 |        841 |                                 openai.ty
+pes.responses.response_audio_transcript_delta_event
+import time:      1095 |       1095 |                                 openai.ty
+pes.responses.response_mcp_call_arguments_done_event
+import time:       900 |        900 |                                 openai.ty
+pes.responses.response_image_gen_call_completed_event
+import time:      1379 |       1379 |                                 openai.ty
+pes.responses.response_mcp_call_arguments_delta_event
+import time:       992 |        992 |                                 openai.ty
+pes.responses.response_mcp_list_tools_completed_event
+import time:       897 |        897 |                                 openai.ty
+pes.responses.response_image_gen_call_generating_event
+import time:       810 |        810 |                                 openai.ty
+pes.responses.response_web_search_call_completed_event
+import time:      1017 |       1017 |                                 openai.ty
+pes.responses.response_web_search_call_searching_event
+import time:       855 |        855 |                                 openai.ty
+pes.responses.response_file_search_call_completed_event
+import time:       914 |        914 |                                 openai.ty
+pes.responses.response_file_search_call_searching_event
+import time:       929 |        929 |                                 openai.ty
+pes.responses.response_image_gen_call_in_progress_event
+import time:      1142 |       1142 |                                 openai.ty
+pes.responses.response_mcp_list_tools_in_progress_event
+import time:      1042 |       1042 |                                 openai.ty
+pes.responses.response_custom_tool_call_input_done_event
+import time:      1144 |       1144 |                                 openai.ty
+pes.responses.response_reasoning_summary_part_done_event
+import time:      1087 |       1087 |                                 openai.ty
+pes.responses.response_reasoning_summary_text_done_event
+import time:       858 |        858 |                                 openai.ty
+pes.responses.response_web_search_call_in_progress_event
+import time:       892 |        892 |                                 openai.ty
+pes.responses.response_custom_tool_call_input_delta_event
+import time:       810 |        810 |                                 openai.ty
+pes.responses.response_file_search_call_in_progress_event
+import time:      1004 |       1004 |                                 openai.ty
+pes.responses.response_function_call_arguments_done_event
+import time:       880 |        880 |                                 openai.ty
+pes.responses.response_image_gen_call_partial_image_event
+import time:       908 |        908 |                                 openai.ty
+pes.responses.response_output_text_annotation_added_event
+import time:      1019 |       1019 |                                 openai.ty
+pes.responses.response_reasoning_summary_part_added_event
+import time:       923 |        923 |                                 openai.ty
+pes.responses.response_reasoning_summary_text_delta_event
+import time:       835 |        835 |                                 openai.ty
+pes.responses.response_function_call_arguments_delta_event
+import time:       769 |        769 |                                 openai.ty
+pes.responses.response_code_interpreter_call_code_done_event
+import time:       737 |        737 |                                 openai.ty
+pes.responses.response_code_interpreter_call_completed_event
+import time:       747 |        747 |                                 openai.ty
+pes.responses.response_code_interpreter_call_code_delta_event
+import time:       710 |        710 |                                 openai.ty
+pes.responses.response_code_interpreter_call_in_progress_event
+import time:       745 |        745 |                                 openai.ty
+pes.responses.response_code_interpreter_call_interpreting_event
+import time:      1384 |      48749 |                               openai.type
+s.responses.response_stream_event
+import time:       608 |        608 |                               openai.type
+s.responses.tool_choice_mcp_param
+import time:       883 |        883 |                               openai.type
+s.responses.input_item_list_params
+import time:       681 |        681 |                                 openai.ty
+pes.responses.tool_choice_shell_param
+import time:       590 |        590 |                                 openai.ty
+pes.responses.tool_choice_types_param
+import time:       836 |        836 |                                 openai.ty
+pes.responses.tool_choice_custom_param
+import time:       945 |        945 |                                 openai.ty
+pes.responses.tool_choice_allowed_param
+import time:       780 |        780 |                                     opena
+i.types.responses.response_format_text_json_schema_config_param
+import time:       834 |       1614 |                                   openai.
+types.responses.response_format_text_config_param
+import time:       949 |       2563 |                                 openai.ty
+pes.responses.response_text_config_param
+import time:       788 |        788 |                                 openai.ty
+pes.responses.tool_choice_function_param
+import time:       676 |        676 |                                 openai.ty
+pes.responses.tool_choice_apply_patch_param
+import time:       901 |        901 |                                 openai.ty
+pes.responses.response_conversation_param_param
+import time:      1591 |       9568 |                               openai.type
+s.responses.response_create_params
+import time:      1054 |       1054 |                                 openai.ty
+pes.responses.response_conversation_param
+import time:      3286 |       4340 |                               openai.type
+s.responses.responses_client_event
+import time:      1153 |       1153 |                               openai.type
+s.responses.responses_server_event
+import time:      2752 |       2752 |                                 openai.ty
+pes.responses.response_input_item_param
+import time:      1152 |       3904 |                               openai.type
+s.responses.response_compact_params
+import time:      1882 |       1882 |                               openai.type
+s.responses.input_token_count_params
+import time:      1436 |       1436 |                               openai.type
+s.responses.response_retrieve_params
+import time:      1660 |       1660 |                               openai.type
+s.responses.input_token_count_response
+import time:      1469 |       1469 |                               openai.type
+s.responses.response_input_audio_param
+import time:      1033 |       1033 |                               openai.type
+s.responses.response_input_content_param
+import time:      1880 |       1880 |                               openai.type
+s.responses.responses_client_event_param
+import time:      1097 |       1097 |                               openai.type
+s.responses.response_function_call_output_item_param
+import time:      1761 |     312501 |                             openai.types.
+responses
+import time:        45 |     312546 |                           openai.types.re
+sponses.response_input_text
+import time:      1253 |     313798 |                         openai.types.grad
+ers.grader_inputs
+import time:      1469 |     315267 |                       openai.types.grader
+s.label_model_grader
+import time:      2584 |       2584 |                       openai.types.grader
+s.score_model_grader
+import time:      1548 |       1548 |                       openai.types.grader
+s.string_check_grader
+import time:      1511 |       1511 |                       openai.types.grader
+s.text_similarity_grader
+import time:      1317 |     323200 |                     openai.types.graders.
+multi_grader
+import time:      1013 |       1013 |                       openai.types.grader
+s.python_grader_param
+import time:      1128 |       1128 |                         openai.types.grad
+ers.grader_inputs_param
+import time:      1217 |       2344 |                       openai.types.grader
+s.label_model_grader_param
+import time:      2219 |       2219 |                       openai.types.grader
+s.score_model_grader_param
+import time:      1351 |       1351 |                       openai.types.grader
+s.string_check_grader_param
+import time:      1261 |       1261 |                       openai.types.grader
+s.text_similarity_grader_param
+import time:      1176 |       9361 |                     openai.types.graders.
+multi_grader_param
+import time:       928 |     333489 |                   openai.types.graders
+import time:        39 |     333528 |                 openai.types.graders.grad
+er_inputs_param
+import time:      1499 |     344724 |               openai.types.eval_create_pa
+rams
+import time:      1477 |       1477 |                 openai.types.eval_custom_
+data_source_config
+import time:      1922 |       1922 |                 openai.types.eval_stored_
+completions_data_source_config
+import time:      3247 |       6645 |               openai.types.eval_list_resp
+onse
+import time:      1384 |       1384 |               openai.types.eval_update_pa
+rams
+import time:      1145 |       1145 |               openai.types.file_create_pa
+rams
+import time:       879 |        879 |               openai.types.video_remix_pa
+rams
+import time:       998 |        998 |               openai.types.batch_create_p
+arams
+import time:       787 |        787 |               openai.types.skill_create_p
+arams
+import time:       932 |        932 |               openai.types.skill_update_p
+arams
+import time:       775 |        775 |                 openai.types.image_input_
+reference_param
+import time:       920 |       1695 |               openai.types.video_create_p
+arams
+import time:       931 |        931 |               openai.types.video_extend_p
+arams
+import time:      2318 |       2318 |               openai.types.eval_create_re
+sponse
+import time:      1692 |       1692 |               openai.types.eval_delete_re
+sponse
+import time:      2279 |       2279 |               openai.types.eval_update_re
+sponse
+import time:      1087 |       1087 |               openai.types.upload_create_
+params
+import time:      1001 |       1001 |               openai.types.vector_store_d
+eleted
+import time:       715 |        715 |               openai.types.audio_response
+_format
+import time:       941 |        941 |               openai.types.container_list
+_params
+import time:       966 |        966 |               openai.types.image_generate
+_params
+import time:       984 |        984 |               openai.types.video_delete_r
+esponse
+import time:      2312 |       2312 |               openai.types.eval_retrieve_
+response
+import time:      1013 |       1013 |                 openai.types.other_file_c
+hunking_strategy_object
+import time:       935 |        935 |                   openai.types.static_fil
+e_chunking_strategy
+import time:       722 |       1657 |                 openai.types.static_file_
+chunking_strategy_object
+import time:      1041 |       3710 |               openai.types.file_chunking_
+strategy
+import time:      1859 |       1859 |                 openai.types.image_gen_co
+mpleted_event
+import time:      1331 |       1331 |                 openai.types.image_gen_pa
+rtial_image_event
+import time:      1075 |       4264 |               openai.types.image_gen_stre
+am_event
+import time:       727 |        727 |               openai.types.upload_complet
+e_params
+import time:      3645 |       3645 |               openai.types.websocket_reco
+nnection
+import time:      1366 |       1366 |               openai.types.container_crea
+te_params
+import time:      1776 |       1776 |               openai.types.container_list
+_response
+import time:      1228 |       1228 |               openai.types.embedding_crea
+te_params
+import time:      1255 |       1255 |                 openai.types.image_edit_c
+ompleted_event
+import time:      1524 |       1524 |                 openai.types.image_edit_p
+artial_image_event
+import time:       866 |       3645 |               openai.types.image_edit_str
+eam_event
+import time:      1272 |       1272 |               openai.types.completion_cre
+ate_params
+import time:      1714 |       1714 |               openai.types.content_proven
+ance_check
+import time:       854 |        854 |                   openai.types.moderation
+_text_input_param
+import time:       703 |        703 |                   openai.types.moderation
+_image_url_input_param
+import time:       703 |       2259 |                 openai.types.moderation_m
+ulti_modal_input_param
+import time:       955 |       3213 |               openai.types.moderation_cre
+ate_params
+import time:       650 |        650 |               openai.types.vector_store_l
+ist_params
+import time:      1264 |       1264 |               openai.types.container_crea
+te_response
+import time:      1111 |       1111 |               openai.types.create_embeddi
+ng_response
+import time:       927 |        927 |               openai.types.moderation_cre
+ate_response
+import time:       774 |        774 |                   openai.types.auto_file_
+chunking_strategy_param
+import time:       836 |        836 |                     openai.types.static_f
+ile_chunking_strategy_param
+import time:       629 |       1465 |                   openai.types.static_fil
+e_chunking_strategy_object_param
+import time:       626 |       2864 |                 openai.types.file_chunkin
+g_strategy_param
+import time:       775 |       3639 |               openai.types.vector_store_c
+reate_params
+import time:      1435 |       1435 |               openai.types.vector_store_s
+earch_params
+import time:       953 |        953 |               openai.types.vector_store_u
+pdate_params
+import time:      1343 |       1343 |               openai.types.container_retr
+ieve_response
+import time:      1486 |       1486 |               openai.types.vector_store_s
+earch_response
+import time:      1171 |       1171 |               openai.types.video_get_char
+acter_response
+import time:       986 |        986 |               openai.types.websocket_conn
+ection_options
+import time:       912 |        912 |               openai.types.image_create_v
+ariation_params
+import time:       691 |        691 |               openai.types.video_create_c
+haracter_params
+import time:       767 |        767 |               openai.types.video_download
+_content_params
+import time:      1321 |       1321 |               openai.types.video_create_c
+haracter_response
+import time:       937 |        937 |               openai.types.content_proven
+ance_check_create_params
+import time:      2227 |     705215 |             openai.types
+import time:      1159 |       1159 |               openai._exceptions
+import time:      1422 |       1422 |               openai._qs
+import time:       764 |        764 |                   openai._httpx2
+import time:      1321 |       2085 |                 openai.auth._workload
+import time:      1486 |       3570 |               openai.auth
+import time:       734 |        734 |               openai._version
+import time:      1332 |       1332 |               openai._provider
+import time:      1063 |       1063 |               openai._streaming
+import time:      1822 |       1822 |                   distro.distro
+import time:      1322 |       3144 |                 distro
+import time:      1429 |       1429 |                 openai._response
+import time:      1253 |       1253 |                 openai._utils._json
+import time:      1876 |       1876 |                 openai._legacy_response
+import time:       739 |        739 |                 httpx_aiohttp
+import time:      2730 |      11168 |               openai._base_client
+import time:      1838 |      22282 |             openai._client
+import time:      1061 |       1061 |             openai._utils._resources_prox
+y
+import time:       691 |        691 |                 openai.lib._pydantic
+import time:       994 |       1684 |               openai.lib._tools
+import time:      1123 |       1123 |                 openai.lib._parsing._comp
+letions
+import time:       818 |       1940 |               openai.lib._parsing
+import time:       925 |       4549 |             openai.lib
+import time:      1078 |       1078 |             openai.lib.azure
+import time:      1675 |       1675 |                     openai.lib._bedrock_a
+uth
+import time:      3506 |       5181 |                   openai.providers.bedroc
+k
+import time:       838 |       6018 |                 openai.providers
+import time:        35 |       6052 |               openai.providers.bedrock
+import time:      2508 |       8560 |             openai.lib.bedrock
+import time:       877 |        877 |             openai.version
+import time:      1125 |       1125 |             openai.lib._old_api
+import time:      2287 |       2287 |                   openai.types.beta.threa
+d
+import time:       796 |        796 |                       openai.types.beta.f
+unction_tool
+import time:      1122 |       1122 |                       openai.types.beta.f
+ile_search_tool
+import time:       735 |        735 |                       openai.types.beta.c
+ode_interpreter_tool
+import time:       591 |       3243 |                     openai.types.beta.ass
+istant_tool
+import time:      1035 |       1035 |                     openai.types.beta.ass
+istant_response_format_option
+import time:      1711 |       5988 |                   openai.types.beta.assis
+tant
+import time:      1850 |       1850 |                     openai.types.beta.bet
+a_custom_tool
+import time:      1205 |       1205 |                     openai.types.beta.bet
+a_computer_tool
+import time:      1147 |       1147 |                     openai.types.beta.bet
+a_function_tool
+import time:      1358 |       1358 |                     openai.types.beta.bet
+a_namespace_tool
+import time:      1514 |       1514 |                     openai.types.beta.bet
+a_web_search_tool
+import time:      1236 |       1236 |                     openai.types.beta.bet
+a_apply_patch_tool
+import time:      2273 |       2273 |                     openai.types.beta.bet
+a_file_search_tool
+import time:      1306 |       1306 |                     openai.types.beta.bet
+a_tool_search_tool
+import time:      1306 |       1306 |                           openai.types.be
+ta.beta_inline_skill_source
+import time:      1352 |       2657 |                         openai.types.beta
+.beta_inline_skill
+import time:      1526 |       1526 |                         openai.types.beta
+.beta_skill_reference
+import time:      1123 |       1123 |                         openai.types.beta
+.beta_container_network_policy_disabled
+import time:       933 |        933 |                           openai.types.be
+ta.beta_container_network_policy_domain_secret
+import time:      1026 |       1959 |                         openai.types.beta
+.beta_container_network_policy_allowlist
+import time:      1637 |       8901 |                       openai.types.beta.b
+eta_container_auto
+import time:       922 |        922 |                         openai.types.beta
+.beta_local_skill
+import time:      1061 |       1983 |                       openai.types.beta.b
+eta_local_environment
+import time:      1462 |       1462 |                       openai.types.beta.b
+eta_container_reference
+import time:      1261 |      13605 |                     openai.types.beta.bet
+a_function_shell_tool
+import time:      1488 |       1488 |                     openai.types.beta.bet
+a_web_search_preview_tool
+import time:      1129 |       1129 |                     openai.types.beta.bet
+a_computer_use_preview_tool
+import time:      3871 |      31977 |                   openai.types.beta.beta_
+tool
+import time:      1072 |       1072 |                     openai.types.beta.bet
+a_response_error
+import time:      1146 |       1146 |                     openai.types.beta.bet
+a_response_usage
+import time:      1131 |       1131 |                       openai.types.beta.b
+eta_response_input_file
+import time:       985 |        985 |                       openai.types.beta.b
+eta_response_input_text
+import time:      1207 |       1207 |                       openai.types.beta.b
+eta_response_input_image
+import time:       808 |       4130 |                     openai.types.beta.bet
+a_response_prompt
+import time:       769 |        769 |                     openai.types.beta.bet
+a_response_status
+import time:       803 |        803 |                     openai.types.beta.bet
+a_tool_choice_mcp
+import time:       686 |        686 |                     openai.types.beta.bet
+a_tool_choice_shell
+import time:       842 |        842 |                     openai.types.beta.bet
+a_tool_choice_types
+import time:       752 |        752 |                     openai.types.beta.bet
+a_tool_choice_custom
+import time:       735 |        735 |                           openai.types.be
+ta.beta_response_input_content
+import time:       592 |       1327 |                         openai.types.beta
+.beta_response_input_message_content_list
+import time:      1108 |       2434 |                       openai.types.beta.b
+eta_easy_input_message
+import time:      2129 |       2129 |                         openai.types.beta
+.beta_response_output_text
+import time:       842 |        842 |                         openai.types.beta
+.beta_response_output_refusal
+import time:      1117 |       4087 |                       openai.types.beta.b
+eta_response_output_message
+import time:      1376 |       1376 |                       openai.types.beta.b
+eta_response_reasoning_item
+import time:      1525 |       1525 |                       openai.types.beta.b
+eta_response_custom_tool_call
+import time:      2276 |       2276 |                         openai.types.beta
+.beta_computer_action
+import time:       664 |        664 |                         openai.types.beta
+.beta_computer_action_list
+import time:      1602 |       4542 |                       openai.types.beta.b
+eta_response_computer_tool_call
+import time:      1646 |       1646 |                       openai.types.beta.b
+eta_response_function_tool_call
+import time:      1489 |       1489 |                       openai.types.beta.b
+eta_response_input_text_content
+import time:      2069 |       2069 |                       openai.types.beta.b
+eta_response_function_web_search
+import time:      1262 |       1262 |                       openai.types.beta.b
+eta_response_input_image_content
+import time:       920 |        920 |                       openai.types.beta.b
+eta_response_compaction_item_param
+import time:      1228 |       1228 |                       openai.types.beta.b
+eta_response_file_search_tool_call
+import time:      1619 |       1619 |                       openai.types.beta.b
+eta_response_custom_tool_call_output
+import time:      1581 |       1581 |                       openai.types.beta.b
+eta_response_code_interpreter_tool_call
+import time:      1076 |       1076 |                       openai.types.beta.b
+eta_response_tool_search_output_item_param
+import time:      1057 |       1057 |                           openai.types.be
+ta.beta_response_input_file_content
+import time:       684 |       1741 |                         openai.types.beta
+.beta_response_function_call_output_item
+import time:       678 |       2419 |                       openai.types.beta.b
+eta_response_function_call_output_item_list
+import time:      1237 |       1237 |                       openai.types.beta.b
+eta_response_function_shell_call_output_content
+import time:      1124 |       1124 |                       openai.types.beta.b
+eta_response_computer_tool_call_output_screenshot
+import time:     14145 |      45772 |                     openai.types.beta.bet
+a_response_input_item
+import time:      1633 |       1633 |                     openai.types.beta.bet
+a_tool_choice_allowed
+import time:       798 |        798 |                     openai.types.beta.bet
+a_tool_choice_options
+import time:      1526 |       1526 |                       openai.types.beta.b
+eta_response_compaction_item
+import time:      1403 |       1403 |                       openai.types.beta.b
+eta_response_tool_search_call
+import time:      2254 |       2254 |                       openai.types.beta.b
+eta_response_apply_patch_tool_call
+import time:      1326 |       1326 |                       openai.types.beta.b
+eta_response_tool_search_output_item
+import time:       971 |        971 |                         openai.types.beta
+.beta_response_local_environment
+import time:      1051 |       1051 |                         openai.types.beta
+.beta_response_container_reference
+import time:      1847 |       3868 |                       openai.types.beta.b
+eta_response_function_shell_tool_call
+import time:      1500 |       1500 |                       openai.types.beta.b
+eta_response_apply_patch_tool_call_output
+import time:      1053 |       1053 |                       openai.types.beta.b
+eta_response_custom_tool_call_output_item
+import time:      1544 |       1544 |                       openai.types.beta.b
+eta_response_computer_tool_call_output_item
+import time:      2446 |       2446 |                       openai.types.beta.b
+eta_response_function_tool_call_output_item
+import time:      2377 |       2377 |                       openai.types.beta.b
+eta_response_function_shell_tool_call_output
+import time:      6438 |      25730 |                     openai.types.beta.bet
+a_response_output_item
+import time:      4070 |       4070 |                         openai.types.beta
+.beta_response_format_text_json_schema_config
+import time:      1719 |       5788 |                       openai.types.beta.b
+eta_response_format_text_config
+import time:      1779 |       7567 |                     openai.types.beta.bet
+a_response_text_config
+import time:      1864 |       1864 |                     openai.types.beta.bet
+a_tool_choice_function
+import time:      1129 |       1129 |                     openai.types.beta.bet
+a_tool_choice_apply_patch
+import time:      4322 |      99011 |                   openai.types.beta.beta_
+response
+import time:      1141 |       1141 |                   openai.types.beta.threa
+d_deleted
+import time:      1084 |       1084 |                     openai.types.beta.bet
+a_custom_tool_param
+import time:       970 |        970 |                     openai.types.beta.bet
+a_computer_tool_param
+import time:       934 |        934 |                     openai.types.beta.bet
+a_function_tool_param
+import time:       887 |        887 |                     openai.types.beta.bet
+a_namespace_tool_param
+import time:       868 |        868 |                     openai.types.beta.bet
+a_web_search_tool_param
+import time:      1091 |       1091 |                     openai.types.beta.bet
+a_apply_patch_tool_param
+import time:      1300 |       1300 |                     openai.types.beta.bet
+a_file_search_tool_param
+import time:       982 |        982 |                     openai.types.beta.bet
+a_tool_search_tool_param
+import time:       696 |        696 |                           openai.types.be
+ta.beta_inline_skill_source_param
+import time:       672 |       1368 |                         openai.types.beta
+.beta_inline_skill_param
+import time:       853 |        853 |                         openai.types.beta
+.beta_skill_reference_param
+import time:       695 |        695 |                         openai.types.beta
+.beta_container_network_policy_disabled_param
+import time:       669 |        669 |                           openai.types.be
+ta.beta_container_network_policy_domain_secret_param
+import time:       740 |       1408 |                         openai.types.beta
+.beta_container_network_policy_allowlist_param
+import time:       778 |       5100 |                       openai.types.beta.b
+eta_container_auto_param
+import time:       611 |        611 |                         openai.types.beta
+.beta_local_skill_param
+import time:       614 |       1225 |                       openai.types.beta.b
+eta_local_environment_param
+import time:       655 |        655 |                       openai.types.beta.b
+eta_container_reference_param
+import time:       792 |       7770 |                     openai.types.beta.bet
+a_function_shell_tool_param
+import time:       658 |        658 |                     openai.types.beta.bet
+a_web_search_preview_tool_param
+import time:       807 |        807 |                     openai.types.beta.bet
+a_computer_use_preview_tool_param
+import time:      1796 |      19142 |                   openai.types.beta.beta_
+tool_param
+import time:      1481 |       1481 |                   openai.types.beta.chatk
+it_workflow
+import time:       970 |        970 |                   openai.types.beta.assis
+tant_deleted
+import time:      1261 |       1261 |                     openai.types.beta.bet
+a_response_input_message_item
+import time:      1095 |       1095 |                     openai.types.beta.bet
+a_response_custom_tool_call_item
+import time:       966 |        966 |                     openai.types.beta.bet
+a_response_function_tool_call_item
+import time:      6431 |       9751 |                   openai.types.beta.beta_
+response_item
+import time:      1238 |       1238 |                   openai.types.beta.beta_
+response_input
+import time:      1035 |       1035 |                   openai.types.beta.funct
+ion_tool_param
+import time:      1015 |       1015 |                     openai.types.beta.fil
+e_search_tool_param
+import time:      1390 |       1390 |                     openai.types.beta.cod
+e_interpreter_tool_param
+import time:       810 |       3213 |                   openai.types.beta.assis
+tant_tool_param
+import time:       774 |        774 |                           openai.types.be
+ta.threads.run_status
+import time:       934 |        934 |                               openai.type
+s.beta.assistant_tool_choice_function
+import time:      1195 |       2129 |                             openai.types.
+beta.assistant_tool_choice
+import time:       726 |       2855 |                           openai.types.be
+ta.assistant_tool_choice_option
+import time:      1154 |       1154 |                           openai.types.be
+ta.threads.required_action_function_tool_call
+import time:      2891 |       7673 |                         openai.types.beta
+.threads.run
+import time:      1039 |       1039 |                             openai.types.
+beta.threads.file_path_annotation
+import time:      1008 |       1008 |                             openai.types.
+beta.threads.file_citation_annotation
+import time:       780 |       2825 |                           openai.types.be
+ta.threads.annotation
+import time:       996 |       3820 |                         openai.types.beta
+.threads.text
+import time:      1221 |       1221 |                             openai.types.
+beta.threads.text_content_block
+import time:       977 |        977 |                             openai.types.
+beta.threads.refusal_content_block
+import time:       986 |        986 |                               openai.type
+s.beta.threads.image_url
+import time:       869 |       1854 |                             openai.types.
+beta.threads.image_url_content_block
+import time:       853 |        853 |                               openai.type
+s.beta.threads.image_file
+import time:       812 |       1664 |                             openai.types.
+beta.threads.image_file_content_block
+import time:       909 |       6624 |                           openai.types.be
+ta.threads.message_content
+import time:      1939 |       8563 |                         openai.types.beta
+.threads.message
+import time:       978 |        978 |                             openai.types.
+beta.threads.file_path_delta_annotation
+import time:      1095 |       1095 |                             openai.types.
+beta.threads.file_citation_delta_annotation
+import time:       699 |       2771 |                           openai.types.be
+ta.threads.annotation_delta
+import time:       837 |       3608 |                         openai.types.beta
+.threads.text_delta
+import time:       818 |        818 |                             openai.types.
+beta.threads.text_delta_block
+import time:       952 |        952 |                             openai.types.
+beta.threads.refusal_delta_block
+import time:      1182 |       1182 |                               openai.type
+s.beta.threads.image_url_delta
+import time:       978 |       2159 |                             openai.types.
+beta.threads.image_url_delta_block
+import time:      1060 |       1060 |                               openai.type
+s.beta.threads.image_file_delta
+import time:       888 |       1947 |                             openai.types.
+beta.threads.image_file_delta_block
+import time:       874 |       6749 |                           openai.types.be
+ta.threads.message_content_delta
+import time:       882 |       7631 |                         openai.types.beta
+.threads.message_delta
+import time:       739 |        739 |                         openai.types.beta
+.threads.image_url_param
+import time:       858 |        858 |                         openai.types.beta
+.threads.message_deleted
+import time:       727 |        727 |                         openai.types.beta
+.threads.run_list_params
+import time:       799 |        799 |                         openai.types.beta
+.threads.image_file_param
+import time:       935 |        935 |                                     opena
+i.types.beta.threads.runs.function_tool_call
+import time:      1614 |       1614 |                                     opena
+i.types.beta.threads.runs.file_search_tool_call
+import time:      1429 |       1429 |                                     opena
+i.types.beta.threads.runs.code_interpreter_tool_call
+import time:       768 |       4744 |                                   openai.
+types.beta.threads.runs.tool_call
+import time:       831 |       5575 |                                 openai.ty
+pes.beta.threads.runs.tool_calls_step_details
+import time:      1016 |       1016 |                                 openai.ty
+pes.beta.threads.runs.message_creation_step_details
+import time:      1799 |       8389 |                               openai.type
+s.beta.threads.runs.run_step
+import time:      2105 |       2105 |                                     opena
+i.types.beta.threads.runs.function_tool_call_delta
+import time:      1334 |       1334 |                                     opena
+i.types.beta.threads.runs.file_search_tool_call_delta
+import time:       867 |        867 |                                       ope
+nai.types.beta.threads.runs.code_interpreter_logs
+import time:      1158 |       1158 |                                       ope
+nai.types.beta.threads.runs.code_interpreter_output_image
+import time:      1264 |       3289 |                                     opena
+i.types.beta.threads.runs.code_interpreter_tool_call_delta
+import time:      1336 |       8062 |                                   openai.
+types.beta.threads.runs.tool_call_delta
+import time:      1209 |       9271 |                                 openai.ty
+pes.beta.threads.runs.tool_call_delta_object
+import time:      1191 |       1191 |                                 openai.ty
+pes.beta.threads.runs.run_step_delta_message_delta
+import time:      1130 |      11590 |                               openai.type
+s.beta.threads.runs.run_step_delta
+import time:       864 |        864 |                               openai.type
+s.beta.threads.runs.run_step_include
+import time:       904 |        904 |                               openai.type
+s.beta.threads.runs.step_list_params
+import time:       922 |        922 |                               openai.type
+s.beta.threads.runs.run_step_delta_event
+import time:       783 |        783 |                               openai.type
+s.beta.threads.runs.step_retrieve_params
+import time:       837 |      24285 |                             openai.types.
+beta.threads.runs
+import time:        39 |      24324 |                           openai.types.be
+ta.threads.runs.run_step_include
+import time:      1268 |       1268 |                             openai.types.
+beta.threads.text_content_block_param
+import time:      1213 |       1213 |                             openai.types.
+beta.threads.image_url_content_block_param
+import time:       887 |        887 |                             openai.types.
+beta.threads.image_file_content_block_param
+import time:       715 |       4081 |                           openai.types.be
+ta.threads.message_content_part_param
+import time:       596 |        596 |                               openai.type
+s.beta.assistant_tool_choice_function_param
+import time:       734 |       1330 |                             openai.types.
+beta.assistant_tool_choice_param
+import time:       882 |       2211 |                           openai.types.be
+ta.assistant_tool_choice_option_param
+import time:       576 |        576 |                           openai.types.be
+ta.assistant_response_format_option_param
+import time:      1306 |      32496 |                         openai.types.beta
+.threads.run_create_params
+import time:       608 |        608 |                         openai.types.beta
+.threads.run_update_params
+import time:       777 |        777 |                         openai.types.beta
+.threads.message_delta_event
+import time:       649 |        649 |                         openai.types.beta
+.threads.message_list_params
+import time:       687 |        687 |                         openai.types.beta
+.threads.message_create_params
+import time:       840 |        840 |                         openai.types.beta
+.threads.message_update_params
+import time:       718 |        718 |                         openai.types.beta
+.threads.run_submit_tool_outputs_params
+import time:      1444 |      72629 |                       openai.types.beta.t
+hreads
+import time:        46 |      72675 |                     openai.types.beta.thr
+eads.message_content_part_param
+import time:      1802 |      74477 |                   openai.types.beta.threa
+d_create_params
+import time:       764 |        764 |                   openai.types.beta.threa
+d_update_params
+import time:       716 |        716 |                   openai.types.beta.assis
+tant_list_params
+import time:      4359 |       4359 |                   openai.types.beta.assis
+tant_stream_event
+import time:       728 |        728 |                     openai.types.beta.bet
+a_response_includable
+import time:       702 |        702 |                           openai.types.be
+ta.beta_response_input_file_param
+import time:       828 |        828 |                           openai.types.be
+ta.beta_response_input_text_param
+import time:       757 |        757 |                           openai.types.be
+ta.beta_response_input_image_param
+import time:       685 |       2970 |                         openai.types.beta
+.beta_response_input_message_content_list_param
+import time:       606 |       3576 |                       openai.types.beta.b
+eta_easy_input_message_param
+import time:      1127 |       1127 |                         openai.types.beta
+.beta_response_output_text_param
+import time:       701 |        701 |                         openai.types.beta
+.beta_response_output_refusal_param
+import time:       863 |       2690 |                       openai.types.beta.b
+eta_response_output_message_param
+import time:      1058 |       1058 |                       openai.types.beta.b
+eta_response_reasoning_item_param
+import time:       802 |        802 |                       openai.types.beta.b
+eta_response_custom_tool_call_param
+import time:      1156 |       1156 |                         openai.types.beta
+.beta_computer_action_param
+import time:      1355 |       1355 |                         openai.types.beta
+.beta_computer_action_list_param
+import time:       883 |       3393 |                       openai.types.beta.b
+eta_response_computer_tool_call_param
+import time:      1154 |       1154 |                       openai.types.beta.b
+eta_response_function_tool_call_param
+import time:       850 |        850 |                       openai.types.beta.b
+eta_response_input_text_content_param
+import time:       904 |        904 |                       openai.types.beta.b
+eta_response_function_web_search_param
+import time:       960 |        960 |                       openai.types.beta.b
+eta_response_input_image_content_param
+import time:       907 |        907 |                       openai.types.beta.b
+eta_response_compaction_item_param_param
+import time:       941 |        941 |                       openai.types.beta.b
+eta_response_file_search_tool_call_param
+import time:       900 |        900 |                       openai.types.beta.b
+eta_response_custom_tool_call_output_param
+import time:       942 |        942 |                       openai.types.beta.b
+eta_response_code_interpreter_tool_call_param
+import time:       913 |        913 |                       openai.types.beta.b
+eta_response_tool_search_output_item_param_param
+import time:       743 |        743 |                         openai.types.beta
+.beta_response_input_file_content_param
+import time:       757 |       1500 |                       openai.types.beta.b
+eta_response_function_call_output_item_list_param
+import time:       897 |        897 |                       openai.types.beta.b
+eta_response_function_shell_call_output_content_param
+import time:       697 |        697 |                       openai.types.beta.b
+eta_response_computer_tool_call_output_screenshot_param
+import time:      4429 |      27505 |                     openai.types.beta.bet
+a_response_input_param
+import time:       868 |        868 |                     openai.types.beta.bet
+a_response_prompt_param
+import time:      1043 |       1043 |                     openai.types.beta.bet
+a_tool_choice_mcp_param
+import time:       793 |        793 |                     openai.types.beta.bet
+a_tool_choice_shell_param
+import time:       718 |        718 |                     openai.types.beta.bet
+a_tool_choice_types_param
+import time:       649 |        649 |                     openai.types.beta.bet
+a_tool_choice_custom_param
+import time:      1085 |       1085 |                     openai.types.beta.bet
+a_tool_choice_allowed_param
+import time:       760 |        760 |                         openai.types.beta
+.beta_response_format_text_json_schema_config_param
+import time:       754 |       1514 |                       openai.types.beta.b
+eta_response_format_text_config_param
+import time:       776 |       2290 |                     openai.types.beta.bet
+a_response_text_config_param
+import time:       691 |        691 |                     openai.types.beta.bet
+a_tool_choice_function_param
+import time:       626 |        626 |                     openai.types.beta.bet
+a_tool_choice_apply_patch_param
+import time:       757 |        757 |                     openai.types.beta.bet
+a_response_conversation_param_param
+import time:      2195 |      39941 |                   openai.types.beta.respo
+nse_create_params
+import time:      1175 |       1175 |                   openai.types.beta.assis
+tant_create_params
+import time:      1081 |       1081 |                   openai.types.beta.assis
+tant_update_params
+import time:      1048 |       1048 |                   openai.types.beta.beta_
+compacted_response
+import time:      4512 |       4512 |                     openai.types.beta.bet
+a_response_input_item_param
+import time:      1105 |       5616 |                   openai.types.beta.respo
+nse_compact_params
+import time:      1285 |       1285 |                   openai.types.beta.respo
+nse_retrieve_params
+import time:      1480 |       1480 |                   openai.types.beta.beta_
+response_error_event
+import time:      1284 |       1284 |                   openai.types.beta.beta_
+response_failed_event
+import time:      1104 |       1104 |                   openai.types.beta.beta_
+response_inject_event
+import time:      1239 |       1239 |                   openai.types.beta.beta_
+response_queued_event
+import time:      1088 |       1088 |                     openai.types.beta.bet
+a_response_created_event
+import time:      1011 |       1011 |                     openai.types.beta.bet
+a_response_completed_event
+import time:      1975 |       1975 |                     openai.types.beta.bet
+a_response_text_done_event
+import time:      1185 |       1185 |                     openai.types.beta.bet
+a_response_audio_done_event
+import time:      1004 |       1004 |                     openai.types.beta.bet
+a_response_incomplete_event
+import time:      1341 |       1341 |                     openai.types.beta.bet
+a_response_text_delta_event
+import time:       975 |        975 |                     openai.types.beta.bet
+a_response_audio_delta_event
+import time:       917 |        917 |                     openai.types.beta.bet
+a_response_in_progress_event
+import time:      1157 |       1157 |                     openai.types.beta.bet
+a_response_refusal_done_event
+import time:      1069 |       1069 |                     openai.types.beta.bet
+a_response_refusal_delta_event
+import time:       964 |        964 |                     openai.types.beta.bet
+a_response_mcp_call_failed_event
+import time:      1003 |       1003 |                     openai.types.beta.bet
+a_response_output_item_done_event
+import time:      1183 |       1183 |                     openai.types.beta.bet
+a_response_content_part_done_event
+import time:      1264 |       1264 |                     openai.types.beta.bet
+a_response_output_item_added_event
+import time:      1349 |       1349 |                     openai.types.beta.bet
+a_response_content_part_added_event
+import time:       951 |        951 |                     openai.types.beta.bet
+a_response_mcp_call_completed_event
+import time:      1043 |       1043 |                     openai.types.beta.bet
+a_response_reasoning_text_done_event
+import time:      1357 |       1357 |                     openai.types.beta.bet
+a_response_mcp_call_in_progress_event
+import time:      1029 |       1029 |                     openai.types.beta.bet
+a_response_reasoning_text_delta_event
+import time:      1219 |       1219 |                     openai.types.beta.bet
+a_response_audio_transcript_done_event
+import time:      1051 |       1051 |                     openai.types.beta.bet
+a_response_mcp_list_tools_failed_event
+import time:      1016 |       1016 |                     openai.types.beta.bet
+a_response_audio_transcript_delta_event
+import time:       956 |        956 |                     openai.types.beta.bet
+a_response_mcp_call_arguments_done_event
+import time:       961 |        961 |                     openai.types.beta.bet
+a_response_image_gen_call_completed_event
+import time:      1213 |       1213 |                     openai.types.beta.bet
+a_response_mcp_call_arguments_delta_event
+import time:       991 |        991 |                     openai.types.beta.bet
+a_response_mcp_list_tools_completed_event
+import time:       953 |        953 |                     openai.types.beta.bet
+a_response_image_gen_call_generating_event
+import time:       944 |        944 |                     openai.types.beta.bet
+a_response_web_search_call_completed_event
+import time:      1040 |       1040 |                     openai.types.beta.bet
+a_response_web_search_call_searching_event
+import time:      1135 |       1135 |                     openai.types.beta.bet
+a_response_file_search_call_completed_event
+import time:      1534 |       1534 |                     openai.types.beta.bet
+a_response_file_search_call_searching_event
+import time:      1724 |       1724 |                     openai.types.beta.bet
+a_response_image_gen_call_in_progress_event
+import time:      1331 |       1331 |                     openai.types.beta.bet
+a_response_mcp_list_tools_in_progress_event
+import time:      1131 |       1131 |                     openai.types.beta.bet
+a_response_custom_tool_call_input_done_event
+import time:      1224 |       1224 |                     openai.types.beta.bet
+a_response_reasoning_summary_part_done_event
+import time:      1104 |       1104 |                     openai.types.beta.bet
+a_response_reasoning_summary_text_done_event
+import time:      1227 |       1227 |                     openai.types.beta.bet
+a_response_web_search_call_in_progress_event
+import time:      1071 |       1071 |                     openai.types.beta.bet
+a_response_custom_tool_call_input_delta_event
+import time:      1404 |       1404 |                     openai.types.beta.bet
+a_response_file_search_call_in_progress_event
+import time:      1161 |       1161 |                     openai.types.beta.bet
+a_response_function_call_arguments_done_event
+import time:      1109 |       1109 |                     openai.types.beta.bet
+a_response_image_gen_call_partial_image_event
+import time:       948 |        948 |                     openai.types.beta.bet
+a_response_output_text_annotation_added_event
+import time:      1339 |       1339 |                     openai.types.beta.bet
+a_response_reasoning_summary_part_added_event
+import time:      1291 |       1291 |                     openai.types.beta.bet
+a_response_reasoning_summary_text_delta_event
+import time:      1297 |       1297 |                     openai.types.beta.bet
+a_response_function_call_arguments_delta_event
+import time:      1184 |       1184 |                     openai.types.beta.bet
+a_response_code_interpreter_call_code_done_event
+import time:      1102 |       1102 |                     openai.types.beta.bet
+a_response_code_interpreter_call_completed_event
+import time:      1050 |       1050 |                     openai.types.beta.bet
+a_response_code_interpreter_call_code_delta_event
+import time:       946 |        946 |                     openai.types.beta.bet
+a_response_code_interpreter_call_in_progress_event
+import time:       949 |        949 |                     openai.types.beta.bet
+a_response_code_interpreter_call_interpreting_event
+import time:      1618 |      59069 |                   openai.types.beta.beta_
+response_stream_event
+import time:       768 |        768 |                     openai.types.beta.bet
+a_response_conversation_param
+import time:      5802 |       6570 |                   openai.types.beta.beta_
+responses_client_event
+import time:      1221 |       1221 |                     openai.types.beta.bet
+a_response_inject_failed_event
+import time:       954 |        954 |                     openai.types.beta.bet
+a_response_inject_created_event
+import time:      1408 |       3582 |                   openai.types.beta.beta_
+responses_server_event
+import time:      1591 |       1591 |                   openai.types.beta.threa
+d_create_and_run_params
+import time:       838 |        838 |                   openai.types.beta.beta_
+response_inject_event_param
+import time:       775 |        775 |                   openai.types.beta.beta_
+response_input_content_param
+import time:      1688 |       1688 |                   openai.types.beta.beta_
+responses_client_event_param
+import time:       701 |        701 |                   openai.types.beta.beta_
+response_function_call_output_item_param
+import time:      1721 |     389320 |                 openai.types.beta
+import time:      1097 |     390417 |               openai.lib.streaming._assis
+tants
+import time:       856 |     391272 |             openai.lib.streaming
+import time:      1280 |       1280 |             openai._module_client
+import time:      2197 |    1139492 |           openai
+import time:       897 |        897 |             tenacity._utils
+import time:      1003 |       1003 |             tenacity.retry
+import time:       529 |        529 |             tenacity.nap
+import time:      1013 |       1013 |             tenacity.stop
+import time:      1925 |       1925 |             tenacity.wait
+import time:      1070 |       1070 |             tenacity.before
+import time:       865 |        865 |             tenacity.after
+import time:       727 |        727 |             tenacity.before_sleep
+import time:      1061 |       1061 |             tornado
+import time:       972 |        972 |               tenacity.asyncio.retry
+import time:      1146 |       2118 |             tenacity.asyncio
+import time:       887 |        887 |                       _queue
+import time:       781 |       1668 |                     queue
+import time:      1124 |       2791 |                   logging.handlers
+import time:      1502 |       1502 |                       html.entities
+import time:      1364 |       2866 |                     html
+import time:       117 |        117 |                       array
+import time:       740 |        740 |                       tornado.speedups
+import time:       986 |       1842 |                     tornado.util
+import time:      1328 |       6034 |                   tornado.escape
+import time:       642 |        642 |                         colorama.ansi
+import time:       946 |        946 |                           colorama.win32
+import time:       700 |       1645 |                         colorama.winterm
+import time:      1006 |       3293 |                       colorama.ansitowin3
+2
+import time:       841 |       4133 |                     colorama.initialise
+import time:      1234 |       5366 |                   colorama
+import time:       591 |        591 |                     _curses
+import time:       868 |       1458 |                   curses
+import time:       891 |      16540 |                 tornado.log
+import time:       715 |      17254 |               tornado.concurrent
+import time:      1008 |       1008 |               tornado.ioloop
+import time:      1853 |      20114 |             tenacity.tornadoweb
+import time:      3082 |      34398 |           tenacity
+import time:      1307 |       1307 |               urllib3.exceptions
+import time:       705 |        705 |                       urllib3.util.timeou
+t
+import time:      1013 |       1717 |                     urllib3.util.connecti
+on
+import time:       521 |        521 |                       urllib3.util.util
+import time:       614 |        614 |                       brotlicffi
+import time:       751 |        751 |                       backports
+import time:       985 |        985 |                         backports.zstd._z
+std
+import time:       668 |        668 |                           backports.zstd.
+_streams
+import time:       647 |       1314 |                         backports.zstd._z
+stdfile
+import time:      1292 |       3590 |                       backports.zstd
+import time:       908 |       6382 |                     urllib3.util.request
+import time:       577 |        577 |                     urllib3.util.response
+import time:      1071 |       1071 |                     urllib3.util.retry
+import time:      1039 |       1039 |                       hmac
+import time:      4892 |       4892 |                       urllib3.util.url
+import time:      1338 |       1338 |                       urllib3.util.ssltra
+nsport
+import time:       746 |       8013 |                     urllib3.util.ssl_
+import time:       804 |        804 |                     urllib3.util.wait
+import time:       653 |      19215 |                   urllib3.util
+import time:        43 |      19258 |                 urllib3.util.connection
+import time:      1101 |      20358 |               urllib3._base_connection
+import time:      1334 |       1334 |               urllib3._collections
+import time:       803 |        803 |               urllib3._version
+import time:       604 |        604 |                     urllib3.fields
+import time:       587 |       1191 |                   urllib3.filepost
+import time:       603 |        603 |                     brotlicffi
+import time:      1295 |       1295 |                       urllib3.http2
+import time:      1010 |       1010 |                       urllib3.http2.probe
+import time:       751 |        751 |                       urllib3.util.ssl_ma
+tch_hostname
+import time:      1235 |       4291 |                     urllib3.connection
+import time:      1089 |       5981 |                   urllib3.response
+import time:       617 |       7788 |                 urllib3._request_methods
+import time:       681 |        681 |                 urllib3.util.proxy
+import time:       865 |       9334 |               urllib3.connectionpool
+import time:      1189 |       1189 |               urllib3.poolmanager
+import time:      1413 |      35734 |             urllib3
+import time:       698 |        698 |                 chardet._utils
+import time:       468 |        468 |                 chardet._version
+import time:       713 |        713 |                   chardet.enums
+import time:      1835 |       1835 |                     chardet.pipeline
+import time:      1625 |       1625 |                     chardet.registry
+import time:      1188 |       4646 |                   chardet.equivalences
+import time:      1132 |       1132 |                       chardet.pipeline.as
+cii__mypyc
+import time:       991 |        991 |                       chardet.pipeline.co
+nfusion__mypyc
+import time:       777 |        777 |                       chardet.pipeline.es
+cape__mypyc
+import time:       754 |        754 |                       chardet.pipeline.ma
+gic__mypyc
+import time:       710 |        710 |                       chardet.pipeline.st
+atistical__mypyc
+import time:       644 |        644 |                       chardet.pipeline.st
+ructural__mypyc
+import time:       669 |        669 |                       chardet.pipeline.ut
+f1632__mypyc
+import time:       587 |        587 |                       chardet.pipeline.ut
+f8__mypyc
+import time:      1083 |       1083 |                       chardet.pipeline.va
+lidity__mypyc
+import time:      1341 |       8684 |                     chardet.pipeline.orch
+estrator__mypyc
+import time:      1192 |       1192 |                     chardet.models
+import time:       863 |        863 |                     chardet.pipeline.asci
+i
+import time:       829 |        829 |                     chardet.pipeline.bina
+ry
+import time:       679 |        679 |                     chardet.pipeline.bom
+import time:       933 |        933 |                     chardet.pipeline.conf
+usion
+import time:       691 |        691 |                     chardet.pipeline.esca
+pe
+import time:       728 |        728 |                     chardet.pipeline.magi
+c
+import time:      1219 |       1219 |                     chardet.pipeline.mark
+up
+import time:       933 |        933 |                     chardet.pipeline.stat
+istical
+import time:       871 |        871 |                     chardet.pipeline.stru
+ctural
+import time:       644 |        644 |                     chardet.pipeline.utf8
+import time:       685 |        685 |                     chardet.pipeline.utf1
+632
+import time:       599 |        599 |                     chardet.pipeline.vali
+dity
+import time:      1284 |      20827 |                   chardet.pipeline.orches
+trator
+import time:       547 |      26731 |                 chardet.detector
+import time:       882 |        882 |                   simplejson.errors
+import time:       702 |        702 |                   simplejson.raw_json
+import time:       913 |        913 |                     simplejson.compat
+import time:       732 |        732 |                       simplejson._speedup
+s
+import time:       698 |       1430 |                     simplejson.scanner
+import time:       717 |       3059 |                   simplejson.decoder
+import time:       894 |        894 |                   simplejson.encoder
+import time:      1505 |       7040 |                 simplejson
+import time:      1319 |       1319 |                 http.cookies
+import time:      1546 |      37800 |               requests.compat
+import time:      1115 |      38915 |             requests.exceptions
+import time:      1317 |       1317 |                   81d243bd2c585b0f4821__m
+ypyc
+import time:      1871 |       1871 |                   charset_normalizer.cons
+tant
+import time:        70 |         70 |                     _multibytecodec
+import time:       868 |        938 |                   charset_normalizer.util
+s
+import time:      1646 |       1646 |                   charset_normalizer.mode
+ls
+import time:      1032 |       6803 |                 charset_normalizer.cd
+import time:        45 |         45 |                 _codecs_tw
+import time:        38 |         38 |                 _codecs_hk
+import time:        59 |         59 |                 _codecs_jp
+import time:        46 |         46 |                 _codecs_kr
+import time:        44 |         44 |                 _codecs_cn
+import time:        54 |         54 |                 _codecs_iso2022
+import time:     60367 |      67453 |               charset_normalizer.api
+import time:       504 |        504 |               charset_normalizer.legacy
+import time:       422 |        422 |               charset_normalizer.version
+import time:      1162 |      69539 |             charset_normalizer
+C:\Users\陈信\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\
+__init__.py:113: RequestsDependencyWarning: urllib3 (2.7.0) or chardet (7.4.3)/
+charset_normalizer (3.4.7) doesn't match a supported version!
+  warnings.warn(
+import time:       995 |        995 |             requests.packages
+import time:       970 |        970 |                   certifi.core
+import time:       975 |       1944 |                 certifi
+import time:       607 |       2551 |               requests.certs
+import time:       502 |        502 |               requests.__version__
+import time:       900 |        900 |               requests._internal_utils
+import time:       896 |        896 |               requests.cookies
+import time:       785 |        785 |               requests.structures
+import time:       813 |        813 |               importlib.resources._adapte
+rs
+import time:       802 |        802 |                   importlib.resources._it
+ertools
+import time:       793 |       1594 |                 importlib.resources.reade
+rs
+import time:       689 |       2283 |               importlib.readers
+import time:      1129 |       9857 |             requests.utils
+import time:       659 |        659 |                   requests.auth
+import time:       999 |        999 |                       stringprep
+import time:       658 |       1657 |                     encodings.idna
+import time:       659 |        659 |                     requests.hooks
+import time:       761 |        761 |                     requests.status_codes
+import time:       842 |       3918 |                   requests.models
+import time:       826 |        826 |                     urllib3.contrib
+import time:      1426 |       1426 |                     socks
+import time:      1009 |       3261 |                   urllib3.contrib.socks
+import time:    212631 |     220467 |                 requests.adapters
+import time:       952 |     221418 |               requests.sessions
+import time:      1078 |     222496 |             requests.api
+import time:      1849 |     379382 |           requests
+import time:      1274 |       1274 |                   pytweening
+import time:      6550 |       6550 |                       _tkinter
+import time:      1179 |       1179 |                       tkinter.constants
+import time:      3319 |      11047 |                     tkinter
+import time:      1191 |       1191 |                     pymsgbox._native_win
+import time:      1319 |      13557 |                   pymsgbox
+import time:      1021 |       1021 |                       PIL._version
+import time:      1236 |       2256 |                     PIL
+import time:      3245 |       3245 |                       PIL.ExifTags
+import time:      1013 |       1013 |                         PIL._deprecate
+import time:      1237 |       2250 |                       PIL.ImageMode
+import time:      1414 |       1414 |                       PIL.TiffTags
+import time:       894 |        894 |                       PIL._binary
+import time:      1000 |       1000 |                                 numpy._ut
+ils._convertions
+import time:       873 |       1872 |                               numpy._util
+s
+import time:       918 |       2790 |                             numpy._global
+s
+import time:       875 |        875 |                             numpy._expire
+d_attrs_2_0
+import time:       667 |        667 |                             numpy.version
+import time:       120 |        120 |                               numpy._dist
+ributor_init_local
+import time:       689 |        809 |                             numpy._distri
+butor_init
+import time:       715 |        715 |                                       num
+py._utils._inspect
+import time:      1027 |       1027 |                                         n
+umpy.exceptions
+import time:       957 |        957 |                                         n
+umpy._core._exceptions
+import time:       615 |        615 |                                         n
+umpy._core.printoptions
+import time:      3368 |       3368 |                                         n
+umpy.dtypes
+import time:      4428 |      10393 |                                       num
+py._core._multiarray_umath
+import time:       922 |      12030 |                                     numpy
+._core.overrides
+import time:      1454 |      13484 |                                   numpy._
+core.multiarray
+import time:      1448 |       1448 |                                   numpy._
+core.umath
+import time:       845 |        845 |                                     numpy
+._core._string_helpers
+import time:      1005 |       1005 |                                     numpy
+._core._type_aliases
+import time:      1042 |       1042 |                                     numpy
+._core._dtype
+import time:      1217 |       4108 |                                   numpy._
+core.numerictypes
+import time:      1059 |       1059 |                                         n
+umpy._core._methods
+import time:      1661 |       2719 |                                       num
+py._core.fromnumeric
+import time:      1309 |       4027 |                                     numpy
+._core.shape_base
+import time:       982 |        982 |                                     numpy
+._core._ufunc_config
+import time:      1266 |       1266 |                                     numpy
+._core.arrayprint
+import time:       699 |        699 |                                     numpy
+._core._asarray
+import time:      1583 |       8556 |                                   numpy._
+core.numeric
+import time:       879 |        879 |                                   numpy._
+core.records
+import time:       919 |        919 |                                   numpy._
+core.memmap
+import time:       915 |        915 |                                   numpy._
+core.function_base
+import time:       754 |        754 |                                   numpy._
+core._machar
+import time:       819 |        819 |                                   numpy._
+core.getlimits
+import time:       758 |        758 |                                   numpy._
+core.einsumfunc
+import time:      1300 |       1300 |                                   numpy._
+core._add_newdocs
+import time:       879 |        879 |                                   numpy._
+core._add_newdocs_scalars
+import time:       635 |        635 |                                   numpy._
+core._dtype_ctypes
+import time:      1049 |       1049 |                                   numpy._
+core._internal
+import time:       756 |        756 |                                   numpy._
+pytesttester
+import time:      1391 |      38640 |                                 numpy._co
+re
+import time:        29 |      38668 |                               numpy._core
+._multiarray_umath
+import time:       946 |      39614 |                             numpy.__confi
+g__
+import time:       699 |        699 |                                 numpy.lib
+._array_utils_impl
+import time:      1141 |       1839 |                               numpy.lib.a
+rray_utils
+import time:       711 |        711 |                               numpy.lib.i
+ntrospect
+import time:       705 |        705 |                               numpy.lib.m
+ixins
+import time:      1112 |       1112 |                                     numpy
+.lib._utils_impl
+import time:       991 |       2102 |                                   numpy.l
+ib.format
+import time:      1188 |       1188 |                                   numpy.l
+ib._datasource
+import time:       970 |        970 |                                   numpy.l
+ib._iotools
+import time:      1477 |       5735 |                                 numpy.lib
+._npyio_impl
+import time:       697 |       6432 |                               numpy.lib.n
+pyio
+import time:       913 |        913 |                                     numpy
+.lib._ufunclike_impl
+import time:      1255 |       2167 |                                   numpy.l
+ib._type_check_impl
+import time:      1145 |       3312 |                                 numpy.lib
+._scimath_impl
+import time:       934 |       4246 |                               numpy.lib.s
+cimath
+import time:       980 |        980 |                                 numpy.lib
+._stride_tricks_impl
+import time:       792 |       1771 |                               numpy.lib.s
+tride_tricks
+import time:       995 |        995 |                                       num
+py.linalg.linalg
+import time:      1057 |       1057 |                                         n
+umpy.lib._twodim_base_impl
+import time:       728 |        728 |                                         n
+umpy.linalg._umath_linalg
+import time:      1119 |       1119 |                                          
+ numpy._typing._nested_sequence
+import time:       757 |        757 |                                          
+ numpy._typing._nbit_base
+import time:       686 |        686 |                                          
+ numpy._typing._nbit
+import time:      1910 |       1910 |                                          
+ numpy._typing._char_codes
+import time:       710 |        710 |                                          
+ numpy._typing._scalars
+import time:       606 |        606 |                                          
+ numpy._typing._shape
+import time:      2553 |       2553 |                                          
+ numpy._typing._dtype_like
+import time:      1940 |       1940 |                                          
+ numpy._typing._array_like
+import time:       571 |        571 |                                          
+ numpy._typing._ufunc
+import time:      1087 |      11934 |                                         n
+umpy._typing
+import time:      2189 |      15907 |                                       num
+py.linalg._linalg
+import time:       976 |      17876 |                                     numpy
+.linalg
+import time:      1087 |      18963 |                                   numpy.m
+atrixlib.defmatrix
+import time:       811 |      19774 |                                 numpy.mat
+rixlib
+import time:      1338 |       1338 |                                   numpy.l
+ib._histograms_impl
+import time:      2509 |       3847 |                                 numpy.lib
+._function_base_impl
+import time:      1049 |      24669 |                               numpy.lib._
+index_tricks_impl
+import time:      1604 |       1604 |                               numpy.lib._
+nanfunctions_impl
+import time:      1430 |       1430 |                               numpy.lib._
+shape_base_impl
+import time:      1715 |       1715 |                               numpy.lib._
+arraysetops_impl
+import time:      1477 |       1477 |                               numpy.lib._
+polynomial_impl
+import time:       927 |        927 |                               numpy.lib._
+arrayterator_impl
+import time:       748 |        748 |                               numpy.lib._
+arraypad_impl
+import time:       719 |        719 |                               numpy.lib._
+version
+import time:      1636 |      50622 |                             numpy.lib
+import time:       816 |        816 |                             numpy._array_
+api_info
+import time:      2811 |      99001 |                           numpy
+import time:      1123 |       1123 |                           numpy._typing._
+add_docstring
+import time:       831 |     100954 |                         numpy.typing
+import time:      1013 |     101966 |                       PIL._typing
+import time:       842 |        842 |                       PIL._util
+import time:       700 |        700 |                               xml
+import time:      1074 |       1774 |                             xml.parsers
+import time:      1094 |       1094 |                             pyexpat
+import time:      1126 |       3993 |                           xml.parsers.exp
+at
+import time:      1022 |       5014 |                         defusedxml.common
+import time:      1200 |       6214 |                       defusedxml
+import time:       709 |        709 |                           xml.etree
+import time:       887 |        887 |                           xml.etree.Eleme
+ntPath
+import time:      1085 |       1085 |                           _elementtree
+import time:      1328 |       4008 |                         xml.etree.Element
+Tree
+import time:         4 |          4 |                         _elementtree
+import time:      2127 |       6138 |                       defusedxml.ElementT
+ree
+import time:       982 |        982 |                       PIL._imaging
+import time:       520 |        520 |                           cffi.lock
+import time:       515 |        515 |                           cffi.error
+import time:      1298 |       1298 |                           cffi.model
+import time:      1252 |       3584 |                         cffi.api
+import time:      1244 |       4828 |                       cffi
+import time:      2559 |     131327 |                     PIL.Image
+import time:       648 |        648 |                         PIL.GimpGradientF
+ile
+import time:       557 |        557 |                         PIL.GimpPaletteFi
+le
+import time:       713 |        713 |                         PIL.ImageColor
+import time:       523 |        523 |                         PIL.PaletteFile
+import time:       782 |       3221 |                       PIL.ImagePalette
+import time:       830 |       4051 |                     PIL.ImageOps
+import time:       987 |        987 |                     PIL.ImageDraw
+import time:       502 |        502 |                     PIL.ImageGrab
+import time:       869 |        869 |                           numpy.core._uti
+ls
+import time:       725 |       1593 |                         numpy.core
+import time:       730 |       2323 |                       numpy.core.multiarr
+ay
+import time:      1698 |       1698 |                       cv2.load_config_py3
+import time:       898 |        898 |                       cv2.version
+import time:       650 |        650 |                       cv2.misc.version
+import time:     26493 |      32059 |                     cv2
+import time:      1845 |       1845 |                           difflib
+import time:      1275 |       1275 |                             cmd
+import time:      1077 |       1077 |                             bdb
+import time:       744 |        744 |                               codeop
+import time:       886 |       1630 |                             code
+import time:      1041 |       1041 |                             pprint
+import time:      1930 |       6951 |                           pdb
+import time:       845 |        845 |                               unittest.ut
+il
+import time:      1071 |       1915 |                             unittest.resu
+lt
+import time:      1451 |       1451 |                             unittest.case
+import time:      1055 |       1055 |                             unittest.suit
+e
+import time:      1267 |       1267 |                             unittest.load
+er
+import time:       794 |        794 |                                 unittest.
+signals
+import time:      1155 |       1948 |                               unittest.ru
+nner
+import time:       767 |       2715 |                             unittest.main
+import time:      1278 |       9679 |                           unittest
+import time:      1972 |      20446 |                         doctest
+import time:      1235 |      21681 |                       pyrect
+import time:      1063 |       1063 |                       pygetwindow._pygetw
+indow_win
+import time:      1276 |      24018 |                     pygetwindow
+import time:      1814 |     197012 |                   pyscreeze
+import time:      1250 |       1250 |                     pyperclip
+import time:      1052 |       1052 |                     webbrowser
+import time:       760 |        760 |                     ctypes.util
+import time:      3949 |       3949 |                     tkinter.ttk
+import time:     58337 |      65347 |                   mouseinfo
+import time:      1834 |       1834 |                   pyautogui._pyautogui_wi
+n
+import time:      2096 |     281117 |                 pyautogui
+import time:      1474 |       1474 |                       keyboard._canonical
+_names
+import time:       809 |       2283 |                     keyboard._keyboard_ev
+ent
+import time:      1371 |       3654 |                   keyboard._winkeyboard
+import time:      1137 |       1137 |                   keyboard._generic
+import time:      1479 |       6269 |                 keyboard
+import time:      1134 |       1134 |                     src.utils.logger
+import time:       880 |        880 |                     src.utils.parser
+import time:      1230 |       1230 |                       src.utils.error_cod
+es
+import time:      1075 |       2304 |                     src.utils.errors
+import time:       984 |       5301 |                   src.utils
+import time:      1285 |       6586 |                 src.utils.image_processor
+import time:      1128 |       1128 |                 src.utils.yolo_detector
+import time:       776 |        776 |                 src.utils.video_analyzer
+import time:      1328 |       1328 |                 src.system.high_risk_dete
+ctor
+import time:       902 |        902 |                 src.system.confirmation
+import time:      2158 |     300261 |               src.system.controller
+import time:       944 |        944 |               src.system.vision
+import time:      1372 |     302576 |             src.system
+import time:        25 |     302600 |           src.system.controller
+import time:      1727 |       1727 |           src.services.local_model_servic
+e
+import time:      1389 |       1389 |           src.services.tool_registry
+import time:      1617 |    1860603 |         src.services.ai_service
+import time:       946 |    1861549 |       src.services
+import time:       807 |    2225061 |     src
+import time:       968 |        968 |           tkinter.dialog
+import time:       847 |        847 |           tkinter.commondialog
+import time:      1015 |       1015 |             tkinter.messagebox
+import time:      1205 |       2219 |           tkinter.simpledialog
+import time:      1038 |       5071 |         tkinter.filedialog
+import time:      1222 |       1222 |                 packaging
+import time:      2627 |       2627 |                 packaging.version
+import time:       682 |        682 |                         customtkinter.win
+dows.widgets.core_rendering.ctk_canvas
+import time:       684 |        684 |                         customtkinter.win
+dows.widgets.core_rendering.draw_engine
+import time:       841 |       2206 |                       customtkinter.windo
+ws.widgets.core_rendering
+import time:       570 |        570 |                         customtkinter.win
+dows.widgets.theme.theme_manager
+import time:       757 |       1327 |                       customtkinter.windo
+ws.widgets.theme
+import time:      1001 |       1001 |                               tkinter.fon
+t
+import time:       640 |       1640 |                             customtkinter
+.windows.widgets.font.ctk_font
+import time:       452 |        452 |                             customtkinter
+.windows.widgets.font.font_manager
+import time:      2052 |       4144 |                           customtkinter.w
+indows.widgets.font
+import time:      1280 |       1280 |                                   darkdet
+ect._windows_detect
+import time:      1631 |       2911 |                                 darkdetec
+t
+import time:       495 |       3405 |                               customtkint
+er.windows.widgets.appearance_mode.appearance_mode_tracker
+import time:       644 |       4049 |                             customtkinter
+.windows.widgets.appearance_mode.appearance_mode_base_class
+import time:       531 |       4580 |                           customtkinter.w
+indows.widgets.appearance_mode
+import time:       503 |        503 |                               customtkint
+er.windows.widgets.scaling.scaling_tracker
+import time:       856 |       1358 |                             customtkinter
+.windows.widgets.scaling.scaling_base_class
+import time:       644 |       2001 |                           customtkinter.w
+indows.widgets.scaling
+import time:       715 |      11438 |                         customtkinter.win
+dows.widgets.core_widget_classes.dropdown_menu
+import time:       919 |        919 |                               PIL.ImageTk
+import time:       610 |       1529 |                             customtkinter
+.windows.widgets.image.ctk_image
+import time:       504 |       2032 |                           customtkinter.w
+indows.widgets.image
+import time:       504 |        504 |                             customtkinter
+.windows.widgets.utility.utility_functions
+import time:       487 |        991 |                           customtkinter.w
+indows.widgets.utility
+import time:       725 |       3747 |                         customtkinter.win
+dows.widgets.core_widget_classes.ctk_base_class
+import time:       512 |      15696 |                       customtkinter.windo
+ws.widgets.core_widget_classes
+import time:       938 |      20166 |                     customtkinter.windows
+.widgets.ctk_button
+import time:       561 |        561 |                     customtkinter.windows
+.widgets.ctk_checkbox
+import time:       752 |        752 |                     customtkinter.windows
+.widgets.ctk_combobox
+import time:       532 |        532 |                     customtkinter.windows
+.widgets.ctk_entry
+import time:       487 |        487 |                     customtkinter.windows
+.widgets.ctk_frame
+import time:       668 |        668 |                     customtkinter.windows
+.widgets.ctk_label
+import time:       593 |        593 |                     customtkinter.windows
+.widgets.ctk_optionmenu
+import time:       499 |        499 |                     customtkinter.windows
+.widgets.ctk_progressbar
+import time:       495 |        495 |                     customtkinter.windows
+.widgets.ctk_radiobutton
+import time:       473 |        473 |                     customtkinter.windows
+.widgets.ctk_scrollbar
+import time:       518 |        518 |                     customtkinter.windows
+.widgets.ctk_segmented_button
+import time:       642 |        642 |                     customtkinter.windows
+.widgets.ctk_slider
+import time:       559 |        559 |                     customtkinter.windows
+.widgets.ctk_switch
+import time:       532 |        532 |                     customtkinter.windows
+.widgets.ctk_tabview
+import time:       572 |        572 |                     customtkinter.windows
+.widgets.ctk_textbox
+import time:       534 |        534 |                     customtkinter.windows
+.widgets.ctk_scrollable_frame
+import time:       781 |      29359 |                   customtkinter.windows.w
+idgets
+import time:        26 |      29385 |                 customtkinter.windows.wid
+gets.theme
+import time:       793 |      34025 |               customtkinter.windows.ctk_t
+k
+import time:       475 |        475 |               customtkinter.windows.ctk_t
+oplevel
+import time:       602 |        602 |               customtkinter.windows.ctk_i
+nput_dialog
+import time:       794 |      35895 |             customtkinter.windows
+import time:        21 |      35915 |           customtkinter.windows.widgets
+import time:        25 |      35940 |         customtkinter.windows.widgets.app
+earance_mode
+import time:       813 |      41823 |       customtkinter
+import time:       838 |        838 |       tkinter.scrolledtext
+import time:      1370 |       1370 |         pywinstyles.py_win_style
+import time:      1123 |       2492 |       pywinstyles
+import time:      2050 |      47201 |     src.ui.customtkinter_app
+import time:       961 |        961 |         PIL.ImageFilter
+import time:      1272 |       2233 |       src.ui.effects.py_effects
+import time:       903 |       3136 |     src.ui.effects
+import time:       931 |    2276328 |   src.ui
+import time:        29 |    2276357 | src.ui.customtkinter_app

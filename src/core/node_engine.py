@@ -1086,29 +1086,44 @@ class NodeEngine:
         from src.utils.logger import get_logger
         logger = get_logger(__name__)
 
-        backend = "cppyy"
-        cppyy_available = False
-        try:
-            import cppyy
-            self._cppyy = cppyy
-            cppyy_available = True
-        except ImportError:
-            pass
-
-        if cppyy_available:
-            try:
-                self._cppyy.cppdef(EMBEDDED_CPP)
-                for name in _ALL_CLASS_NAMES:
-                    cls_obj = getattr(self._cppyy.gbl.nodecalc, name)
-                    setattr(self, name, cls_obj)
-                backend = "cppyy"
-                logger.info("NodeEngine: C++ 后端已加载 (cppyy)")
-            except Exception as e:
-                logger.warning(f"cppyy C++ 编译失败，回退纯 Python：{e}")
-                backend = "python"
+        backend = "native"
+        native_loaded = False
+        if os.environ.get("NODECALC_BACKEND", "").lower() == "python":
+            logger.info("NodeEngine: NODECALC_BACKEND=python，跳过原生后端")
         else:
-            logger.warning("cppyy 未安装，回退纯 Python 实现（功能完整，性能稍慢）")
-            backend = "python"
+            try:
+                from src.core.native.native_backend import register_native_backend
+                native_loaded = register_native_backend(self)
+            except Exception as e:
+                logger.warning(f"原生后端加载失败，尝试 cppyy：{e}")
+
+        if native_loaded:
+            backend = "native"
+            logger.info("NodeEngine: C++ 原生后端已加载 (cffi/nodecalc_native.dll)")
+        else:
+            backend = "cppyy"
+            cppyy_available = False
+            try:
+                import cppyy
+                self._cppyy = cppyy
+                cppyy_available = True
+            except ImportError:
+                pass
+
+            if cppyy_available:
+                try:
+                    self._cppyy.cppdef(EMBEDDED_CPP)
+                    for name in _ALL_CLASS_NAMES:
+                        cls_obj = getattr(self._cppyy.gbl.nodecalc, name)
+                        setattr(self, name, cls_obj)
+                    backend = "cppyy"
+                    logger.info("NodeEngine: C++ 后端已加载 (cppyy)")
+                except Exception as e:
+                    logger.warning(f"cppyy C++ 编译失败，回退纯 Python：{e}")
+                    backend = "python"
+            else:
+                logger.warning("cppyy 未安装，回退纯 Python 实现（功能完整，性能稍慢）")
+                backend = "python"
 
         if backend == "python":
             _register_python_fallback(self)

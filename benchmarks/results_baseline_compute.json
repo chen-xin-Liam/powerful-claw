@@ -1,0 +1,18 @@
+{
+  "backend": "python",
+  "small_expressions": {
+    "iters": 2000,
+    "expressions": 10,
+    "total_evals": 20000,
+    "elapsed_ms": 2088.1,
+    "us_per_eval": 104.403,
+    "evals_per_sec": 9578.3,
+    "checksum": 268828.427
+  },
+  "heavy_vector_2000": {
+    "iters": 20,
+    "elapsed_ms": 75549.9,
+    "ms_per_eval": 3777.494,
+    "checksum": 51527.004
+  }
+}

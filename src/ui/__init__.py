@@ -1,12 +1,5 @@
-from .customtkinter_app import CustomTkinterApp, main
-from .effects import GLEffects, GLColor, GlassEffectParams, GlowEffectParams, WindowAnimationParams
+"""UI 子包
 
-__all__ = [
-    "CustomTkinterApp", 
-    "main",
-    "GLEffects",
-    "GLColor",
-    "GlassEffectParams",
-    "GlowEffectParams",
-    "WindowAnimationParams"
-]
+按需使用完整路径导入（如 ``from src.ui.customtkinter_app import CustomTkinterApp``），
+避免在包初始化阶段加载 Tk/特效等重依赖。
+"""

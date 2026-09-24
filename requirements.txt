@@ -117,6 +117,9 @@ argon2-cffi>=23.1.0
 pycryptodome>=3.19.0
 paramiko>=3.3.1
 
+# 原生加速（nodecalc C++ 后端，MinGW g++ 构建；缺失时自动回退纯 Python）
+cffi>=1.16.0
+
 # 科学计算
 numpy>=1.26.2
 scipy>=1.11.4

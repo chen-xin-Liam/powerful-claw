@@ -1,4 +1,3 @@
-from .controller import SystemController, PermissionLevel, OperationPermission
-from .vision import VisionCapture
+"""system 子包：按需使用完整路径导入，如 from src.system.controller import SystemController"""
 
 __all__ = ["SystemController", "PermissionLevel", "OperationPermission", "VisionCapture"]

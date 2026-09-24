@@ -551,7 +551,9 @@ def compile_ast_to_graph(engine, ast_node, variables=None):
                 g.connect(zero_idx, 0, sub_gt_idx, 1)
                 cmp_gt = engine.GreaterThan() if hasattr(engine, 'GreaterThan') else None
                 if cmp_gt is None:
-                    cmp_gt = engine._cppyy.gbl.nodecalc.GreaterThan() if hasattr(engine._cppyy.gbl.nodecalc, 'GreaterThan') else None
+                    _cppyy = getattr(engine, '_cppyy', None)
+                    if _cppyy is not None and hasattr(_cppyy.gbl.nodecalc, 'GreaterThan'):
+                        cmp_gt = _cppyy.gbl.nodecalc.GreaterThan()
                 return if_node, 0
             elif op == 'transpose':
                 result = engine.MatTranspose()
