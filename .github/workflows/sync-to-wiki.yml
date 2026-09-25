@@ -32,6 +32,8 @@ jobs:
         with:
           # docs/ 现按 en/ zh/ ru/ fr/ 语言子目录组织，整体同步到 Wiki
           path: docs
-          delete: true # 全量覆盖：删除 Wiki 中已不存在的页面
-          wiki-token: ${{ secrets.WIKI_SYNC_TOKEN }}
+          # v4 参数变更：strategy=init 等价于旧版 delete:true ——
+          # 以单提交强制推送，删除 Wiki 中 docs/ 里已不存在的页面
+          strategy: init
+          token: ${{ secrets.WIKI_SYNC_TOKEN }}
           commit-message: "docs: sync multilingual wiki (en/zh/ru/fr)"
