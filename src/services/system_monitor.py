@@ -74,10 +74,30 @@ class SystemMonitor:
             logger.warning(f"获取网络 IO 计数器失败，使用零值兜底: {e}")
             self._last_net_io = None
         self._last_time = time.time()
+        # SystemInfo 短 TTL 缓存：监控数据用于展示，1 秒内重复请求直接复用快照，
+        # 避免每次调用都阻塞 100ms 采集 CPU（见 get_system_info）
+        self._sysinfo_ttl = 1.0
+        self._sysinfo_cache: Optional[tuple] = None  # (timestamp, SystemInfo)
+        self._sysinfo_lock = threading.Lock()
         self._initialized = True
 
     def get_system_info(self) -> SystemInfo:
-        """获取系统基本信息。
+        """获取系统基本信息（带 1 秒短缓存）。
+
+        监控数据用于展示，短时间内的重复请求复用同一份快照，
+        把阻塞式 CPU 采样限制在每秒至多一次。
+        """
+        now = time.time()
+        with self._sysinfo_lock:
+            cached = self._sysinfo_cache
+            if cached is not None and (now - cached[0]) < self._sysinfo_ttl:
+                return cached[1]
+            info = self._collect_system_info()
+            self._sysinfo_cache = (now, info)
+            return info
+
+    def _collect_system_info(self) -> SystemInfo:
+        """实际采集系统基本信息。
 
         监控类采用软失败策略：逐字段保护，异常时降级为默认值，
         确保即使某项指标获取失败也能返回完整 SystemInfo。
@@ -176,27 +196,89 @@ class SystemMonitor:
         except psutil.NoSuchProcess:
             raise ValueError(f"Process with pid {pid} not found")
 
-    def get_running_processes(self, limit: int = 20) -> List[ProcessInfo]:
-        """获取运行中的进程列表"""
+    def get_running_processes(self, limit: int = 20, interval: float = 0.1) -> List[ProcessInfo]:
+        """获取运行中的进程列表（按内存使用率排序）。
+
+        性能说明（实测剖析结论）：
+          - 旧实现对每个进程单独 ``cpu_percent(interval=0.1)``，N 个进程阻塞
+            N×100ms（约 58 秒）；
+          - Windows 上 psutil 的 ``status()`` 底层调用 ``proc_is_suspended``
+            需枚举线程，约 18ms/进程，474 个进程即 8.7 秒；
+          - ``cmdline()`` 约 2ms/进程。
+        因此：CPU 改为「基线 -> 单个采样窗口 -> 读值」两遍采样；不采集 status；
+        先按内存排序取 Top-N，只对这 N 个进程获取昂贵的 cmdline。
+        总耗时从约 58 秒降至约 0.5 秒，且与进程总数基本无关。
+        """
         if not isinstance(limit, int) or limit <= 0:
             raise ValidationError(
                 ErrorCode.E_VAL_OUT_OF_RANGE,
                 f"limit 必须 > 0，实际收到 {limit}",
                 details={"arg": "limit", "value": limit},
             )
-        processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+
+        # 廉价属性一次采集（刻意排除 status：Windows 上枚举线程极慢）
+        cheap_attrs = ['pid', 'name', 'create_time', 'memory_info', 'memory_percent']
+
+        # 第一遍：建立 CPU 计数基线（interval=None 非阻塞）
+        procs = []
+        for proc in psutil.process_iter(cheap_attrs):
             try:
-                processes.append(self.get_process_info(proc.info['pid']))
+                proc.cpu_percent(None)
+                procs.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
             except Exception as e:
-                # 单个进程获取失败不影响整体
-                logger.debug(f"跳过进程 {proc.info.get('pid')}: {e}")
+                logger.debug(f"建立进程 CPU 基线失败: {e}")
 
-        # 按内存使用排序
-        processes.sort(key=lambda p: p.memory_percent, reverse=True)
-        return processes[:limit]
+        # 全局唯一一个采样等待窗口
+        time.sleep(max(0.0, interval))
+
+        # 第二遍：读 CPU 占用 + 组装记录（此时不含 cmdline）
+        records = []
+        for proc in procs:
+            try:
+                info = proc.info
+                mem_info = info.get('memory_info')
+                create_ts = info.get('create_time')
+                records.append({
+                    'proc': proc,
+                    'pid': info['pid'],
+                    'name': info.get('name') or '',
+                    'cpu_percent': proc.cpu_percent(None),
+                    'memory_percent': info.get('memory_percent') or 0.0,
+                    'memory_rss': self._bytes_to_mb(mem_info.rss) if mem_info else 0.0,
+                    'create_time': datetime.fromtimestamp(create_ts) if create_ts else datetime.now(),
+                })
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+            except Exception as e:
+                logger.debug(f"读取进程信息失败: {e}")
+
+        # 先按内存排序取 Top-N，只为这少量进程获取昂贵的 cmdline
+        records.sort(key=lambda r: r['memory_percent'], reverse=True)
+        top = records[:limit]
+
+        processes = []
+        for r in top:
+            cmdline = ''
+            try:
+                cmdline = ' '.join(r['proc'].cmdline())[:200]
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+            except Exception as e:
+                logger.debug(f"获取进程 {r['pid']} cmdline 失败: {e}")
+            processes.append(ProcessInfo(
+                pid=r['pid'],
+                name=r['name'],
+                cmdline=cmdline,
+                cpu_percent=r['cpu_percent'],
+                memory_percent=r['memory_percent'],
+                memory_rss=r['memory_rss'],
+                status='',  # Windows 下 status() 需枚举线程，成本过高，不采集
+                create_time=r['create_time'],
+                username=None,
+            ))
+        return processes
 
     def get_gpu_info(self) -> List[Dict[str, Any]]:
         """获取GPU信息（如果可用）。
