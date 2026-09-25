@@ -166,6 +166,7 @@ $RECYCLE.BIN/
 *.exp
 *.lib
 *.obj
+build/
 
 # ==============================
 # Model / Data files (large)

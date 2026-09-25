@@ -1,18 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-import os
 
-# nodecalc C++ 原生后端（缺失时 Python 侧自动回退纯 Python，不阻断打包）
-_native_dll = os.path.join('src', 'core', 'native', 'nodecalc_native.dll')
-_extra_datas = [('src/web', 'web'), ('src/web_api', 'web_api')]
-if os.path.exists(_native_dll):
-    _extra_datas.append((_native_dll, os.path.join('src', 'core', 'native')))
 
 a = Analysis(
     ['src\\main.py'],
     pathex=[],
     binaries=[],
-    datas=_extra_datas,
-    hiddenimports=['websockets', 'soundcard', 'cv2', 'pyautogui', 'keyboard', 'customtkinter', 'pydantic', 'pydantic_settings', 'dotenv', 'cffi', 'src.core.native.native_backend'],
+    datas=[('src/web', 'web'), ('src/web_api', 'web_api')],
+    hiddenimports=['websockets', 'soundcard', 'cv2', 'pyautogui', 'keyboard', 'customtkinter', 'pydantic', 'pydantic_settings', 'dotenv'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

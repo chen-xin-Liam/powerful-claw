@@ -18,7 +18,7 @@ pystray>=0.19.4
 pywinstyles>=1.8
 pexpect>=4.8.0
 plumbum>=1.7.2
-sqlalchemy>=2.0.0
+sqlalchemy>=2.0.35
 
 # 多媒体处理
 ffmpeg-python>=0.2.0
