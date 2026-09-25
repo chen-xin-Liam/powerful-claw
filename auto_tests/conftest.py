@@ -5,6 +5,7 @@
 """
 import os
 import math
+import json
 
 import pytest
 
@@ -50,3 +51,32 @@ def assert_close(actual, expected, rel_tol=1e-9, abs_tol=1e-9):
     else:
         assert math.isclose(float(actual), float(expected), rel_tol=rel_tol, abs_tol=abs_tol), \
             f"{actual} != {expected}"
+
+
+# ───────── MCP 导入测试隔离 ─────────
+
+@pytest.fixture(autouse=True)
+def _reset_extension_manager():
+    """每个 MCP 测试前后重置 ExtensionManager 单例与配置，避免状态泄漏。"""
+    from src.services.extension_manager import ExtensionManager
+    from src.services.mcp_manager import mcp_manager
+
+    config_path = os.path.join("src", "config", "extensions.json")
+
+    # 测试前：清空内存单例与磁盘配置
+    ExtensionManager._instance = None
+    mcp_manager.servers.clear()
+    _write_empty_config(config_path)
+
+    yield
+
+    # 测试后：清理残留
+    ExtensionManager._instance = None
+    mcp_manager.servers.clear()
+    _write_empty_config(config_path)
+
+
+def _write_empty_config(path: str):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"mcp_servers": [], "enabled_extensions": []}, f)
