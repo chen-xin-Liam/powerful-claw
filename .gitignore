@@ -196,3 +196,4 @@ python-check.html
 *.temp
 *.bak
 *.crdownload
+/test/
