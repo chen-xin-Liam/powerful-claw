@@ -1015,8 +1015,14 @@ class CustomTkinterApp:
         self.settings_btn.pack(pady=5)
         
     def open_settings(self):
-        """打开设置窗口"""
-        SettingsWindow(self.root)
+        """打开设置窗口（PySide6 版，失败回退 CTk）"""
+        try:
+            from src.ui.qt_settings import show_settings
+            # PySide6 与 tkinter 事件循环独立，不传 parent 避免类型冲突
+            show_settings()
+        except Exception as e:
+            logger.warning(f"PySide6 设置窗口打开失败，回退到 CTk: {e}")
+            SettingsWindow(self.root)
         
     def setup_main_area(self):
         self.main_area = ctk.CTkFrame(self.root, corner_radius=0)

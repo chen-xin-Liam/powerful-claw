@@ -8,12 +8,13 @@
 
 ```
 auto_tests/
-├── __init__.py              # 包说明
-├── conftest.py              # pytest 公共 fixture（后端切换、求值辅助、近似断言）
-├── test_expression_engine.py # 表达式引擎核心测试（覆盖全部 44 个节点类型）
-├── test_backend_parity.py   # 多后端等价性测试（native ↔ python）
-├── test_performance.py      # 性能回归测试（与基准 JSON 比对）
-└── run_tests.py             # 独立运行器（不依赖 pytest）
+├── __init__.py                  # 包说明
+├── conftest.py                  # pytest 公共 fixture（后端切换、求值辅助、近似断言）
+├── test_expression_engine.py    # 表达式引擎核心测试（覆盖全部 44 个节点类型）
+├── test_backend_parity.py      # 多后端等价性测试（native ↔ python）
+├── test_performance.py          # 性能回归测试（与基准 JSON 比对）
+├── test_api_connectivity.py    # API 连通性测试（OpenAI/Ollama/本地模型）
+└── run_tests.py                 # 独立运行器（不依赖 pytest）
 ```
 
 ---
@@ -115,6 +116,17 @@ pytest auto_tests/test_performance.py -v -s
 | 2000 元素向量统计 | ms/eval | 243.2 |
 
 若当前性能超过阈值则测试失败，提示性能回退。基准数据可通过 `python benchmarks/perf_bench.py compute --iters 2000 --json-out benchmarks/results_native_compute.json` 重新生成。
+
+### 4. API 连通性测试（test_api_connectivity.py）
+
+验证 AI 提供方配置是否可用，防止无效 Key 或网络问题导致的运行时失败：
+
+- **OpenAI 兼容端点**：发送最小请求验证 Key 有效性、网络连通性
+- **Ollama**：检查服务状态 + 指定模型是否存在
+- **本地模型 / Copilot**：跳过（无需网络）
+- 测试状态码：`success` / `invalid_key` / `network_error` / `config_error` / `skip`
+
+在设置面板（PySide6）的「AI 模型」标签页中，点击 **🌐 测试连接** 可实时验证当前输入的 API Key 与 Base URL。
 
 ---
 

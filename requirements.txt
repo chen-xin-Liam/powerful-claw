@@ -14,6 +14,7 @@ pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 colorama>=0.4.6
 customtkinter>=5.2.0
+PySide6>=6.5.0
 pystray>=0.19.4
 pywinstyles>=1.8
 pexpect>=4.8.0

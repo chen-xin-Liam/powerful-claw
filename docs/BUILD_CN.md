@@ -66,7 +66,7 @@ python scripts/build_exe.py --skip-tests --skip-native
   `src/web`、`src/web_api`、`src/web_monitor`、`src/video_editor`
 - **原生后端**：`src/core/native/nodecalc_native.dll`（存在时自动纳入，缺失不阻断）
 - **hiddenimports**：websockets、soundcard、cv2、pyautogui、keyboard、customtkinter、pydantic、pydantic_settings、dotenv、cffi
-- **excludes**：PyQt5/PyQt6/PySide2/PySide6/matplotlib（本项目使用 CustomTkinter/tkinter，Qt 绑定仅为间接依赖；排除可避免"multiple Qt bindings"冲突并大幅减小体积）
+- **excludes**：PyQt5/PyQt6/matplotlib（本项目使用 CustomTkinter(tkinter) + PySide6，Qt 绑定中仅保留 PySide6；排除其余可避免"multiple Qt bindings"冲突并大幅减小体积）
 
 spec 支持以下环境变量覆盖（脚本已自动处理，一般无需手动设置）：
 
@@ -113,21 +113,25 @@ python test_main.py
 
 ### 1. `Aborting build ... multiple Qt bindings packages`
 
-环境同时安装了 PyQt5 与 PyQt6（常见于装过 matplotlib 的开发环境）。spec 已在 `excludes` 中排除全部 Qt 绑定；若仍出现，检查是否有代码直接 import Qt。
+环境同时安装了 PyQt5 与 PyQt6（常见于装过 matplotlib 的开发环境）。spec 已在 `excludes` 中排除 PyQt5/PyQt6/matplotlib；若仍出现，检查是否有代码直接 import Qt。
 
-### 2. 杀毒软件报毒 / exe 被删
+### 2. PySide6 设置窗口打不开
+
+确认已安装 PySide6（`pip install PySide6>=6.5.0`）。若仍失败，主程序会自动回退到 CustomTkinter 设置窗口，日志中会有 `PySide6 设置窗口打开失败` 的警告。
+
+### 3. 杀毒软件报毒 / exe 被删
 
 onefile + UPX 压缩的 exe 易被启发式查杀。改用 `--no-upx`，或将产物目录加入杀软白名单。
 
-### 3. exe 双击闪退
+### 4. exe 双击闪退
 
 默认使用控制台模式便于排错；若用了 `--windowed`，先重新打一个控制台版本查看报错日志。常见原因：`.env` 未随程序分发、端口被占用。
 
-### 4. 找不到 g++ / 想加速计算
+### 5. 找不到 g++ / 想加速计算
 
 安装 [MinGW-w64](https://www.mingw-w64.org/) 并将 `g++` 加入 PATH，重新运行构建脚本即可；也可单独执行 `python src/core/native/build_native.py`。
 
-### 5. 修改了资源或新增 hidden import
+### 6. 修改了资源或新增 hidden import
 
 直接编辑 `AIComputerControl.spec` 的 `datas` / `hiddenimports`，不要在脚本命令行重复添加——spec 是唯一配置源。
 
