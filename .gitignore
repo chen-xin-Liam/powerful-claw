@@ -168,6 +168,9 @@ $RECYCLE.BIN/
 *.obj
 build/
 
+# Wiki 同步暂存目录（CI 中由 scripts/build_wiki_staging.py 生成）
+wiki-staging/
+
 # ==============================
 # Model / Data files (large)
 # ==============================

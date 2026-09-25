@@ -27,13 +27,16 @@ jobs:
     # 链接检查未通过时不同步，避免把失效链接推到 Wiki
     steps:
       - uses: actions/checkout@v4
+      - name: Flatten docs for wiki
+        # GitHub Wiki 不支持子目录路由：zh/INDEX.md 需扁平化为页面 zh-INDEX，
+        # 内部链接去掉 .md；docs 之外的链接转为仓库 blob URL
+        run: python3 scripts/build_wiki_staging.py docs wiki-staging
       - name: Push multilingual docs to wiki
         uses: Andrew-Chen-Wang/github-wiki-action@v4
         with:
-          # docs/ 现按 en/ zh/ ru/ fr/ 语言子目录组织，整体同步到 Wiki
-          path: docs
-          # v4 参数变更：strategy=init 等价于旧版 delete:true ——
-          # 以单提交强制推送，删除 Wiki 中 docs/ 里已不存在的页面
+          # 同步扁平化后的暂存目录（en/zh/ru/fr 页面名带语言前缀）
+          path: wiki-staging
+          # strategy=init：单提交强制推送，与旧 Wiki 完全对齐，删除已不存在的页面
           strategy: init
           token: ${{ secrets.WIKI_SYNC_TOKEN }}
           commit-message: "docs: sync multilingual wiki (en/zh/ru/fr)"
