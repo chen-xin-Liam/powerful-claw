@@ -17,5 +17,6 @@ cluster, débogage, tests, construction EXE) est actuellement disponible en angl
 
 - [Index anglais](../en/INDEX.md)
 - [Index chinois](../zh/INDEX.md)
+- [Vue d'ensemble de l'architecture et des modules (中文)](../zh/architecture.md) — couches, démarrage, ports, threads, puis liens vers chaque module
 
 La traduction française des documents techniques sera ajoutée progressivement.

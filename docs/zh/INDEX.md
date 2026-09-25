@@ -18,6 +18,21 @@
 
 ---
 
+## 🏛️ 架构与源码模块
+
+> 想读源码或二次开发？从架构总览开始，再按模块深入。
+
+| 文档 | 说明 |
+|------|------|
+| [系统架构总览](architecture.md) | 分层结构、启动流程、端口规划、线程模型 |
+| [服务层模块](modules-services.md) | AI/Agent、网络服务、工具系统、MCP 与插件（23 个模块） |
+| [系统能力与权限模块](modules-system.md) | 四级权限、高危检测、二次确认、提权、视觉捕获 |
+| [表达式引擎与原生后端](modules-core.md) | 44 节点计算图、native/cppyy/python 三级后端、构建与基准 |
+| [界面、配置与主题模块](modules-ui-config.md) | CustomTkinter 主窗口、PySide6 设置、配置与主题 |
+| [工具库、视觉与推流模块](modules-utils-streaming.md) | 日志/错误码、YOLO、低带宽推流、Web 前端 |
+
+---
+
 ## 🛠️ 功能模块
 
 | 文档 | 说明 |
@@ -38,6 +53,9 @@
 | 首次安装 | [installation.md](installation.md) |
 | 配置 AI 模型 | [configuration.md](configuration.md) |
 | 学习使用应用 | [user_manual.md](user_manual.md) |
+| 了解整体架构/读源码 | [architecture.md](architecture.md) |
+| 新增 AI 工具或插件 | [modules-services.md](modules-services.md) |
+| 新增表达式节点 | [modules-core.md](modules-core.md) |
 | 排查问题 | [debug_mode_guide.md](debug_mode_guide.md) |
 | 运行自动化测试 | [testing.md](testing.md) |
 | 打包 EXE 发布 | [build.md](build.md) |
