@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 <!-- TODO: 替换为真实 Logo（建议 256×256 PNG/SVG，放 docs/images/logo.png）
 <img src="docs/images/logo.png" alt="AI Computer Control" width="200" height="200" />
@@ -11,7 +11,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-success.svg?logo=windows&logoColor=white)](#)
-[![License](https://img.shields.io/badge/License-GPL--3.0%20%2B%20NonCommercial-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0%20%2B%20NonCommercial-red.svg)](../../LICENSE)
 [![Stars](https://img.shields.io/github/stars/chen-xin-Liam/powerful-claw?style=social)](https://github.com/chen-xin-Liam/powerful-claw/stargazers)
 [![bilibili](https://img.shields.io/badge/bilibili-%E6%95%B0%E7%A7%91%E6%99%BA%E6%98%9F-00A1D6.svg?logo=bilibili&logoColor=white)](https://space.bilibili.com/3493111196027162)
 
@@ -71,7 +71,7 @@ pip install -r requirements.txt
 python src/main.py        # 启动；加 --debug 看详细日志，--noui 走终端模式
 ```
 
-> 📋 **环境要求**：Python 3.13+（需 tkinter）。首次启动前复制 `.env.example` 为 `.env` 并填入你的 AI API Key。完整安装/配置见 [📦 安装文档](docs/INSTALLATION_CN.md) 与 [⚙️ 配置文档](docs/CONFIGURATION_CN.md)。
+> 📋 **环境要求**：Python 3.13+（需 tkinter）。首次启动前复制 `.env.example` 为 `.env` 并填入你的 AI API Key。完整安装/配置见 [📦 安装文档](installation.md) 与 [⚙️ 配置文档](configuration.md)。
 
 ### 一键自检
 
@@ -94,15 +94,15 @@ python test_main.py       # 9 项核心测试 + pip 依赖检查（缺包会给�
 
 | 模块 | 默认端口 | 一句话 | 文档 |
 |------|----------|--------|------|
-| 🤖 AI 智能控制 | — | 多提供者对话 + 视觉感知 + 鼠键控制 | [AI 库使用指南](docs/ai_library_usage_ZH.md) |
-| 📺 桌面监控 | 15004 | 实时屏幕/音频捕获 + 多协议推流 | [用户手册](docs/USER_MANUAL_CN.md) |
-| 🎬 视频剪辑 | 15010 | Web 多轨编辑器，导出 4K | [用户手册](docs/USER_MANUAL_CN.md) |
-| 🌐 API 服务 | 15002 | Web 设置 + AI 对话接口 + 插件热加载 | [配置文档](docs/CONFIGURATION_CN.md) |
-| 🖱️ 网页控制端 | 15000 | 浏览器即控制台 | [用户手册](docs/USER_MANUAL_CN.md) |
-| 🖥️ 局域网算力共享 | 15300-15304 | 自动发现 + 任务调度 + 加密传输 | [集群计算文档](docs/cluster_computing_ZH.md) |
-| 🎨 UI 视觉特效 | — | 毛玻璃/光晕/动画（Py + C++ 双实现） | [调试与特效指南](docs/debug_mode_guide_CN.md) |
+| 🤖 AI 智能控制 | — | 多提供者对话 + 视觉感知 + 鼠键控制 | [AI 库使用指南](ai_library_usage.md) |
+| 📺 桌面监控 | 15004 | 实时屏幕/音频捕获 + 多协议推流 | [用户手册](user_manual.md) |
+| 🎬 视频剪辑 | 15010 | Web 多轨编辑器，导出 4K | [用户手册](user_manual.md) |
+| 🌐 API 服务 | 15002 | Web 设置 + AI 对话接口 + 插件热加载 | [配置文档](configuration.md) |
+| 🖱️ 网页控制端 | 15000 | 浏览器即控制台 | [用户手册](user_manual.md) |
+| 🖥️ 局域网算力共享 | 15300-15304 | 自动发现 + 任务调度 + 加密传输 | [集群计算文档](cluster_computing.md) |
+| 🎨 UI 视觉特效 | — | 毛玻璃/光晕/动画（Py + C++ 双实现） | [调试与特效指南](debug_mode_guide.md) |
 
-> 完整端口表、运行参数、控制台命令等详见 [⚙️ 配置文档](docs/CONFIGURATION_CN.md)。
+> 完整端口表、运行参数、控制台命令等详见 [⚙️ 配置文档](configuration.md)。
 
 ## 🛠️ 技术栈
 
@@ -118,11 +118,11 @@ python test_main.py       # 9 项核心测试 + pip 依赖检查（缺包会给�
 
 ## 📚 文档导航
 
-所有文档均在 [`docs/`](docs) 目录，并配有 [📄 导览索引](docs/导览.md)。快速入口：
+所有文档均在 [`docs/`](../) 目录，并配有 [📄 导览索引](INDEX.md)。快速入口：
 
-- 📦 [安装文档](docs/INSTALLATION_CN.md) ｜ ⚙️ [配置文档](docs/CONFIGURATION_CN.md) ｜ 📖 [用户手册](docs/USER_MANUAL_CN.md)
-- 🤖 [AI 库使用](docs/ai_library_usage_ZH.md) ｜ 🖥️ [集群计算](docs/cluster_computing_ZH.md) ｜ 🐛 [调试与错误码指南](docs/debug_mode_guide_CN.md)
-- 🌍 English: [README](docs/README_EN.md) ｜ [Installation](docs/INSTALLATION.md) ｜ [User Manual](docs/USER_MANUAL.md)
+- 📦 [安装文档](installation.md) ｜ ⚙️ [配置文档](configuration.md) ｜ 📖 [用户手册](user_manual.md)
+- 🤖 [AI 库使用](ai_library_usage.md) ｜ 🖥️ [集群计算](cluster_computing.md) ｜ 🐛 [调试与错误码指南](debug_mode_guide.md)
+- 🌍 English: [README](../../README.md) ｜ [Installation](../en/installation.md) ｜ [User Manual](../en/user_manual.md)
 
 ## ❓ FAQ
 
@@ -146,7 +146,7 @@ python test_main.py       # 9 项核心测试 + pip 依赖检查（缺包会给�
 <details>
 <summary><b>AI 会乱动我的电脑吗？</b></summary>
 
-默认 `Limited` 权限起步，鼠标移到屏幕左上角即触发安全停止。建议在虚拟机或非生产环境首次试用。详见 [配置文档](docs/CONFIGURATION_CN.md)。
+默认 `Limited` 权限起步，鼠标移到屏幕左上角即触发安全停止。建议在虚拟机或非生产环境首次试用。详见 [配置文档](configuration.md)。
 </details>
 
 <details>
@@ -159,7 +159,7 @@ python test_main.py       # 9 项核心测试 + pip 依赖检查（缺包会给�
 
 欢迎提 [Issue](https://github.com/chen-xin-Liam/powerful-claw/issues) 反馈问题或 [Discussions](https://github.com/chen-xin-Liam/powerful-claw/discussions) 讨论功能。
 
-开发前请阅读 [调试与错误码指南](docs/debug_mode_guide_CN.md)（项目已统一异常体系与错误码分段，便于定位问题）。
+开发前请阅读 [调试与错误码指南](debug_mode_guide.md)（项目已统一异常体系与错误码分段，便于定位问题）。
 
 ```bash
 # 代码规范检查
@@ -175,7 +175,7 @@ python test_main.py
 
 ## 📄 License
 
-本项目采用 **GPL-3.0 + 附加禁止商业使用条款**。详见 [LICENSE](LICENSE)。
+本项目采用 **GPL-3.0 + 附加禁止商业使用条款**。详见 [LICENSE](../../LICENSE)。
 
 ## 🌟 Star History
 

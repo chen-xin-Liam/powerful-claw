@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**English** | [简体中文](docs/README_CN.md)
+**English** | [简体中文](docs/zh/README.md) | [Русский](docs/ru/README.md) | [Français](docs/fr/README.md)
 
 <!-- TODO: Replace with real logo (256×256 PNG/SVG, docs/images/logo.png)
 <img src="docs/images/logo.png" alt="powerful-claw" width="200" height="200" />
@@ -88,13 +88,15 @@ python src/main.py
 
 ## 📖 Documentation
 
-| Document | Language |
-|----------|----------|
-| [Installation Guide](docs/INSTALLATION.md) | English |
-| [Configuration Guide](docs/CONFIGURATION_EN.md) | English |
-| [User Manual](docs/USER_MANUAL.md) | English |
-| [Contributing Guide](CONTRIBUTING.md) | English |
-| [中文文档导览](docs/导览.md) | 中文 |
+**Languages**: [English](docs/README.md) · [简体中文](docs/zh/INDEX.md) · [Русский](docs/ru/INDEX.md) · [Français](docs/fr/INDEX.md)
+
+| Document | English | 中文 |
+|----------|---------|------|
+| Getting Started | [Installation](docs/en/installation.md) | [安装指南](docs/zh/installation.md) |
+| Configuration | [Configuration](docs/en/configuration.md) | [配置指南](docs/zh/configuration.md) |
+| User Manual | [User Manual](docs/en/user_manual.md) | [用户手册](docs/zh/user_manual.md) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) | — |
+| Security | [SECURITY.md](SECURITY.md) | [安全策略](docs/zh/SECURITY.md) |
 
 ## 🧪 Testing
 
@@ -110,7 +112,7 @@ python benchmarks/perf_bench.py compute --iters 2000
 python benchmarks/perf_bench.py startup --runs 7
 ```
 
-See [docs/TESTING_CN.md](docs/TESTING_CN.md) for details (Chinese).
+See [docs/zh/testing.md](docs/zh/testing.md) for details.
 
 ## 🔌 MCP Server Import
 
@@ -130,7 +132,7 @@ python -m src.services.mcp_importer path/to/mcp.json
 python scripts/build_exe.py
 ```
 
-Output goes to `dist/AIComputerControl/`. See [docs/BUILD_CN.md](docs/BUILD_CN.md) for details (Chinese).
+Output goes to `dist/AIComputerControl/`. See [docs/zh/build.md](docs/zh/build.md) for details.
 
 ## 🤝 Contributing
 

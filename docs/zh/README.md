@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[English](../README.md) | **简体中文**
+[English](../../README.md) | **简体中文** | [Русский](../ru/README.md) | [Français](../fr/README.md)
 
 #### ⚠️ **当前状态：开发中 / WIP，存在已知 Bug，请勿用于生产环境**
 #### ⚠️ **GitHub为本项目唯一主仓库，其他平台均为镜像，不建议直接提交修改**
@@ -12,7 +12,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-success.svg?logo=windows&logoColor=white)](#)
-[![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](../LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](../../LICENSE)
 [![Stars](https://img.shields.io/github/stars/chen-xin-Liam/powerful-claw?style=social)](https://github.com/chen-xin-Liam/powerful-claw/stargazers)
 [![bilibili](https://img.shields.io/badge/bilibili-%E6%95%B0%E7%A7%91%E6%99%BA%E6%98%9F-00A1D6.svg?logo=bilibili&logoColor=white)](https://space.bilibili.com/3493111196027162)
 </div>
@@ -82,12 +82,12 @@ python src/main.py
 
 | 文档 | 说明 |
 |------|------|
-| [安装指南](INSTALLATION_CN.md) | 环境要求、依赖安装、环境变量配置 |
-| [配置指南](CONFIGURATION_CN.md) | AI 模型参数、权限级别、端口配置 |
-| [用户手册](USER_MANUAL_CN.md) | 启动应用、聊天/控制模式、安全特性 |
-| [自动化测试](TESTING_CN.md) | 测试套件运行方式、后端控制、扩展方法 |
-| [EXE 构建](BUILD_CN.md) | 一键构建流水线、参数说明、常见问题 |
-| [文档导览](导览.md) | 所有文档索引 |
+| [安装指南](installation.md) | 环境要求、依赖安装、环境变量配置 |
+| [配置指南](configuration.md) | AI 模型参数、权限级别、端口配置 |
+| [用户手册](user_manual.md) | 启动应用、聊天/控制模式、安全特性 |
+| [自动化测试](testing.md) | 测试套件运行方式、后端控制、扩展方法 |
+| [EXE 构建](build.md) | 一键构建流水线、参数说明、常见问题 |
+| [文档索引](INDEX.md) | 所有中文文档 |
 
 ## 🧪 自动化测试
 
@@ -123,12 +123,12 @@ python -m src.services.mcp_importer path/to/mcp.json
 python scripts/build_exe.py
 ```
 
-输出到 `dist/AIComputerControl/`。详见 [BUILD_CN.md](BUILD_CN.md)。
+输出到 `dist/AIComputerControl/`。详见 [build.md](build.md)。
 
 ## 🤝 参与贡献
 
-请阅读 [CONTRIBUTING.md](../CONTRIBUTING.md) 了解开发环境搭建、代码规范和提交流程。
+请阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md) 了解开发环境搭建、代码规范和提交流程。
 
 ## 📄 许可证
 
-本项目基于 [GNU General Public License v3.0](../LICENSE) 开源。
+本项目基于 [GNU General Public License v3.0](../../LICENSE) 开源。

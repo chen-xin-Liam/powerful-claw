@@ -1,21 +1,37 @@
-name: Sync Docs to Wiki
+name: Docs — link check & wiki sync
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'docs/**'
+      - '*.md'
+      - 'config/**/*.md'
+      - 'scripts/check_doc_links.py'
+      - '.github/workflows/sync-to-wiki.yml'
+  workflow_dispatch:
 
 jobs:
-  sync-wiki:
+  link-check:
+    name: Validate markdown relative links
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Run link checker
+        run: python3 scripts/check_doc_links.py
 
-      - name: Sync to Wiki
+  sync-wiki:
+    name: Sync docs to GitHub Wiki
+    needs: link-check
+    runs-on: ubuntu-latest
+    # 链接检查未通过时不同步，避免把失效链接推到 Wiki
+    steps:
+      - uses: actions/checkout@v4
+      - name: Push multilingual docs to wiki
         uses: Andrew-Chen-Wang/github-wiki-action@v4
         with:
-          path: docs/
-          token: ${{ secrets.WIKI_SYNC_TOKEN }}
-          commit-message: "docs: auto-sync from main branch"
-          
+          # docs/ 现按 en/ zh/ ru/ fr/ 语言子目录组织，整体同步到 Wiki
+          path: docs
+          delete: true # 全量覆盖：删除 Wiki 中已不存在的页面
+          wiki-token: ${{ secrets.WIKI_SYNC_TOKEN }}
+          commit-message: "docs: sync multilingual wiki (en/zh/ru/fr)"

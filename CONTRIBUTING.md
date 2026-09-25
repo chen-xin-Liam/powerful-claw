@@ -1,5 +1,7 @@
 # Contributing to powerful-claw
 
+**English** | [简体中文](docs/zh/CONTRIBUTING.md) | [Русский](docs/ru/CONTRIBUTING.md) | [Français](docs/fr/CONTRIBUTING.md)
+
 Thank you for your interest in contributing! This guide explains how to set up a development environment, run tests, and submit changes.
 
 ---
@@ -71,7 +73,7 @@ Tests cover:
 - API connectivity checks
 - MCP configuration import
 
-See [docs/TESTING_CN.md](docs/TESTING_CN.md) for details.
+See [docs/zh/testing.md](docs/zh/testing.md) for details.
 
 ---
 
