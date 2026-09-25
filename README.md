@@ -1,80 +1,141 @@
 # 🤖 powerful-claw
+
 <div align="center">
-<!-- TODO: 替换为真实 Logo（建议 256×256 PNG/SVG，放 docs/images/logo.png）
+
+**English** | [简体中文](docs/README_CN.md)
+
+<!-- TODO: Replace with real logo (256×256 PNG/SVG, docs/images/logo.png)
 <img src="docs/images/logo.png" alt="powerful-claw" width="200" height="200" />
 -->
 
-#### ⚠️ **当前状态：开发中 / WIP，存在已知 Bug，请勿用于生产环境**
-#### ⚠️ **GitHub为本项目唯一主仓库，其他平台均为镜像，不建议直接提交修改**
+#### ⚠️ **Current Status: Under Development / WIP, known bugs exist — not production-ready**
+#### ⚠️ **GitHub is the only primary repository; other platforms are mirrors**
 
-[GitHub主仓库]: https://github.com/chen-xin-Liam/powerful-claw
-
-**让 AI 看见并操作本地电脑** —— 开源桌面自动化 Agent 控制中枢。
-可以串联多模态大模型、屏幕视觉感知、键鼠自动化；附带桌面推流、简易视频剪辑、局域网算力节点调度等配套模块。
+**Let AI see and operate your local computer** — an open-source desktop automation agent control hub.
+Chains multimodal LLMs, screen vision perception, and keyboard/mouse automation; includes desktop streaming, a simple video editor, and LAN compute node scheduling.
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-success.svg?logo=windows&logoColor=white)](#)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/chen-xin-Liam/powerful-claw?style=social)](https://github.com/chen-xin-Liam/powerful-claw/stargazers)
 [![bilibili](https://img.shields.io/badge/bilibili-%E6%95%B0%E7%A7%91%E6%99%BA%E6%98%9F-00A1D6.svg?logo=bilibili&logoColor=white)](https://space.bilibili.com/3493111196027162)
-<!-- TODO: 启用 CI 后替换为真实构建/覆盖率徽章
-[![Build](https://img.shields.io/github/actions/workflow/status/chen-xin-Liam/powerful-claw/.github/workflows/ci.yml?branch=main&label=build)](...)
-[![Coverage](https://img.shields.io/codecov/c/github/chen-xin-Liam/powerful-claw.svg)](...)
--->
 </div>
 
 ---
 
-> 💡 项目定位：
-> 很多AI Agent项目只停留在对话。本项目尝试构建一套端侧本地Agent，**读取屏幕画面、理解界面内容，调用键鼠完成电脑上的操作任务**。
-> 桌面推流、视频剪辑、局域网算力集群属于附属配套模块，部分仍在开发中。
+> 💡 **Project Vision**
+> Most AI agent projects stop at conversation. This project builds a local end-side agent that **reads the screen, understands UI content, and operates the keyboard/mouse to complete tasks**.
+> Desktop streaming, video editing, and LAN compute clustering are supporting modules — some still in development.
 
-## ✨ 项目特点
-- 🧠 **端侧桌面AI Agent**：对接多模态大模型（Ollama / OpenAI兼容接口 / NVIDIA API），基于YOLO做屏幕目标检测，实现截图理解、键鼠自动化；内置四级权限模型（None/View/Limited/Full）控制Agent操作权限，降低误操作风险。
-- 📺 **桌面实时推流模块**：帧率1–30FPS可调，支持RTMP/SRT/WebRTC多协议音视频推流；使用帧差压缩+分块编码降低传输带宽，浏览器可直接访问查看桌面。
-- 🎬 **内置Web视频剪辑器（基础实现）**：多轨时间轴、调色滤镜、SRT/ASS字幕、语音转字幕，支持导出 MP4/MOV/GIF/WebM（1080P/2K/4K）。
-- 🌐 **局域网算力调度（WIP）**：UDP自动发现内网节点，采集CPU/内存/GPU/NPU负载，支持任务调度，Fernet/RSA加密传输，可将多台闲置机器组成推理集群。
-- 🎨 **可插拔桌面UI**：两套渲染实现，Python(Pillow) 轻量版本 + C++/OpenGL 高性能毛玻璃、窗口动画实现，跨平台可切换。
-- 🛠️ **原生Python主体**：架构轻量化，便于阅读源码、二次开发与本地调试。
+## ✨ Key Features
 
-## 📚 技术栈 / Tech Stack
-| 模块 | 技术 / 语言 | 说明 |
-|------|------------|------|
-| AI Agent | Python 3.13+ | 多模态大模型驱动，可接入 Ollama/OpenAI/NVIDIA 等模型服务 |
-| 视觉感知 | Python + YOLOv8 | 屏幕截图、界面目标检测，适配高DPI显示器 |
-| 桌面控制 | Python (pyautogui/keyboard) | 跨平台鼠标键盘自动化，四级权限控制 |
-| 视频推流 | Python + FFmpeg | RTMP/SRT/WebRTC 多协议，帧差压缩与分块编码 |
-| UI 界面 | CustomTkinter + C++/OpenGL | 毛玻璃/光晕窗口动画，双实现可插拔 |
-| 集群计算 | Python + UDP/加密 | 局域网节点发现、任务调度，Fernet/RSA加密传输 |
-| 日志/错误 | Loguru/Rich | 统一错误码、分级日志，全链路Debug追踪 |
-| 节点化数学引擎 | C++17 + cppyy嵌入Python | 44节点运算单元（算术/三角/矩阵LU/统计），可降级到纯Python运行 |
+- 🧠 **End-side Desktop AI Agent**: Connects to multimodal LLMs (Ollama / OpenAI-compatible / NVIDIA API), uses YOLO for screen object detection, enables screenshot understanding and keyboard/mouse automation. Built-in 4-level permission model (None/View/Limited/Full) to reduce misoperation risk.
+- 📺 **Desktop Real-time Streaming**: Adjustable 1–30 FPS, supports RTMP/SRT/WebRTC protocols. Frame-difference compression + chunked encoding reduces bandwidth. Viewable directly in browser.
+- 🎬 **Built-in Web Video Editor (Basic)**: Multi-track timeline, color grading filters, SRT/ASS subtitles, speech-to-text. Export to MP4/MOV/GIF/WebM (1080P/2K/4K).
+- 🌐 **LAN Compute Scheduling (WIP)**: UDP auto-discovery of intranet nodes, CPU/Memory/GPU/NPU load collection, task scheduling, Fernet/RSA encrypted transmission. Combine idle machines into an inference cluster.
+- 🎨 **Pluggable Desktop UI**: Two rendering implementations — Python (Pillow) lightweight version + C++/OpenGL high-performance frosted glass and window animations. Cross-platform switchable.
+- 🛠️ **Native Python Core**: Lightweight architecture for easy source reading, secondary development, and local debugging.
 
-## 🚀 已实现功能
-- [x] 多AI后端接入（Ollama、OpenAI兼容API、NVIDIA），易于扩展新增服务商
-- [x] 屏幕截图 + YOLO目标检测视觉识别
-- [x] 鼠标、键盘自动化控制
-- [x] 桌面实时推流 RTMP/SRT/WebRTC
-- [x] 局域网节点发现与硬件监控
-- [x] 统一日志、异常错误处理体系
-- [x] 基础窗口UI管理
-- [x] 问答交互入口
+## 📚 Tech Stack
 
-## 🐛 已知问题 & 未完成模块
-- 高DPI显示器下屏幕坐标识别存在偏差
-- 切换显示器分辨率时，偶发画面闪烁
-- 目前仅在 Windows10/11 完成基础验证
-- 修改主题设置有概率卡死UI
-- 局域网算力调度：节点调度逻辑尚未完成
-- 视频剪辑模块：仅完成基础架构，功能不完善
+| Module | Technology | Notes |
+|--------|-----------|-------|
+| AI Agent | Python 3.13+ | Multimodal LLM driven, supports Ollama/OpenAI/NVIDIA |
+| Vision | Python + YOLOv8 | Screen capture, UI object detection, high-DPI support |
+| Desktop Control | Python (pyautogui/keyboard) | Cross-platform mouse/keyboard automation, 4-level permissions |
+| Video Streaming | Python + FFmpeg | RTMP/SRT/WebRTC, frame-difference compression |
+| UI | CustomTkinter + C++/OpenGL | Frosted glass/glow animations, dual implementations |
+| Cluster Computing | Python + UDP/Encryption | LAN node discovery, task scheduling, Fernet/RSA encryption |
+| Logging/Errors | Loguru/Rich | Unified error codes, tiered logging, full-link debug tracing |
+| Math Engine | C++17 + cppyy embedded Python | 44 node types (arithmetic/trig/matrix LU/statistics), pure-Python fallback |
 
-## 🛠️ 快速开始
+## 🚀 Implemented
+
+- [x] Multi-AI backend (Ollama, OpenAI-compatible API, NVIDIA), easy to extend
+- [x] Screen capture + YOLO object detection
+- [x] Mouse and keyboard automation
+- [x] Desktop real-time streaming (RTMP/SRT/WebRTC)
+- [x] LAN node discovery and hardware monitoring
+- [x] Unified logging and error handling
+- [x] Basic window UI management
+- [x] Q&A interaction entry
+
+## 🐛 Known Issues & Incomplete Modules
+
+- Screen coordinate recognition deviation on high-DPI displays
+- Occasional screen flicker when switching display resolution
+- Only basic validation on Windows 10/11
+- Theme switching may occasionally freeze the UI
+- LAN compute scheduling: node scheduling logic incomplete
+- Video editor: basic architecture only, features incomplete
+
+## 🛠️ Quick Start
+
 ```bash
-# 1. 克隆项目
+# 1. Clone
 git clone https://github.com/chen-xin-Liam/powerful-claw.git
 cd powerful-claw
-# 2. 安装依赖
+
+# 2. Install dependencies
 pip install -r requirements.txt
-# 3. 运行主程序
+
+# 3. Run
 python src/main.py
-# 4. 访问 WebUI（推流+剪辑）
-# 浏览器打开：http://localhost:8080
+
+# 4. Access WebUI (streaming + editing)
+# Open in browser: http://localhost:8080
+```
+
+## 📖 Documentation
+
+| Document | Language |
+|----------|----------|
+| [Installation Guide](docs/INSTALLATION.md) | English |
+| [Configuration Guide](docs/CONFIGURATION_EN.md) | English |
+| [User Manual](docs/USER_MANUAL.md) | English |
+| [Contributing Guide](CONTRIBUTING.md) | English |
+| [中文文档导览](docs/导览.md) | 中文 |
+
+## 🧪 Testing
+
+```bash
+# Full test suite
+pytest auto_tests/
+
+# Standalone runner (no pytest required)
+python auto_tests/run_tests.py
+
+# Performance benchmarks
+python benchmarks/perf_bench.py compute --iters 2000
+python benchmarks/perf_bench.py startup --runs 7
+```
+
+See [docs/TESTING_CN.md](docs/TESTING_CN.md) for details (Chinese).
+
+## 🔌 MCP Server Import
+
+Import standard MCP configurations (`.mcp.json`, Claude Desktop, VS Code):
+
+```bash
+# List available templates
+python -m src.services.mcp_importer --templates
+
+# Import from config file
+python -m src.services.mcp_importer path/to/mcp.json
+```
+
+## 📦 Build Executable
+
+```bash
+python scripts/build_exe.py
+```
+
+Output goes to `dist/AIComputerControl/`. See [docs/BUILD_CN.md](docs/BUILD_CN.md) for details (Chinese).
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding conventions, and how to submit changes.
+
+## 📄 License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
