@@ -4,7 +4,12 @@ import json
 import threading
 import os
 import sys
+import time
+import base64
+import io
+import cv2
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -13,6 +18,10 @@ from src.system.vision import VisionCapture
 from src.config.settings import settings
 
 from src.utils.logger import get_logger
+from src.utils import net_auth
+from src.utils.net_auth import authorize_websocket
+from websockets.http11 import Response
+from websockets.datastructures import Headers
 
 logger = get_logger(__name__)
 
@@ -27,8 +36,13 @@ class RCONBroadcastServer:
         self.clients = set()
         self.message_queue = asyncio.Queue()
     
-    async def _broadcast_handler(self, websocket, path):
-        """处理rcon客户端连接"""
+    async def _broadcast_handler(self, websocket):
+        """处理rcon客户端连接（回环放行，非回环须 Token）"""
+        if not await authorize_websocket(websocket):
+            logger.warning("RCON 鉴权失败，关闭连接")
+            await websocket.close(code=1008, reason="unauthorized")
+            return
+
         self.clients.add(websocket)
         logger.info(f"RCON客户端已连接: {websocket.remote_address}")
         
@@ -93,8 +107,12 @@ class RCONBroadcastServer:
     def stop(self):
         """停止RCON广播服务器"""
         self.is_running = False
-        if self.server:
-            self.server.close()
+        if self.server and getattr(self, "loop", None) is not None:
+            try:
+                fut = asyncio.run_coroutine_threadsafe(self.server.close(), self.loop)
+                fut.result(timeout=2)
+            except Exception:
+                pass
         logger.info("RCON广播服务器已停止")
 
 
@@ -933,8 +951,13 @@ class WebSocketServer:
         
         logger.info(f"网页文件已创建: {os.path.join(self.web_dir, 'index.html')}")
     
-    async def _handle_client(self, websocket, path):
-        """处理单个客户端连接"""
+    async def _handle_client(self, websocket):
+        """处理单个客户端连接（回环放行，非回环须 Token）"""
+        if not await authorize_websocket(websocket):
+            logger.warning("WebSocket 鉴权失败，关闭连接")
+            await websocket.close(code=1008, reason="unauthorized")
+            return
+
         self.clients.add(websocket)
         logger.info(f"客户端已连接: {websocket.remote_address}")
         
@@ -1015,149 +1038,279 @@ class WebSocketServer:
         response = f"收到消息: {message}\n\n这是一个模拟响应。在实际应用中，这里会调用AI服务生成回复。"
         return {'type': 'chat_response', 'content': response}
     
+    async def _execute_op(self, operation):
+        """经共享 SystemController 统一入口在线程中执行操作并映射为 WS 响应。"""
+        res = await asyncio.to_thread(
+            self.system_controller.execute_operation, operation)
+        if res.get("success"):
+            return {'type': 'success',
+                    'message': res.get('message', '操作成功')}
+        return {'type': 'error',
+                'message': res.get('message', '操作被拒绝'),
+                'data': res.get('data', {})}
+
     async def _handle_mouse_move(self, data):
-        """处理鼠标移动"""
-        x = data.get('x', 0)
-        y = data.get('y', 0)
-        self.system_controller.move_mouse(x, y)
-        return {'type': 'success', 'message': f'鼠标已移动到 ({x}, {y})'}
-    
+        """处理鼠标移动（绝对坐标）"""
+        return await self._execute_op({
+            'type': 'mouse_move',
+            'x': int(data.get('x', 0)),
+            'y': int(data.get('y', 0)),
+            'duration': data.get('duration', 0.3),
+        })
+
     async def _handle_mouse_move_relative(self, data):
         """处理鼠标相对移动"""
-        dx = data.get('dx', 0)
-        dy = data.get('dy', 0)
-        self.system_controller.move_mouse_relative(dx, dy)
-        return {'type': 'success', 'message': f'鼠标相对移动 ({dx}, {dy})'}
-    
+        return await self._execute_op({
+            'type': 'mouse_move_relative',
+            'dx': int(data.get('dx', 0)),
+            'dy': int(data.get('dy', 0)),
+        })
+
     async def _handle_mouse_click(self, data):
         """处理鼠标点击"""
-        button = data.get('button', 'left')
-        self.system_controller.click_mouse(button)
-        return {'type': 'success', 'message': f'{button}键点击'}
-    
+        return await self._execute_op({
+            'type': 'mouse_click',
+            'button': data.get('button', 'left'),
+        })
+
     async def _handle_mouse_scroll(self, data):
         """处理鼠标滚动"""
         direction = data.get('direction', 'up')
-        self.system_controller.scroll_mouse(direction)
-        return {'type': 'success', 'message': f'鼠标{direction}滚动'}
-    
+        clicks = 3 if direction == 'up' else -3
+        return await self._execute_op({
+            'type': 'mouse_scroll', 'clicks': clicks})
+
     async def _handle_mouse_drag(self, data):
-        """处理鼠标拖拽"""
-        action = data.get('action', 'start')
-        if action == 'start':
-            self.system_controller.start_drag()
-        else:
-            self.system_controller.stop_drag()
-        return {'type': 'success', 'message': f'拖拽{action}'}
+        """处理鼠标拖拽（按下/释放）"""
+        op_type = ('mouse_drag_start' if data.get('action', 'start') == 'start'
+                   else 'mouse_drag_stop')
+        return await self._execute_op({
+            'type': op_type, 'button': data.get('button', 'left')})
     
+    @staticmethod
+    def _split_hotkey(hotkey):
+        """将 'ctrl+c' / 'ctrl c' 形式归一化为按键列表。"""
+        return [k.strip() for k in str(hotkey).replace('+', ' ').split()
+                if k.strip()]
+
     async def _handle_keyboard_type(self, data):
         """处理键盘输入"""
-        text = data.get('text', '')
-        self.system_controller.type_text(text)
-        return {'type': 'success', 'message': f'已输入: {text}'}
-    
+        return await self._execute_op({
+            'type': 'keyboard_type',
+            'text': data.get('text', ''),
+        })
+
     async def _handle_keyboard_hotkey(self, data):
         """处理快捷键"""
-        hotkey = data.get('hotkey', '')
-        self.system_controller.press_hotkey(hotkey)
-        return {'type': 'success', 'message': f'已执行: {hotkey}'}
-    
+        return await self._execute_op({
+            'type': 'keyboard_hotkey',
+            'keys': self._split_hotkey(data.get('hotkey', '')),
+        })
+
     async def _handle_keyboard_press(self, data):
         """处理按键"""
-        key = data.get('key', '')
-        self.system_controller.press_key(key)
-        return {'type': 'success', 'message': f'已按下: {key}'}
+        return await self._execute_op({
+            'type': 'keyboard_press',
+            'key': data.get('key', ''),
+        })
     
     async def _handle_system_minimize(self, data):
         """处理窗口最小化"""
-        self.system_controller.minimize_window()
-        return {'type': 'success', 'message': '窗口已最小化'}
-    
+        return await self._execute_op({'type': 'window_minimize'})
+
     async def _handle_system_maximize(self, data):
         """处理窗口最大化"""
-        self.system_controller.maximize_window()
-        return {'type': 'success', 'message': '窗口已最大化'}
-    
+        return await self._execute_op({'type': 'window_maximize'})
+
     async def _handle_system_restore(self, data):
         """处理窗口还原"""
-        self.system_controller.restore_window()
-        return {'type': 'success', 'message': '窗口已还原'}
-    
+        return await self._execute_op({'type': 'window_restore'})
+
     async def _handle_system_close(self, data):
         """处理窗口关闭"""
-        self.system_controller.close_window()
-        return {'type': 'success', 'message': '窗口已关闭'}
-    
+        return await self._execute_op({'type': 'window_close'})
+
     async def _handle_system_lock(self, data):
         """处理锁屏"""
-        self.system_controller.lock_screen()
-        return {'type': 'success', 'message': '屏幕已锁定'}
-    
+        return await self._execute_op({'type': 'system_lock'})
+
     async def _handle_system_shutdown(self, data):
         """处理关机"""
-        self.system_controller.shutdown()
-        return {'type': 'success', 'message': '系统即将关机'}
-    
+        return await self._execute_op({'type': 'system_shutdown'})
+
     async def _handle_system_restart(self, data):
         """处理重启"""
-        self.system_controller.restart()
-        return {'type': 'success', 'message': '系统即将重启'}
-    
+        return await self._execute_op({'type': 'system_restart'})
+
     async def _handle_system_sleep(self, data):
         """处理睡眠"""
-        self.system_controller.sleep()
-        return {'type': 'success', 'message': '系统即将进入睡眠'}
-    
+        return await self._execute_op({'type': 'system_sleep'})
+
     async def _handle_system_volume(self, data):
         """处理音量设置"""
-        volume = data.get('volume', 50)
-        self.system_controller.set_volume(volume)
-        return {'type': 'success', 'message': f'音量已设置为 {volume}%'}
-    
+        return await self._execute_op({
+            'type': 'volume_set',
+            'volume': int(data.get('volume', 50)),
+        })
+
     async def _handle_system_mute(self, data):
         """处理静音"""
-        self.system_controller.toggle_mute()
-        return {'type': 'success', 'message': '静音状态已切换'}
-    
+        return await self._execute_op({'type': 'mute_toggle'})
+
     async def _handle_system_status(self, data):
         """处理系统状态查询"""
-        status = self.system_controller.get_system_status()
-        return {'type': 'system_status', 'data': status}
+        res = await asyncio.to_thread(
+            self.system_controller.execute_operation,
+            {'type': 'get_system_info'})
+        if res.get('success'):
+            return {'type': 'system_status', 'data': res.get('data', {})}
+        return {'type': 'error',
+                'message': res.get('message', '获取系统状态失败'),
+                'data': res.get('data', {})}
     
+    @staticmethod
+    def _normalize_region(region):
+        """将区域描述归一化为 PIL bbox (left, top, right, bottom)，全屏返回 None。"""
+        if region in (None, '', 'full', 'all'):
+            return None
+        if isinstance(region, dict):
+            x = int(region.get('x', 0))
+            y = int(region.get('y', 0))
+            return (x, y,
+                    x + int(region.get('width', 0)),
+                    y + int(region.get('height', 0)))
+        if isinstance(region, (list, tuple)) and len(region) == 4:
+            return tuple(int(v) for v in region)
+        return None
+
+    @staticmethod
+    def _pil_to_data_url(img, fmt='PNG'):
+        """PIL 图像 → data URL（base64）。"""
+        buf = io.BytesIO()
+        img.save(buf, format=fmt)
+        return 'data:image/{};base64,{}'.format(
+            fmt.lower(),
+            base64.b64encode(buf.getvalue()).decode('ascii'))
+
+    @staticmethod
+    def _frame_to_data_url(frame):
+        """OpenCV BGR 帧 → JPEG data URL（base64）。"""
+        ok, buf = cv2.imencode('.jpg', frame)
+        if not ok:
+            raise RuntimeError('帧 JPEG 编码失败')
+        return 'data:image/jpeg;base64,' + base64.b64encode(
+            buf.tobytes()).decode('ascii')
+
+    def _vision_denied(self):
+        if self.system_controller.permissions.screen_capture:
+            return None
+        return {'type': 'error', 'message': '权限不足：屏幕截图'}
+
     async def _handle_vision_screenshot(self, data):
-        """处理截图"""
-        region = data.get('region', 'full')
-        screenshot_data = self.vision_capture.take_screenshot(region)
-        return {'type': 'screenshot', 'data': screenshot_data}
-    
+        """处理截图：返回 base64 data URL"""
+        denied = self._vision_denied()
+        if denied:
+            return denied
+        region = self._normalize_region(data.get('region', 'full'))
+        img = await asyncio.to_thread(
+            self.vision_capture.capture_screen, region)
+        if img is None:
+            return {'type': 'error', 'message': '截图失败'}
+        data_url = await asyncio.to_thread(self._pil_to_data_url, img, 'PNG')
+        return {'type': 'screenshot', 'data': data_url}
+
     async def _handle_vision_save_screenshot(self, data):
         """处理保存截图"""
-        self.vision_capture.save_screenshot()
-        return {'type': 'success', 'message': '截图已保存'}
-    
+        denied = self._vision_denied()
+        if denied:
+            return denied
+        region = self._normalize_region(data.get('region', 'full'))
+        target = data.get('path')
+        if target:
+            os.makedirs(os.path.dirname(os.path.abspath(target)),
+                        exist_ok=True)
+        else:
+            save_dir = os.path.join(os.getcwd(), 'screenshots')
+            os.makedirs(save_dir, exist_ok=True)
+            target = os.path.join(
+                save_dir,
+                f"screenshot_{time.strftime('%Y%m%d_%H%M%S')}.png")
+        ok = await asyncio.to_thread(
+            self.vision_capture.save_screenshot, target, region)
+        if ok:
+            return {'type': 'success',
+                    'message': f'截图已保存: {target}'}
+        return {'type': 'error', 'message': '截图保存失败'}
+
     async def _handle_vision_camera_toggle(self, data):
         """处理摄像头开关"""
-        self.vision_capture.toggle_camera()
-        return {'type': 'success', 'message': '摄像头状态已切换'}
-    
+        denied = self._vision_denied()
+        if denied:
+            return denied
+        if self.vision_capture.camera is None:
+            index = int(data.get('camera_index', 0))
+            ok = await asyncio.to_thread(
+                self.vision_capture.initialize_camera, index)
+            return {'type': 'success',
+                    'message': '摄像头已开启' if ok else '摄像头开启失败'}
+        await asyncio.to_thread(self.vision_capture.release_camera)
+        return {'type': 'success', 'message': '摄像头已关闭'}
+
     async def _handle_vision_camera_capture(self, data):
-        """处理拍照"""
-        photo_data = self.vision_capture.capture_photo()
-        return {'type': 'screenshot', 'data': photo_data}
+        """处理拍照：返回 base64 JPEG data URL"""
+        denied = self._vision_denied()
+        if denied:
+            return denied
+        frame = await asyncio.to_thread(self.vision_capture.capture_camera)
+        if frame is None:
+            return {'type': 'error', 'message': '拍照失败'}
+        data_url = await asyncio.to_thread(self._frame_to_data_url, frame)
+        return {'type': 'screenshot', 'data': data_url}
     
-    async def _http_handler(self, path, request_headers):
-        """处理HTTP请求，提供静态文件服务"""
-        if path == "/" or path == "/index.html":
+    async def _http_handler(self, connection, request):
+        """升级前 HTTP 钩子（websockets 17 新签名）：提供网页控制端静态文件。
+
+        鉴权策略与 WS 一致：回环放行，非回环须 Bearer / ?token=。
+        """
+        # WebSocket 升级请求直接放行到握手（返回 None），鉴权由 _handle_client 完成；
+        # 本钩子只处理普通浏览器的静态页 GET
+        if request.headers.get("Upgrade", "").strip().lower() == "websocket":
+            return None
+
+        client_ip = connection.remote_address[0] if connection.remote_address else ""
+        auth = request.headers.get("Authorization", "")
+        token = auth[7:].strip() if auth.startswith("Bearer ") else None
+        if not token:
+            qvals = parse_qs(urlparse(request.path).query).get("token")
+            if qvals:
+                token = qvals[0]
+
+        if not (net_auth.is_loopback(client_ip) or (token and net_auth.token_valid(token))):
+            return Response(
+                401, "Unauthorized",
+                Headers([
+                    ("Content-Type", "application/json"),
+                    ("WWW-Authenticate", 'Bearer realm="pcnative"'),
+                ]),
+                b'{"error":"unauthorized"}',
+            )
+
+        route = urlparse(request.path).path
+        if route == "/" or route == "/index.html":
             file_path = os.path.join(self.web_dir, "index.html")
             if os.path.exists(file_path):
                 with open(file_path, "rb") as f:
                     content = f.read()
-                return (
-                    200,
-                    [("Content-Type", "text/html; charset=utf-8")],
+                return Response(
+                    200, "OK",
+                    Headers([
+                        ("Content-Type", "text/html; charset=utf-8"),
+                        ("Content-Length", str(len(content))),
+                    ]),
                     content,
                 )
-        return (404, [("Content-Type", "text/plain")], b"Not Found")
+        return Response(404, "Not Found",
+                        Headers([("Content-Type", "text/plain")]), b"Not Found")
     
     async def _start_server(self):
         """启动WebSocket服务器（同时支持HTTP静态文件服务）"""
@@ -1176,6 +1329,7 @@ class WebSocketServer:
         """在子线程中运行服务器"""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        self.loop = loop
         loop.run_until_complete(self._start_server())
     
     def start(self):
@@ -1203,8 +1357,12 @@ class WebSocketServer:
         self.rcon_server.stop()
         
         # 停止主WebSocket服务器
-        if self.server:
-            self.server.close()
+        if self.server and getattr(self, "loop", None) is not None:
+            try:
+                fut = asyncio.run_coroutine_threadsafe(self.server.close(), self.loop)
+                fut.result(timeout=2)
+            except Exception:
+                pass
         logger.info("WebSocket服务器已停止")
     
     def broadcast_rcon(self, message_type, content):

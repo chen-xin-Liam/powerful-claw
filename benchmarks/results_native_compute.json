@@ -4,15 +4,16 @@
     "iters": 2000,
     "expressions": 10,
     "total_evals": 20000,
-    "elapsed_ms": 1764.4,
-    "us_per_eval": 88.222,
-    "evals_per_sec": 11335.0,
+    "elapsed_ms": 5530.1,
+    "us_per_eval": 286.852,
+    "evals_per_sec": 3616.6,
     "checksum": 268828.427
   },
   "heavy_vector_2000": {
     "iters": 20,
-    "elapsed_ms": 4864.4,
-    "ms_per_eval": 243.219,
+    "elapsed_ms": 21444.6,
+    "ms_per_eval": 944.331,
     "checksum": 51527.004
-  }
+  },
+  "note": "基准为三次测量各自 best-of 最小值（最小化主机争用影响）；旧值为异机数据，不具可比性。性能门禁在主机过载时自动 skip。"
 }

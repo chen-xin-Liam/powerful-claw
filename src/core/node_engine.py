@@ -45,7 +45,7 @@ struct Port {
     std::vector<double> v;
     std::vector<std::vector<double>> m;
     std::string name;
-    Port(PortType t, std::string n) : type(t), name(n), s(0) {}
+    Port(PortType t, std::string n) : type(t), s(0), v(), m(), name(n) {}
 };
 
 class Node {

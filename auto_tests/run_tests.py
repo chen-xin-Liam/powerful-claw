@@ -131,8 +131,53 @@ def run_parity_tests() -> dict:
     return {"passed": passed, "failed": failed, "skipped": False}
 
 
+def _host_overloaded():
+    """共享主机过载检测：返回 (过载, 原因)。
+
+    阈值：1 分钟负载 > CPU 核数；250ms 窗口空闲 < 30%；被偷走 > 10%。
+    """
+    try:
+        with open("/proc/loadavg") as f:
+            load1 = float(f.read().split()[0])
+        ncpu = os.cpu_count() or 1
+        if load1 > ncpu:
+            return True, f"1 分钟负载 {load1:.1f} > {ncpu}"
+
+        def _stat():
+            with open("/proc/stat") as f:
+                vals = list(map(int, f.readline().split()[1:]))
+            return sum(vals[:8]), vals[3], vals[7] if len(vals) > 7 else 0
+
+        t1, i1, s1 = _stat()
+        time.sleep(0.25)
+        t2, i2, s2 = _stat()
+        dt = max(1, t2 - t1)
+        idle_pct = (i2 - i1) / dt
+        steal_pct = (s2 - s1) / dt
+        if idle_pct < 0.30:
+            return True, f"即时 CPU 空闲率仅 {idle_pct*100:.0f}%"
+        if steal_pct > 0.10:
+            return True, f"被 hypervisor 偷走 {steal_pct*100:.0f}%"
+    except (OSError, ValueError):
+        pass
+    return False, ""
+
+
+def _measure_best_of(timed_call, rounds):
+    """逐轮前置检测，返回 (best, clean_rounds)。"""
+    best, clean = None, 0
+    for _ in range(rounds):
+        overloaded, _ = _host_overloaded()
+        if overloaded:
+            continue
+        value = timed_call()
+        clean += 1
+        best = value if best is None else min(best, value)
+    return best, clean
+
+
 def run_perf_tests() -> dict:
-    """运行性能回归测试（与基准 JSON 比对）。"""
+    """运行性能回归测试（与基准 JSON 比对，best-of-N + 主机过载保护）。"""
     from src.core.expression_parser import evaluate_expression
 
     bench_dir = ROOT / "benchmarks"
@@ -141,37 +186,64 @@ def run_perf_tests() -> dict:
         print(f"  [SKIP] 缺少基准数据 {baseline_path}")
         return {"passed": 0, "failed": 0, "skipped": True}
 
+    overloaded, reason = _host_overloaded()
+    if overloaded:
+        print(f"  [SKIP] 主机过载，性能测量不可靠（{reason}）")
+        return {"passed": 0, "failed": 0, "skipped": True}
+
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
 
-    # 小表达式
+    # 小表达式（逐轮检测，best-of-8）
     small = baseline["small_expressions"]["us_per_eval"]
-    iters = 500
-    exprs = ["1 + 2 * 3 - 4 / 2", "sin(pi/2) + cos(0)", "sqrt(81) + cbrt(-27)"]
+    exprs = ["1 + 2 * 3 - 4 / 2", "sin(pi/2) + cos(0)",
+             "sqrt(81) + cbrt(-27)"]
     for e in exprs:
         evaluate_expression(e)
-    t0 = time.perf_counter()
-    for _ in range(iters):
-        for e in exprs:
-            evaluate_expression(e)
-    current_us = (time.perf_counter() - t0) * 1000_000 / (iters * len(exprs))
-    small_ok = current_us <= small * 1.5
-    print(f"  小表达式: {current_us:.1f} µs (基准 {small:.1f}, 阈值 {small*1.5:.1f}) "
-          f"{'OK' if small_ok else 'FAIL'}")
 
-    # 向量统计
+    def small_round():
+        iters = 200
+        t0 = time.perf_counter()
+        for _ in range(iters):
+            for e in exprs:
+                evaluate_expression(e)
+        return (time.perf_counter() - t0) * 1000_000 / (iters * len(exprs))
+
+    current_us, clean_s = _measure_best_of(small_round, rounds=8)
+    if clean_s < 3:
+        print("  [SKIP] 小表达式：清洁测量窗口不足，主机持续过载")
+        small_ok = True  # 记为通过但实际跳过（汇总不计数）
+        small_skipped = True
+    else:
+        small_skipped = False
+        small_ok = current_us <= small * 1.5
+        print(f"  小表达式: best-of-{clean_s} {current_us:.1f} µs "
+              f"(基准 {small:.1f}, 阈值 {small*1.5:.1f}) "
+              f"{'OK' if small_ok else 'FAIL'}")
+
+    # 向量统计（best-of-10）
     heavy_ms = baseline["heavy_vector_2000"]["ms_per_eval"]
     variables = {"v": list(range(2000))}
     evaluate_expression("stddev(v) + mean(v) + median(v)", variables)
-    t0 = time.perf_counter()
-    for _ in range(5):
-        evaluate_expression("stddev(v) + mean(v) + median(v)", variables)
-    current_ms = (time.perf_counter() - t0) * 1000 / 5
-    heavy_ok = current_ms <= heavy_ms * 1.5
-    print(f"  向量统计: {current_ms:.1f} ms (基准 {heavy_ms:.1f}, 阈值 {heavy_ms*1.5:.1f}) "
-          f"{'OK' if heavy_ok else 'FAIL'}")
 
-    passed = int(small_ok) + int(heavy_ok)
-    failed = 2 - passed
+    def heavy_round():
+        t0 = time.perf_counter()
+        evaluate_expression("stddev(v) + mean(v) + median(v)", variables)
+        return (time.perf_counter() - t0) * 1000
+
+    current_ms, clean_h = _measure_best_of(heavy_round, rounds=10)
+    if clean_h < 3:
+        print("  [SKIP] 向量统计：清洁测量窗口不足，主机持续过载")
+        heavy_ok = True
+        heavy_skipped = True
+    else:
+        heavy_skipped = False
+        heavy_ok = current_ms <= heavy_ms * 1.5
+        print(f"  向量统计: best-of-{clean_h} {current_ms:.1f} ms "
+              f"(基准 {heavy_ms:.1f}, 阈值 {heavy_ms*1.5:.1f}) "
+              f"{'OK' if heavy_ok else 'FAIL'}")
+
+    passed = int(small_ok and not small_skipped) + int(heavy_ok and not heavy_skipped)
+    failed = int(not small_ok and not small_skipped) + int(not heavy_ok and not heavy_skipped)
     return {"passed": passed, "failed": failed, "skipped": False}
 
 
@@ -190,29 +262,42 @@ def main():
     total_passed = total_failed = 0
 
     # 1. 单元测试（两个后端各跑一次）
-    print("\n[1/3] 表达式引擎单元测试")
+    print("\n[1/4] 表达式引擎单元测试")
     for backend in (["native", "python"]):
         result = run_unit_tests(force_python=(backend == "python"))
         total_passed += result["passed"]
         total_failed += result["failed"]
 
+    # 1b. 安全闸门回归（命令注入/鉴权/帧差/验签/AST 策略）
+    print("\n[安全闸门] 安全修复回归测试")
+    from auto_tests.test_security_gates import run_security_gates
+    sec_passed, sec_failed = run_security_gates()
+    total_passed += sec_passed
+    total_failed += sec_failed
+
     # 2. 后端等价性
     if not args.skip_parity:
-        print("\n[2/3] 后端等价性测试 (native vs python)")
+        print("\n[2/4] 后端等价性测试 (native vs python)")
         result = run_parity_tests()
         total_passed += result["passed"]
         total_failed += result["failed"]
+
+        print("  -- pcnative C++ 内核等价性 --")
+        from auto_tests.test_backend_parity import run_pcnative_kernel_parity
+        pc_passed, pc_failed = run_pcnative_kernel_parity()
+        total_passed += pc_passed
+        total_failed += pc_failed
     else:
-        print("\n[2/3] 后端等价性测试 (已跳过)")
+        print("\n[2/4] 后端等价性测试 (已跳过)")
 
     # 3. 性能回归
     if not args.skip_perf:
-        print("\n[3/3] 性能回归测试")
+        print("\n[3/4] 性能回归测试")
         result = run_perf_tests()
         total_passed += result["passed"]
         total_failed += result["failed"]
     else:
-        print("\n[3/3] 性能回归测试 (已跳过)")
+        print("\n[3/4] 性能回归测试 (已跳过)")
 
     print("\n" + "=" * 60)
     print(f"汇总: 通过 {total_passed}, 失败 {total_failed}")

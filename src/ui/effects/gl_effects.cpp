@@ -6,8 +6,10 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include <gl/GL.h>
+#include <GL/gl.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "opengl32.lib")
+#endif
 #else
 #include <GL/gl.h>
 #include <GL/glu.h>

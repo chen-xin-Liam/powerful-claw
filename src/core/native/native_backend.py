@@ -56,15 +56,29 @@ const char* nc_last_error(void);
 
 
 def _dll_path():
+    if sys.platform == "darwin":
+        lib_names = ["libnodecalc_native.dylib", "nodecalc_native.dylib"]
+    elif os.name == "nt":
+        lib_names = ["nodecalc_native.dll"]
+    else:
+        lib_names = ["libnodecalc_native.so", "nodecalc_native.so"]
+
+    # 显式覆盖
+    override = os.environ.get("NODECALC_LIB")
+    if override and os.path.exists(override):
+        return override
+
     if getattr(sys, "frozen", False):  # PyInstaller 打包后
         base = getattr(sys, "_MEIPASS", _HERE)
-        candidates = [os.path.join(base, "nodecalc_native.dll"),
-                      os.path.join(base, "src", "core", "native", "nodecalc_native.dll")]
+        search_dirs = [base, os.path.join(base, "src", "core", "native")]
     else:
-        candidates = [os.path.join(_HERE, "nodecalc_native.dll")]
-    for p in candidates:
-        if os.path.exists(p):
-            return p
+        search_dirs = [_HERE, os.path.join(_HERE, "build")]
+
+    for d in search_dirs:
+        for name in lib_names:
+            p = os.path.join(d, name)
+            if os.path.exists(p):
+                return p
     return None
 
 

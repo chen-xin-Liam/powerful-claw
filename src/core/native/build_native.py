@@ -97,6 +97,9 @@ def build_dll(gpp, profile=False):
         flags.append("-pg")
     if platform.system() == "Windows":
         flags += ["-static", "-static-libgcc", "-static-libstdc++"]
+    else:
+        # Linux/macOS 生成位置无关代码（嵌入式实现含 thread_local）
+        flags.append("-fPIC")
     cmd = [gpp] + flags + [CAPI_PATH, "-o", out]
     run(cmd)
     print(f"[2/3] 已生成 {os.path.relpath(out, HERE)}")

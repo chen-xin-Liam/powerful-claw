@@ -3,6 +3,7 @@ AIAgent - AI 代理系统
 让 AI 知道自己能使用什么工具，并智能选择调用
 """
 
+import ast
 import json
 import inspect
 from typing import List, Dict, Any, Callable, Optional, Type
@@ -13,6 +14,128 @@ from src.services.python_library_tool import PythonLibraryTool
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+# ==================== AST 安全策略 ====================
+
+# 表达式模式允许的节点类型（纯算术/比较/布尔运算）
+_ALLOWED_EXPR_NODES = (
+    ast.Expression,
+    ast.Constant,
+    ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare,
+    ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
+    ast.USub, ast.UAdd, ast.Not, ast.And, ast.Or,
+    ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
+    ast.Is, ast.IsNot, ast.In, ast.NotIn,
+    ast.Load,
+)
+
+# 表达式中允许的标识符（仅布尔/空值关键字，解析为 Name 节点）
+_SAFE_EXPR_NAMES = {"True", "False", "None"}
+
+
+def validate_expression(source: str) -> None:
+    """以 AST 白名单校验表达式源码。
+
+    仅允许字面量与算术/比较/布尔运算；任何属性访问、函数调用、
+    其他标识符（含 ``__import__`` 等）均抛出 ValueError。
+    """
+    tree = ast.parse(source, mode="eval")
+    for node in ast.walk(tree):
+        if isinstance(node, _ALLOWED_EXPR_NODES):
+            continue
+        if isinstance(node, ast.Name):
+            if node.id in _SAFE_EXPR_NAMES:
+                continue
+            raise ValueError(f"禁止使用标识符: {node.id}")
+        if isinstance(node, ast.Attribute):
+            raise ValueError(f"禁止属性访问: .{node.attr}")
+        if isinstance(node, ast.Call):
+            raise ValueError("禁止函数调用")
+        raise ValueError(f"禁止的语法: {type(node).__name__}")
+
+    # CPU 型 DoS 防护：指数不允许再嵌套幂运算，并限制超大整数指数
+    pow_nodes = [n for n in ast.walk(tree) if isinstance(n, ast.BinOp)
+                 and isinstance(n.op, ast.Pow)]
+    if len(pow_nodes) > 3:
+        raise ValueError("幂运算嵌套层数过多")
+    for node in pow_nodes:
+        if any(isinstance(sub, ast.BinOp) and isinstance(sub.op, ast.Pow)
+               for sub in ast.walk(node.right)):
+            raise ValueError("幂运算指数不允许再嵌套幂运算")
+        if isinstance(node.right, ast.Constant) and isinstance(node.right.value, int) \
+                and abs(node.right.value) > 100_000:
+            raise ValueError("幂运算指数过大")
+
+
+def safe_eval_expression(source: str):
+    """校验后在无内置环境中求值表达式。"""
+    validate_expression(source)
+    safe_globals = {
+        "__builtins__": {},
+        "True": True,
+        "False": False,
+        "None": None,
+    }
+    return eval(compile(source, "<safe-expression>", "eval"),
+                safe_globals, {})
+
+
+# 受控代码中禁止引用的危险内置（即使不直接调用、仅别名化也拒绝）
+_CODE_FORBIDDEN_NAMES = {
+    "eval", "exec", "compile", "open", "__import__",
+    "getattr", "setattr", "delattr",
+    "globals", "locals", "vars", "breakpoint", "exit", "quit",
+    "input",
+}
+
+# 受控代码中允许直接按名调用的内置函数白名单
+_CODE_ALLOWED_CALLS = {
+    "print", "len", "range", "str", "int", "float", "bool", "list", "dict",
+    "set", "tuple", "bytes", "bytearray", "sorted", "min", "max", "sum",
+    "abs", "round", "enumerate", "zip", "map", "filter", "any", "all",
+    "repr", "format", "chr", "ord", "hex", "oct", "bin", "hash", "iter",
+    "next", "reversed", "slice", "frozenset", "divmod", "pow",
+    "isinstance", "issubclass", "callable",
+}
+
+
+def validate_code(source: str) -> None:
+    """语句级代码静态策略（用于受控 Python 执行器）。
+
+    采用"逃逸面拒绝 + 调用白名单"策略（执行本身仍在独立子进程中）：
+    - import 语句 / __import__ 调用 → 拒绝；
+    - 双下划线属性或标识符（``__class__``/``__subclasses__``/
+      ``__globals__``/``__builtins__`` 等沙箱逃逸面）→ 拒绝；
+    - 字符串常量中含 ``__`` → 拒绝（防止字符串拼接构造魔术属性）；
+    - eval/exec/compile/open/getattr 等危险内置 → 拒绝；
+    - 直接按名调用的函数必须在 :data:`_CODE_ALLOWED_CALLS` 白名单内
+      （防止把危险函数别名化后间接调用）。
+    """
+    tree = ast.parse(source, mode="exec")
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            raise ValueError("禁止在受控执行中使用 import")
+        if isinstance(node, ast.Name):
+            if node.id in _CODE_FORBIDDEN_NAMES:
+                raise ValueError(f"禁止引用危险内置: {node.id}")
+            if node.id.startswith("__"):
+                raise ValueError(f"禁止使用特殊标识符: {node.id}")
+        if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+            raise ValueError(f"禁止访问特殊属性: .{node.attr}")
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) \
+                and "__" in node.value:
+            raise ValueError("字符串常量中禁止包含双下划线")
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name):
+                if func.id == "__import__":
+                    raise ValueError("禁止调用 __import__")
+                if func.id not in _CODE_ALLOWED_CALLS:
+                    raise ValueError(f"禁止调用函数: {func.id}")
+            elif not isinstance(func, ast.Attribute):
+                raise ValueError("禁止间接函数调用")
+
 
 
 @dataclass
@@ -314,23 +437,15 @@ class CommandTool(BaseTool):
     
     @classmethod
     def execute(cls, command: str, cwd: str = None) -> str:
-        import subprocess
-        
         if not command:
             return "错误：请提供命令"
-        
+
+        from src.services.command_executor import command_executor
         try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                timeout=60
-            )
-            return f"STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}\n\n返回码: {result.returncode}"
-        except subprocess.TimeoutExpired:
-            return "命令执行超时"
+            stdout, stderr, returncode = command_executor.run_simple_command(
+                command, timeout=60, cwd=cwd)
+            return (f"STDOUT:\n{stdout}\n\nSTDERR:\n{stderr}\n\n"
+                    f"返回码: {returncode}")
         except Exception as e:
             return f"执行失败: {str(e)}"
 
@@ -415,27 +530,32 @@ class PythonExecutorTool(BaseTool):
     def execute(cls, code: str, timeout: int = 30) -> str:
         if not code:
             return "错误：请提供要执行的 Python 代码"
-        
+
+        try:
+            # 静态策略：拒绝 import 与沙箱逃逸面
+            validate_code(code)
+        except ValueError as e:
+            return f"代码被拒绝: {e}"
+
         try:
             import subprocess
             import sys
-            
-            # 使用 subprocess 执行 Python 代码，避免安全风险
+
+            # 在独立子进程中执行（静态策略通过后）
             result = subprocess.run(
                 [sys.executable, '-c', code],
                 capture_output=True,
                 text=True,
-                timeout=timeout,
-                cwd=os.getcwd()
+                timeout=timeout
             )
-            
+
             output = ""
             if result.stdout:
                 output += f"STDOUT:\n{result.stdout}\n\n"
             if result.stderr:
                 output += f"STDERR:\n{result.stderr}\n\n"
             output += f"返回码: {result.returncode}"
-            
+
             return output
         except subprocess.TimeoutExpired:
             return f"执行超时（{timeout}秒）"
@@ -454,11 +574,13 @@ class PythonEvalTool(BaseTool):
     def execute(cls, expression: str) -> str:
         if not expression:
             return "错误：请提供要计算的表达式"
-        
+
         try:
-            # 使用 eval 计算表达式（限制在安全范围内）
-            result = eval(expression, {}, {})
+            # AST 白名单校验后在无内置环境中求值
+            result = safe_eval_expression(expression)
             return f"结果: {result}"
+        except ValueError as e:
+            return f"表达式被拒绝: {e}"
         except Exception as e:
             return f"计算失败: {str(e)}"
 
@@ -474,31 +596,21 @@ class CMDTool(BaseTool):
     
     @classmethod
     def execute(cls, command: str, cwd: str = None, timeout: int = 60) -> str:
-        import subprocess
-        
         if not command:
             return "错误：请提供命令"
-        
+
+        from src.services.command_executor import command_executor
         try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                timeout=timeout
-            )
-            
+            stdout, stderr, returncode = command_executor.run_simple_command(
+                command, timeout=timeout, cwd=cwd)
+
             output = ""
-            if result.stdout:
-                output += f"STDOUT:\n{result.stdout}\n\n"
-            if result.stderr:
-                output += f"STDERR:\n{result.stderr}\n\n"
-            output += f"返回码: {result.returncode}"
-            
+            if stdout:
+                output += f"STDOUT:\n{stdout}\n\n"
+            if stderr:
+                output += f"STDERR:\n{stderr}\n\n"
+            output += f"返回码: {returncode}"
             return output
-        except subprocess.TimeoutExpired:
-            return f"命令执行超时（{timeout}秒）"
         except Exception as e:
             return f"执行失败: {str(e)}"
 

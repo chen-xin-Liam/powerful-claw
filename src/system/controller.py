@@ -3,6 +3,7 @@ import pyautogui
 import pyperclip
 import keyboard
 import subprocess
+import sys
 import requests
 import time
 import json
@@ -87,7 +88,9 @@ class SystemController:
                 mouse_click=True,
                 mouse_drag=False,
                 keyboard_input=True,
-                keyboard_hotkey=True,
+                # LIMITED 仅允许文本输入；热键可触发系统级快捷操作
+                # （Alt+F4/Win+R 等），故不予放行
+                keyboard_hotkey=False,
                 execute_command=False,
                 browser_access=False,
                 screen_capture=True,
@@ -243,9 +246,13 @@ class SystemController:
             try:
                 keyboard.write(text, delay=interval)
             except Exception:
-                pyperclip.copy(text)
-                keyboard.press_and_release('ctrl+v')
-                time.sleep(0.3)
+                # Linux 非 root 无 /dev/uinput：退到 X 层 pyautogui
+                try:
+                    pyautogui.typewrite(text, interval=interval)
+                except Exception:
+                    pyperclip.copy(text)
+                    pyautogui.hotkey('ctrl', 'v')
+                    time.sleep(0.3)
             result["success"] = True
             result["message"] = "文本输入成功"
             result["data"] = {"text": text, "length": len(text)}
@@ -260,7 +267,10 @@ class SystemController:
             result["message"] = "权限不足：按键"
             return result
         try:
-            keyboard.press_and_release(key)
+            try:
+                keyboard.press_and_release(key)
+            except Exception:
+                pyautogui.press(key)
             result["success"] = True
             result["message"] = f"按键成功: {key}"
             result["data"] = {"key": key}
@@ -275,7 +285,10 @@ class SystemController:
             result["message"] = "权限不足：组合键"
             return result
         try:
-            keyboard.press_and_release('+'.join(keys))
+            try:
+                keyboard.press_and_release('+'.join(keys))
+            except Exception:
+                pyautogui.hotkey(*keys)
             result["success"] = True
             result["message"] = f"组合键成功: {'+'.join(keys)}"
             result["data"] = {"keys": list(keys)}
@@ -505,6 +518,175 @@ class SystemController:
         except Exception as e:
             return {"success": False, "message": f"摄像头分析失败: {str(e)}", "data": {"error": str(e)}}
 
+    # ================= 窗口 / 系统 / 扩展操作 =================
+
+    _WINDOW_HOTKEYS = {
+        "win32": {"minimize": ("win", "down"), "maximize": ("win", "up"),
+                  "restore": ("win", "up"), "close": ("alt", "f4")},
+        "darwin": {"minimize": ("command", "m"),
+                   "maximize": ("command", "ctrl", "f"),
+                   "restore": ("command", "ctrl", "f"),
+                   "close": ("command", "w")},
+        "linux": {"minimize": ("super", "h"), "maximize": ("super", "up"),
+                  "restore": ("super", "down"), "close": ("alt", "f4")},
+    }
+
+    _POWER_COMMANDS = {
+        "win32": {
+            "shutdown": ["shutdown", "/s", "/t", "0"],
+            "restart": ["shutdown", "/r", "/t", "0"],
+            "lock": ["rundll32.exe", "user32.dll,LockWorkStation"],
+            "sleep": ["shutdown", "/h"],
+        },
+        "linux": {
+            "shutdown": ["systemctl", "poweroff"],
+            "restart": ["systemctl", "reboot"],
+            "lock": ["loginctl", "lock-session"],
+            "sleep": ["systemctl", "suspend"],
+        },
+        "darwin": {
+            "shutdown": ["osascript", "-e",
+                         'tell application "System Events" to shut down'],
+            "restart": ["osascript", "-e",
+                        'tell application "System Events" to restart'],
+            "lock": ["osascript", "-e",
+                     'tell application "System Events" to keystroke "q" '
+                     'using {control down, command down}'],
+            "sleep": ["pmset", "sleepnow"],
+        },
+    }
+
+    def mouse_move_relative(self, dx: int, dy: int,
+                            duration: float = 0.1) -> Dict[str, Any]:
+        """相对当前位置移动鼠标。"""
+        if not self.permissions.mouse_move:
+            return {"success": False, "message": "权限不足：鼠标移动", "data": {}}
+        try:
+            pyautogui.moveRel(int(dx), int(dy), duration=float(duration))
+            return {"success": True,
+                    "message": f"鼠标相对移动 ({dx}, {dy})", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"鼠标移动失败: {e}",
+                    "data": {"error": str(e)}}
+
+    def mouse_drag_start(self, button: str = "left") -> Dict[str, Any]:
+        if not self.permissions.mouse_drag:
+            return {"success": False, "message": "权限不足：鼠标拖拽", "data": {}}
+        try:
+            pyautogui.mouseDown(button=button)
+            return {"success": True, "message": "拖拽开始", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"拖拽开始失败: {e}",
+                    "data": {"error": str(e)}}
+
+    def mouse_drag_stop(self, button: str = "left") -> Dict[str, Any]:
+        if not self.permissions.mouse_drag:
+            return {"success": False, "message": "权限不足：鼠标拖拽", "data": {}}
+        try:
+            pyautogui.mouseUp(button=button)
+            return {"success": True, "message": "拖拽结束", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"拖拽结束失败: {e}",
+                    "data": {"error": str(e)}}
+
+    def _window_action(self, action: str) -> Dict[str, Any]:
+        if not self.permissions.window_control:
+            return {"success": False, "message": "权限不足：窗口控制", "data": {}}
+        try:
+            keys = self._WINDOW_HOTKEYS.get(
+                sys.platform, self._WINDOW_HOTKEYS["linux"])[action]
+            pyautogui.hotkey(*keys)
+            return {"success": True,
+                    "message": f"窗口操作已执行: {action}", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"窗口操作失败: {e}",
+                    "data": {"error": str(e)}}
+
+    def window_minimize(self):
+        return self._window_action("minimize")
+
+    def window_maximize(self):
+        return self._window_action("maximize")
+
+    def window_restore(self):
+        return self._window_action("restore")
+
+    def window_close(self):
+        return self._window_action("close")
+
+    def _power_action(self, action: str) -> Dict[str, Any]:
+        """电源/会话操作（固定 argv，无外部字符串拼接）。"""
+        if not self.permissions.system_control:
+            return {"success": False, "message": "权限不足：系统控制", "data": {}}
+        try:
+            argv = self._POWER_COMMANDS.get(
+                sys.platform, self._POWER_COMMANDS["linux"])[action]
+            subprocess.run(argv, timeout=10, check=False)
+            return {"success": True,
+                    "message": f"系统操作已执行: {action}", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"系统操作失败: {e}",
+                    "data": {"error": str(e)}}
+
+    def system_lock(self):
+        return self._power_action("lock")
+
+    def system_shutdown(self):
+        return self._power_action("shutdown")
+
+    def system_restart(self):
+        return self._power_action("restart")
+
+    def system_sleep(self):
+        return self._power_action("sleep")
+
+    def set_volume(self, volume: int) -> Dict[str, Any]:
+        if not self.permissions.system_control:
+            return {"success": False, "message": "权限不足：系统控制", "data": {}}
+        volume = max(0, min(100, int(volume)))
+        try:
+            if sys.platform == "win32":
+                # Windows 无内置绝对音量 CLI：先静音复位，再以音量键逼近目标值
+                pyautogui.press("volumemute")
+                for _ in range(50):
+                    pyautogui.press("volumeup")
+                for _ in range(round((100 - volume) / 2)):
+                    pyautogui.press("volumedown")
+            elif sys.platform == "darwin":
+                subprocess.run(
+                    ["osascript", "-e",
+                     f"set volume output volume {volume}"],
+                    timeout=5, check=False)
+            else:
+                subprocess.run(
+                    ["amixer", "sset", "Master", f"{volume}%"],
+                    capture_output=True, timeout=5, check=False)
+            return {"success": True,
+                    "message": f"音量已设置为 {volume}%", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"音量设置失败: {e}",
+                    "data": {"error": str(e)}}
+
+    def toggle_mute(self) -> Dict[str, Any]:
+        if not self.permissions.system_control:
+            return {"success": False, "message": "权限不足：系统控制", "data": {}}
+        try:
+            if sys.platform == "win32":
+                pyautogui.press("volumemute")
+            elif sys.platform == "darwin":
+                subprocess.run(
+                    ["osascript", "-e",
+                     "set volume muted to not (muted)"],
+                    timeout=5, check=False)
+            else:
+                subprocess.run(
+                    ["amixer", "sset", "Master", "toggle"],
+                    capture_output=True, timeout=5, check=False)
+            return {"success": True, "message": "静音状态已切换", "data": {}}
+        except Exception as e:
+            return {"success": False, "message": f"静音切换失败: {e}",
+                    "data": {"error": str(e)}}
+
     def execute_operation(self, operation: Dict[str, Any]) -> Dict[str, Any]:
         result = {
             "success": False,
@@ -632,6 +814,48 @@ class SystemController:
             if result_data.get("success") and "summary" in result_data.get("data", {}):
                 result_data["formatted"] = result_data["data"]["summary"]
             return result_data
+
+        elif op_type == "mouse_move_relative":
+            dx = operation.get("dx", 0)
+            dy = operation.get("dy", 0)
+            duration = operation.get("duration", 0.1)
+            return self.mouse_move_relative(dx, dy, duration)
+
+        elif op_type == "mouse_drag_start":
+            return self.mouse_drag_start(operation.get("button", "left"))
+
+        elif op_type == "mouse_drag_stop":
+            return self.mouse_drag_stop(operation.get("button", "left"))
+
+        elif op_type == "window_minimize":
+            return self.window_minimize()
+
+        elif op_type == "window_maximize":
+            return self.window_maximize()
+
+        elif op_type == "window_restore":
+            return self.window_restore()
+
+        elif op_type == "window_close":
+            return self.window_close()
+
+        elif op_type == "system_lock":
+            return self.system_lock()
+
+        elif op_type == "system_shutdown":
+            return self.system_shutdown()
+
+        elif op_type == "system_restart":
+            return self.system_restart()
+
+        elif op_type == "system_sleep":
+            return self.system_sleep()
+
+        elif op_type == "volume_set":
+            return self.set_volume(operation.get("volume", 50))
+
+        elif op_type == "mute_toggle":
+            return self.toggle_mute()
 
         else:
             result["message"] = f"未知操作类型: {op_type}"

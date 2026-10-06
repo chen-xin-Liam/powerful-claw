@@ -13,6 +13,7 @@
 - 支持自定义黑名单追加与白名单覆盖（通过 .env 配置）
 """
 
+import os
 import platform
 import re
 from typing import Tuple, List
@@ -20,6 +21,12 @@ from typing import Tuple, List
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _project_root() -> str:
+    # src/system/high_risk_detector.py → 项目根（上溯三级）
+    return os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class HighRiskDetector:
@@ -44,12 +51,13 @@ class HighRiskDetector:
         self.platform = platform.system()  # 'Windows' / 'Linux' / 'Darwin'
         logger.info(f"高危检测器初始化，当前平台: {self.platform}")
 
-        # ── 通用白名单（查看类命令，跨平台免确认）──
+        # ── 通用白名单（只读查看类命令，跨平台免确认）──
+        # 注：env/set/nice/nohup/time 等可再执行任意命令的包装器不在白名单
         self.whitelist = {
             "ls", "dir", "pwd", "echo", "cat", "head", "tail", "less", "more",
-            "ps", "whoami", "date", "time", "hostname", "ipconfig", "ifconfig",
+            "ps", "whoami", "date", "hostname", "ipconfig", "ifconfig",
             "systeminfo", "uname", "uptime", "free", "df", "top", "tasklist",
-            "where", "which", "ver", "help", "history", "env", "set",
+            "where", "which", "ver", "help", "history",
         }
 
         # ── 平台特定规则 ──
@@ -146,6 +154,11 @@ class HighRiskDetector:
         """归一化命令字符串：小写 + 压缩多余空白。"""
         return re.sub(r"\s+", " ", cmd.strip().lower())
 
+    @staticmethod
+    def _strip_shell_quotes(text: str) -> str:
+        """删除 shell 引号，防止 "''sudo id" / 's"u"do id' 规避黑名单。"""
+        return text.replace("'", "").replace('"', "")
+
     def _is_whitelisted(self, cmd_normalized: str) -> bool:
         """是否命中白名单（查看类命令免确认）。"""
         if not cmd_normalized:
@@ -160,36 +173,121 @@ class HighRiskDetector:
         if not cmd or not cmd.strip():
             return False, ""
 
-        normalized = self._normalize_cmd(cmd)
+        # 1. 先按换行拆行——换行本身是命令分隔符，
+        #    不能在归一化（\s+→空格）时被抹掉，否则可注入任意子命令
+        raw_lines = [ln for ln in re.split(r"[\r\n]+", cmd) if ln.strip()]
+        multi = len(raw_lines) > 1
 
-        # 1. 白名单优先：查看类命令直接放行
-        if self._is_whitelisted(normalized):
-            return False, ""
+        for raw_line in raw_lines:
+            normalized = self._strip_shell_quotes(self._normalize_cmd(raw_line))
 
-        # 2. 黑名单关键词匹配（单词边界，避免 format 误匹配 information）
-        for kw in self.blacklist_keywords:
-            kw_norm = kw.strip().lower()
-            if not kw_norm:
-                continue
-            # 关键词作为命令前缀，或作为独立 token 出现
-            if normalized == kw_norm.rstrip() or normalized.startswith(kw_norm):
-                return True, f"命中黑名单关键词: {kw_norm}"
+            # 2. 含管道/分号/逻辑连接：逐个子命令检查，避免"白名单首命令 && 高危子命令"绕过
+            if any(sep in normalized for sep in ("&&", "||", "|", ";")):
+                # \|\| 与 && 优先于单字符，确保 || 不会被拆成两个空段
+                parts = [p.strip() for p in re.split(r"\|\||&&|[|;]", normalized) if p.strip()]
+            else:
+                parts = [normalized]
 
-            # 管道/分号后的子命令也要检查（如 echo x | sudo apt）
-            for sep in ("|", ";", "&&", "||"):
-                if sep in normalized:
-                    parts = re.split(r"[|;]|&&|\|\|", normalized)
-                    for part in parts:
-                        part = part.strip()
-                        if part and (part == kw_norm.rstrip() or part.startswith(kw_norm)):
-                            return True, f"命中黑名单关键词（子命令）: {kw_norm}"
+            for part in parts:
+                is_high, reason = self._is_single_command_high_risk(part)
+                if is_high:
+                    return True, (f"{reason}（子命令）" if multi else reason)
 
-        # 3. 敏感路径匹配
+        return False, ""
+
+    def _is_single_command_high_risk(self, normalized: str) -> Tuple[bool, str]:
+        """判断单条（不含分隔符）命令是否高危。"""
+        # 敏感路径检查对白名单同样生效：cat /etc/shadow 不能免确认
         for path in self.sensitive_paths:
             if path.lower() in normalized:
                 return True, f"访问系统敏感路径: {path}"
 
+        if self._is_whitelisted(normalized):
+            return False, ""
+
+        # 黑名单关键词匹配（单词边界，避免 format 误匹配 information）
+        for kw in self.blacklist_keywords:
+            kw_norm = kw.strip().lower()
+            if not kw_norm:
+                continue
+            # 关键词作为整条命令，或作为命令前缀出现
+            if normalized == kw_norm.rstrip() or normalized.startswith(kw_norm):
+                return True, f"命中黑名单关键词: {kw_norm}"
+
         return False, ""
+
+    # 受保护的路径组件（任意一层目录命中即拒绝，不依赖 cwd 解析）
+    _PROTECTED_DIRS = {
+        ".ssh", ".gnupg", ".aws", ".config", ".docker", ".kube",
+    }
+    # 受保护的末级文件名
+    _PROTECTED_NAMES = {
+        ".env", ".env.local", ".netrc", ".npmrc", ".pypirc", ".htpasswd",
+        ".git-credentials", ".bash_history", ".zsh_history",
+        ".bashrc", ".profile", ".zshrc",
+        "shadow", "sudoers", "passwd",
+        "authorized_keys", "credentials",
+    }
+    # 受保护的末级文件名前缀（覆盖 id_rsa / id_rsa.bak 等）
+    _PROTECTED_PREFIXES = (
+        "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "identity",
+    )
+    # 绝对路径受保护的首层目录
+    _PROTECTED_ABS_ROOTS = {"etc", "root", "boot", "proc", "sys", "dev", "usr"}
+
+    @staticmethod
+    def _extract_path_candidate(token: str) -> str:
+        """剥离 getopt 粘连形态，返回其中实际路径部分：
+        -fPATH / -ufPATH → PATH；--file=PATH → PATH；其余原样。
+        若 '=' 之前部分已含路径分隔符（如 ``dir/aa=b`` 文件名自带 '='），
+        则整串是路径，按整串判定。"""
+        t = token
+        if "=" in t:
+            before, after = t.split("=", 1)
+            if re.search(r"[\\/]", before):
+                return t
+            t = after
+        elif t.startswith("-"):
+            t = t.lstrip("-")
+            m = re.match(r"[A-Za-z]+", t)
+            if m:
+                t = t[m.end():]
+        return t
+
+    def is_protected_path_token(self, token: str) -> bool:
+        """判断单个 argv token 是否指向受保护内容。
+
+        安全边界（组件级判定，对相对路径、cwd 变化、选项粘连同样有效）：
+        1. 凭据/密钥类目录与文件名（.ssh/id_*/.env/.bash_history/...）拒绝；
+        2. 含 ``..`` 跳转拒绝；
+        3. 绝对路径：/etc /root /boot /proc /sys /dev /usr 拒绝；
+           项目根目录之内允许，项目之外拒绝。
+        """
+        path = self._extract_path_candidate(token).strip().lower()
+        if not path:
+            return False
+        comps = re.split(r"[\\/]", path)
+        # 含父目录跳转：白名单只读命令不允许
+        if ".." in comps:
+            return True
+        if any(c in self._PROTECTED_DIRS for c in comps):
+            return True
+        base = comps[-1]
+        if base in self._PROTECTED_NAMES:
+            return True
+        if (base.startswith(self._PROTECTED_PREFIXES)
+                or base.endswith(".pem")):
+            return True
+        if path.startswith("/"):
+            # 项目根之内允许
+            root = os.path.abspath(_project_root()).lower()
+            if path == root or path.startswith(root.rstrip("/") + "/"):
+                return False
+            # 其余绝对路径：首层系统敏感目录拒绝，项目外路径一律拒绝
+            if len(comps) > 1 and comps[1] in self._PROTECTED_ABS_ROOTS:
+                return True
+            return True
+        return False
 
     def is_high_risk_hotkey(self, keys) -> Tuple[bool, str]:
         """判断组合键是否高危。keys 可为 list/tuple/单个字符串。"""
@@ -232,9 +330,14 @@ class HighRiskDetector:
             return self.is_high_risk_hotkey(keys)
 
         if op_type in ("window_control", "window_minimize", "window_close",
-                       "window_maximize", "window_focus"):
+                       "window_maximize", "window_restore", "window_focus"):
             # 窗口控制类统一视为需确认
             return True, f"窗口控制操作: {op_type}"
+
+        if op_type in ("system_lock", "system_shutdown",
+                       "system_restart", "system_sleep"):
+            # 会话/电源类操作统一视为需确认
+            return True, f"系统电源/会话操作: {op_type}"
 
         # keyboard_press 单键：检查是否危险单键（如 win）
         if op_type == "keyboard_press":

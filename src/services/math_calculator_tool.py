@@ -148,6 +148,31 @@ def _output_port_value(port):
 def _do_evaluate(expression, variables):
     if not expression or not expression.strip():
         return _fmt_err("E_VALIDATION_PARSE_ERROR", "expression 为空", "请输入数学表达式")
+
+    # 无变量的标量表达式：优先走 pcnative 快速求值；
+    # 原生不支持的语法（变量/向量/矩阵/未知函数等）回退节点图引擎
+    if not variables:
+        try:
+            from src.core.native import pcnative_backend
+            if pcnative_backend.NATIVE_AVAILABLE:
+                value = pcnative_backend.expr_eval(expression)
+                payload = {
+                    "value": value,
+                    "value_str": _value_to_str(value),
+                    "steps": 1,
+                    "graph_nodes": 1,
+                    "backend": "pcnative",
+                }
+                return _fmt_str(
+                    "OK",
+                    f"表达式求值完成: {expression} = {_value_to_str(value)}",
+                    data=payload)
+        except ValueError:
+            pass  # 语法超集：回退
+        except Exception:
+            logger.debug("pcnative 表达式快速路径异常，回退节点图引擎",
+                         exc_info=True)
+
     from src.core.expression_parser import evaluate_expression
     from src.utils.errors import AppError, ValidationError
     try:

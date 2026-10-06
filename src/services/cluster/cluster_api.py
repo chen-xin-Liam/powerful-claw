@@ -9,10 +9,16 @@ import socket
 import time
 from typing import Dict, Any
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse
+
+from src.utils.net_auth import TokenAuthMixin
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-class ClusterAPIHandler(BaseHTTPRequestHandler):
-    """集群API请求处理器"""
+class ClusterAPIHandler(TokenAuthMixin, BaseHTTPRequestHandler):
+    """集群API请求处理器（回环放行，非回环须 Token）"""
     
     def __init__(self, *args, cluster_manager=None, **kwargs):
         self.cluster_manager = cluster_manager
@@ -31,16 +37,19 @@ class ClusterAPIHandler(BaseHTTPRequestHandler):
     
     def do_GET(self):
         """处理GET请求"""
+        if not self._require_authorization():
+            return
         try:
-            if self.path == '/api/cluster/stats':
+            route = urlparse(self.path).path
+            if route == '/api/cluster/stats':
                 self._handle_get_stats()
-            elif self.path == '/api/cluster/nodes':
+            elif route == '/api/cluster/nodes':
                 self._handle_get_nodes()
-            elif self.path == '/api/cluster/tasks':
+            elif route == '/api/cluster/tasks':
                 self._handle_get_tasks()
-            elif self.path == '/api/cluster/summary':
+            elif route == '/api/cluster/summary':
                 self._handle_get_summary()
-            elif self.path == '/api/cluster/self':
+            elif route == '/api/cluster/self':
                 self._handle_get_self()
             else:
                 self._send_error_response(404, "Not found")
@@ -49,14 +58,17 @@ class ClusterAPIHandler(BaseHTTPRequestHandler):
     
     def do_POST(self):
         """处理POST请求"""
+        if not self._require_authorization():
+            return
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
             data = json.loads(body) if content_length > 0 else {}
-            
-            if self.path == '/api/cluster/task':
+            route = urlparse(self.path).path
+
+            if route == '/api/cluster/task':
                 self._handle_post_task(data)
-            elif self.path == '/api/cluster/task/cancel':
+            elif route == '/api/cluster/task/cancel':
                 self._handle_post_cancel_task(data)
             else:
                 self._send_error_response(404, "Not found")

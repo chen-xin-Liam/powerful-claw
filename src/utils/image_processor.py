@@ -2,6 +2,12 @@ import numpy as np
 from PIL import Image
 from typing import Tuple, Optional, List
 
+try:
+    from src.core.native import pcnative_backend
+except Exception:  # 原生绑定不可用时静默回退
+    pcnative_backend = None
+
+
 class ImageProcessor:
     def __init__(self):
         self.ascii_chars = '@%#*+=-:. '
@@ -19,7 +25,15 @@ class ImageProcessor:
             height = int(width * ratio * 0.55)
         
         img = img.resize((width, height))
-        
+
+        if pcnative_backend is not None and pcnative_backend.NATIVE_AVAILABLE:
+            try:
+                # PIL.tobytes 直取原始灰度，避免 np.asarray 的转换开销
+                return pcnative_backend.ascii_gray(
+                    img.tobytes(), width, height, invert)
+            except Exception:
+                pass  # 原生调用异常时回退纯 Python
+
         pixels = np.array(img)
         
         ascii_result = []
@@ -28,7 +42,7 @@ class ImageProcessor:
         for row in pixels:
             ascii_row = []
             for pixel in row:
-                char_idx = int(pixel * (len(chars) - 1) / 255)
+                char_idx = int(int(pixel) * (len(chars) - 1) / 255)
                 char_idx = max(0, min(char_idx, len(chars) - 1))
                 ascii_row.append(chars[char_idx])
             ascii_result.append(''.join(ascii_row))
@@ -39,7 +53,27 @@ class ImageProcessor:
         """将图片转换为像素矩阵描述"""
         img = image.convert('RGB')
         width, height = img.size
-        
+
+        if pcnative_backend is not None and pcnative_backend.NATIVE_AVAILABLE:
+            try:
+                step_x = max(1, width // sample_size)
+                step_y = max(1, height // sample_size)
+                grid_cols = width // step_x
+                grid_rows = height // step_y
+                # 采样点显著少于全像素时走稀疏路径（零整帧拷贝）；
+                # sample_size 极小（网格≈整帧）时直接传全帧
+                if grid_cols * grid_rows * 4 < width * height:
+                    pts = bytearray()
+                    for yy in range(0, height, step_y):
+                        for xx in range(0, width, step_x):
+                            pts.extend(img.getpixel((xx, yy)))
+                    return pcnative_backend.sampled_matrix(
+                        bytes(pts), grid_cols, grid_rows, width, height)
+                return pcnative_backend.pixel_matrix_rgb(
+                    img.tobytes(), width, height, sample_size)
+            except Exception:
+                pass  # 原生调用异常时回退纯 Python
+
         step_x = max(1, width // sample_size)
         step_y = max(1, height // sample_size)
         

@@ -15,11 +15,12 @@ from src.services.extension_manager import extension_manager
 from src.services.screen_monitor import screen_monitor
 
 from src.utils.logger import get_logger
+from src.utils.net_auth import TokenAuthMixin, authorize_websocket, write_env_value
 
 logger = get_logger(__name__)
 
-class HTTPServerHandler(BaseHTTPRequestHandler):
-    """HTTP请求处理器"""
+class HTTPServerHandler(TokenAuthMixin, BaseHTTPRequestHandler):
+    """HTTP请求处理器（回环放行，非回环须 Token）"""
     
     def __init__(self, web_dir, monitor_dir, *args, **kwargs):
         self.web_dir = web_dir
@@ -32,6 +33,8 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
     
     def do_GET(self):
         """处理GET请求"""
+        if not self._require_authorization():
+            return
         if self.path == "/" or self.path == "/index.html":
             file_path = os.path.join(self.web_dir, "index.html")
             if os.path.exists(file_path):
@@ -956,6 +959,12 @@ class APIServer:
     
     async def _handle_client(self, websocket):
         """处理单个WebSocket客户端连接"""
+        # 连接级鉴权：回环放行，非回环须提供有效 Token，否则关闭连接
+        if not await authorize_websocket(websocket):
+            logger.warning("API WebSocket 鉴权失败，关闭连接")
+            await websocket.close(code=1008, reason="unauthorized")
+            return
+
         self.clients.add(websocket)
         logger.info(f"API客户端已连接: {websocket.remote_address}")
         
@@ -1155,47 +1164,18 @@ class APIServer:
         pass
     
     def _update_env_file(self, key, value):
-        """更新.env文件"""
-        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
-        if os.path.exists(env_path):
-            with open(env_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            lines = content.split('\n')
-            new_lines = []
-            found = False
-            
-            for line in lines:
-                if line.startswith(f'{key}:') or line.startswith(f'{key}='):
-                    if ':' in line:
-                        new_lines.append(f'{key}: str = "{value}"')
-                    else:
-                        new_lines.append(f'{key}={value}')
-                    found = True
-                else:
-                    new_lines.append(line)
-            
-            if not found:
-                new_lines.append(f'{key}: str = "{value}"')
-            
-            with open(env_path, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(new_lines))
-    
-    async def _ws_process_request(self, path, request_headers):
-        """处理WebSocket升级请求前的HTTP请求"""
-        # 允许所有请求
-        return None
-        
+        """更新 .env 文件（复用 NetAuth 的规范写入，失败静默）。"""
+        write_env_value(key, str(value))
+
     async def _ws_run_server(self):
         """运行WebSocket服务器"""
         self.ws_server = await websockets.serve(
             self._handle_client,
             self.host,
             self.port + 1,  # WebSocket使用端口+1
-            process_request=self._ws_process_request
         )
         logger.info(f"API WebSocket服务器已启动: ws://{self.host}:{self.port + 1}/api")
-        
+
         await self.ws_server.wait_closed()
     
     def _ws_thread_func(self):
